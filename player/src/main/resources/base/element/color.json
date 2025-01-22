@@ -1,0 +1,232 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "tab_sel_color",
+      "value": "#ED6F21"
+    },
+    {
+      "name": "brand",
+      "value": "#ff0a59f7"
+    },
+    {
+      "name": "warning",
+      "value": "#ffe84026"
+    },
+    {
+      "name": "alert",
+      "value": "#ffed6f21"
+    },
+    {
+      "name": "confirm",
+      "value": "#ff64bb5c"
+    },
+    {
+      "name": "font_primary",
+      "value": "#e5000000"
+    },
+    {
+      "name": "font_secondary",
+      "value": "#99000000"
+    },
+    {
+      "name": "font_tertiary",
+      "value": "#66000000"
+    },
+    {
+      "name": "font_fourth",
+      "value": "#33000000"
+    },
+    {
+      "name": "font_emphasize",
+      "value": "#ff0a59f7"
+    },
+    {
+      "name": "font_on_primary",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "font_on_secondary",
+      "value": "#99ffffff"
+    },
+    {
+      "name": "font_on_tertiary",
+      "value": "#66ffffff"
+    },
+    {
+      "name": "font_on_fourth",
+      "value": "#33ffffff"
+    },
+    {
+      "name": "icon_primary",
+      "value": "#e5000000"
+    },
+    {
+      "name": "icon_secondary",
+      "value": "#99000000"
+    },
+    {
+      "name": "icon_tertiary",
+      "value": "#66000000"
+    },
+    {
+      "name": "icon_fourth",
+      "value": "#33000000"
+    },
+    {
+      "name": "icon_emphasize",
+      "value": "#ff0a59f7"
+    },
+    {
+      "name": "icon_sub_emphasize",
+      "value": "#660a59f7"
+    },
+    {
+      "name": "icon_on_primary",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "icon_on_secondary",
+      "value": "#99ffffff"
+    },
+    {
+      "name": "icon_on_tertiary",
+      "value": "#66ffffff"
+    },
+    {
+      "name": "icon_on_fourth",
+      "value": "#33ffffff"
+    },
+    {
+      "name": "background_primary",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "background_secondary",
+      "value": "#fff1f3f5"
+    },
+    {
+      "name": "background_tertiary",
+      "value": "#ffe5e5ea"
+    },
+    {
+      "name": "background_fourth",
+      "value": "#ffd1d1d6"
+    },
+    {
+      "name": "background_emphasize",
+      "value": "#ff0a59f7"
+    },
+    {
+      "name": "comp_foreground_primary",
+      "value": "#ff000000"
+    },
+    {
+      "name": "comp_background_primary",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "comp_background_primary_trans",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "comp_background_primary_contrary",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "comp_background_gray",
+      "value": "#fff1f3f5"
+    },
+    {
+      "name": "comp_background_secondary",
+      "value": "#19000000"
+    },
+    {
+      "name": "comp_background_tertiary",
+      "value": "#0c000000"
+    },
+    {
+      "name": "comp_background_emphasize",
+      "value": "#ff0a59f7"
+    },
+    {
+      "name": "comp_background_neutral",
+      "value": "#ff000000"
+    },
+    {
+      "name": "comp_emphasize_secondary",
+      "value": "#330a59f7"
+    },
+    {
+      "name": "comp_emphasize_tertiary",
+      "value": "#190a59f7"
+    },
+    {
+      "name": "comp_divider",
+      "value": "#33000000"
+    },
+    {
+      "name": "comp_common_contrary",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "comp_background_focus",
+      "value": "#fff1f3f5"
+    },
+    {
+      "name": "comp_focused_primary",
+      "value": "#e5000000"
+    },
+    {
+      "name": "comp_focused_secondary",
+      "value": "#99000000"
+    },
+    {
+      "name": "comp_focused_tertiary",
+      "value": "#66000000"
+    },
+    {
+      "name": "interactive_hover",
+      "value": "#0c000000"
+    },
+    {
+      "name": "interactive_pressed",
+      "value": "#19000000"
+    },
+    {
+      "name": "interactive_focus",
+      "value": "#ff0a59f7"
+    },
+    {
+      "name": "interactive_active",
+      "value": "#ff0a59f7"
+    },
+    {
+      "name": "interactive_select",
+      "value": "#33000000"
+    },
+    {
+      "name": "interactive_click",
+      "value": "#19000000"
+    },
+    {
+      "name": "rohy_card",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "rohy_settings_background",
+      "value": "#fff1f3f5"
+    },
+    {
+      "name": "rohy_settings_card",
+      "value": "#ffffffff"
+    },
+    {
+      "name": "rohy_back_button",
+      "value": "#fff1f3f5"
+    }
+  ]
+}

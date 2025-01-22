@@ -1,0 +1,160 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "PlayerAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "PlayerAbility_label",
+      "value": "Rohy Player"
+    },
+    {
+      "name": "reason_keep_background_running",
+      "value": "playing video and audio in background"
+    },
+    {
+      "name": "VideoAbility_label",
+      "value": "Video Player"
+    },
+    {
+      "name": "home_tab_video",
+      "value": "Video"
+    },
+    {
+      "name": "home_tab_audio",
+      "value": "Audio"
+    },
+    {
+      "name": "home_tab_playlist",
+      "value": "Playlist"
+    },
+    {
+      "name": "home_tab_more",
+      "value": "More"
+    },
+    {
+      "name": "coming_soon",
+      "value": "Coming Soon..."
+    },
+    {
+      "name": "settings",
+      "value": "Settings"
+    },
+    {
+      "name": "questions",
+      "value": "Q&A"
+    },
+    {
+      "name": "about",
+      "value": "About"
+    },
+    {
+      "name": "choose_picker",
+      "value": "Choose Location"
+    },
+    {
+      "name": "filemanager",
+      "value": "File Manager"
+    },
+    {
+      "name": "photos",
+      "value": "Photos"
+    },
+    {
+      "name": "videolibrary_view_mode_list",
+      "value": "List View"
+    },
+    {
+      "name": "videolibrary_view_mode_grid",
+      "value": "Grid View"
+    },
+    {
+      "name": "videolibrary_view_sort_name",
+      "value": "Name"
+    },
+    {
+      "name": "videolibrary_view_sort_time",
+      "value": "Date"
+    },
+    {
+      "name": "search",
+      "value": "Search"
+    },
+    {
+      "name": "confirm_to_delete",
+      "value": "Confirm to delete?"
+    },
+    {
+      "name": "confirm_to_delete_desc",
+      "value": "Delete this video will only removed this video from library, video file is still on your device."
+    },
+    {
+      "name": "cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "delete",
+      "value": "Delete"
+    },
+    {
+      "name": "edit_name",
+      "value": "Edit Name"
+    },
+    {
+      "name": "confirm",
+      "value": "Confirm"
+    },
+    {
+      "name": "import_time",
+      "value": "Imported at: %s"
+    },
+    {
+      "name": "duration",
+      "value": "Duration: %s"
+    },
+    {
+      "name": "duplicated_imports",
+      "value": "Duplicated imports"
+    },
+    {
+      "name": "duplicated_imports_desc",
+      "value": "Imported duplicated file(s), they will not be imported."
+    },
+    {
+      "name": "long_press_speeding_up",
+      "value": "Speeding Up"
+    },
+    {
+      "name": "no_subtitle",
+      "value": "No Subtitle"
+    },
+    {
+      "name": "import",
+      "value": "Import"
+    },
+    {
+      "name": "speed_1_00x",
+      "value": "1.00x"
+    },
+    {
+      "name": "surfaceFillingMode_fit",
+      "value": "Fit"
+    },
+    {
+      "name": "surfaceFillingMode_stretch",
+      "value": "Stretch"
+    },
+    {
+      "name": "surfaceFillingMode_4by3",
+      "value": "4: 3"
+    },
+    {
+      "name": "surfaceFillingMode_16by9",
+      "value": "16: 9"
+    }
+  ]
+}

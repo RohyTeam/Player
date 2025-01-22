@@ -1,0 +1,55 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\deechael\\.ohos\\config\\default_RohyPlayer_FFBeknnEAFaiHfF0jfBffgDNKKMPerNPQJ_VfRI6-X8=.cer",
+          "storePassword": "0000001BD9F83A0B2EA7E308E2B59919B7D6D87E0500E55312FC0104863618FB5384AE121F846F421B7137",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BD2AA972148D8075CFC753700D214AE2D76CC926F39188FD8D4B3D9BA6F4F62D90E4106E90CE03A",
+          "profile": "C:\\Users\\deechael\\.ohos\\config\\default_RohyPlayer_FFBeknnEAFaiHfF0jfBffgDNKKMPerNPQJ_VfRI6-X8=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\deechael\\.ohos\\config\\default_RohyPlayer_FFBeknnEAFaiHfF0jfBffgDNKKMPerNPQJ_VfRI6-X8=.p12"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.1(13)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "player",
+      "srcPath": "./player",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

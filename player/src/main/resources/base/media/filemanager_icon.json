@@ -1,0 +1,7 @@
+{
+  "layered-image":
+  {
+    "background" : "$media:filemanager_background",
+    "foreground" : "$media:filemanager_foreground"
+  }
+}

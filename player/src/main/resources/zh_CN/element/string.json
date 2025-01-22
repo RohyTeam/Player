@@ -1,0 +1,144 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "PlayerAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "PlayerAbility_label",
+      "value": "Rohy 播放器"
+    },
+    {
+      "name": "VideoAbility_label",
+      "value": "视频播放器"
+    },
+    {
+      "name": "home_tab_video",
+      "value": "视频"
+    },
+    {
+      "name": "home_tab_audio",
+      "value": "音频"
+    },
+    {
+      "name": "home_tab_playlist",
+      "value": "播放列表"
+    },
+    {
+      "name": "home_tab_more",
+      "value": "更多"
+    },
+    {
+      "name": "coming_soon",
+      "value": "敬请期待..."
+    },
+    {
+      "name": "settings",
+      "value": "设置"
+    },
+    {
+      "name": "questions",
+      "value": "常见问题"
+    },
+    {
+      "name": "about",
+      "value": "关于"
+    },
+    {
+      "name": "choose_picker",
+      "value": "选择位置"
+    },
+    {
+      "name": "filemanager",
+      "value": "文件管理"
+    },
+    {
+      "name": "photos",
+      "value": "图库"
+    },
+    {
+      "name": "videolibrary_view_mode_list",
+      "value": "列表"
+    },
+    {
+      "name": "videolibrary_view_mode_grid",
+      "value": "图标"
+    },
+    {
+      "name": "videolibrary_view_sort_name",
+      "value": "名称"
+    },
+    {
+      "name": "videolibrary_view_sort_time",
+      "value": "时间"
+    },
+    {
+      "name": "search",
+      "value": "搜索"
+    },
+    {
+      "name": "confirm_to_delete",
+      "value": "确认删除？"
+    },
+    {
+      "name": "confirm_to_delete_desc",
+      "value": "删除这个视频只会从库中移除，并不会从您的设备上删除视频文件。"
+    },
+    {
+      "name": "cancel",
+      "value": "取消"
+    },
+    {
+      "name": "delete",
+      "value": "删除"
+    },
+    {
+      "name": "edit_name",
+      "value": "编辑名称"
+    },
+    {
+      "name": "confirm",
+      "value": "确认"
+    },
+    {
+      "name": "import_time",
+      "value": "导入于：%s"
+    },
+    {
+      "name": "duration",
+      "value": "时长：%s"
+    },
+    {
+      "name": "duplicated_imports",
+      "value": "重复导入"
+    },
+    {
+      "name": "duplicated_imports_desc",
+      "value": "导入了重复的文件，重复的文件将不会被导入。"
+    },
+    {
+      "name": "long_press_speeding_up",
+      "value": "加速中"
+    },
+    {
+      "name": "no_subtitle",
+      "value": "不显示字幕"
+    },
+    {
+      "name": "import",
+      "value": "导入"
+    },
+    {
+      "name": "surfaceFillingMode_fit",
+      "value": "适应"
+    },
+    {
+      "name": "surfaceFillingMode_stretch",
+      "value": "拉伸"
+    }
+  ]
+}
