@@ -1118,11 +1118,9 @@ class VideoPlayerGestureModifier implements GestureModifier {
     event.addGesture(
       new LongPressGestureHandler({ fingers: 1})
         .onAction((event: GestureEvent) => {
-          // TODO: 长按屏幕加速
           this.startSpeedUp()
         })
         .onActionEnd((event: GestureEvent) => {
-          // TODO: 长按屏幕加速
           this.endSpeedUp()
         })
         .onActionCancel(() => {
