@@ -128,7 +128,6 @@ export interface CompiledASSStyleTag {
     xshad: number;
     yshad: number;
     fe: number;
-    // TODO: [breaking change] delete `q`
     q: 0 | 1 | 2 | 3;
 }
 
