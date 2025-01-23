@@ -82,6 +82,42 @@ export class VideoLibraryDatabase {
     })
   }
 
+  public static unsafeList(context: common.Context): Promise<Array<VideoEntity>> {
+    return new Promise((resultReturner) => {
+      relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
+        if (err) {
+          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          return;
+        }
+        store.query(new relationalStore.RdbPredicates("VideoLibrary"), async (err: BusinessError, resultSet) => {
+          if (err) {
+            hilog.error(0x2, "database", `Failed to query data. Code:${err.code}, message:${err.message}`)
+            resultReturner(new Array())
+            return
+          }
+          if (resultSet.rowCount == 0) {
+            console.error("there are no data in database")
+            resultReturner(new Array())
+          } else {
+            let videos = new Array<VideoEntity>()
+
+            while (resultSet.goToNextRow()) {
+              let video: VideoEntity = {
+                uri: resultSet.getString(resultSet.getColumnIndex("LOCATION")),
+                title: resultSet.getString(resultSet.getColumnIndex("TITLE")),
+                addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
+                hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH"))
+              }
+              videos.push(video)
+            }
+
+            resultReturner(videos)
+          }
+        })
+      })
+    })
+  }
+
   public static list(context: common.Context): Promise<Array<VideoEntity>> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {

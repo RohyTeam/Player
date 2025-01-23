@@ -1,14 +1,14 @@
-import { VideoEntity, VideoEntityV2, VideoEntityV2Array } from "../../../entity/VideoEntity"
+import { FileStatus, VideoEntity, VideoEntityV2, VideoEntityV2Array } from "../../../entity/VideoEntity"
 import Want from "@ohos.app.ability.Want"
 import common from "@ohos.app.ability.common"
 import { BreakpointConstants } from "../../../common/constants/BreakpointConstants"
 import { media } from "@kit.MediaKit"
 import { VideoDeleter } from "./VideoLibraryPage"
-import { fileIo } from "@kit.CoreFileKit"
+import { fileIo, fileShare, hash } from "@kit.CoreFileKit"
 import { deviceInfo } from "@kit.BasicServicesKit"
 import { CommonConstants } from "../../../common/constants/CommonConstants"
 import { convertNumberToDurationString } from "../../../util/TimeUtil"
-import { DateUtil } from "@pura/harmony-utils"
+import { DateUtil, FileUtil } from "@pura/harmony-utils"
 import { LengthMetrics } from "@kit.ArkUI"
 import { DialogHelper } from "@pura/harmony-dialog"
 import { VideoLibraryDatabase } from "../../../database/VideoLibraryDatabase"
@@ -36,9 +36,8 @@ export struct GridView {
           regularSize: [1, 1]
         }
       ) {
-
         ForEach(this.videos, (video: VideoEntityV2) => {
-          if (this.searching.length == 0 || video.title.indexOf(this.searching) >= 0) {
+          if (this.searching.length == 0 || video.title.indexOf(this.searching) >= 0 && video.status != FileStatus.Disappear) {
             GridItem() {
               VideoRow({
                 deleter: this.deleter,
@@ -47,8 +46,27 @@ export struct GridView {
                 video: video,
               })
                 .onAppear(() => {
-                  this.findMetadata(video)
-                  this.findCover(video)
+                  if (video.status == FileStatus.Authorized) {
+                    this.findMetadata(video)
+                    this.findCover(video)
+                  } else if (video.status == FileStatus.None) {
+                    fileShare.activatePermission([{
+                      uri: video.uri,
+                      operationMode: 0b1
+                    }])
+                      .then(() => {
+                        hash.hash(FileUtil.getFilePath(video.uri), "sha256")
+                          .then((fileHash) => {
+                            if (fileHash != video.hash) {
+                              VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
+                            } else {
+                              video.status = FileStatus.Authorized
+                              this.findMetadata(video)
+                              this.findCover(video)
+                            }
+                          })
+                      })
+                  }
                 })
             }
           }
@@ -70,7 +88,11 @@ export struct GridView {
       .rowsGap(8)
       .columnsGap(8)
       .layoutDirection(GridDirection.Row)
-      .width("90%")
+      .width("100%")
+      .padding({
+        left: "5%",
+        right: "5%",
+      })
       .borderRadius(12)
       .layoutWeight(1)
     }
@@ -133,70 +155,87 @@ struct VideoRow {
   metadatas: Record<string, media.AVMetadata>
 
   build() {
-    Row() {
-      Button() {
-        Column() {
-          if (this.covers[this.video.hash] != undefined) {
-            Image(this.covers[this.video.hash])
-              .width("100%")
-              .borderRadius(10)
-          }
-          Text(this.video.title)
-            .maxLines(1)
-            .textOverflow({
-              overflow: TextOverflow.Ellipsis
-            })
-            .fontSize(16)
-            .margin({
-              left: "8vp",
-              right: "8vp",
-              top: "4vp"
-            })
-          if (this.metadatas[this.video.hash] != undefined) {
-            Text($r("app.string.duration", `${convertNumberToDurationString(parseInt(this.metadatas[this.video.hash].duration))}`))
+    if (this.video.status == FileStatus.Authorized) {
+      Row() {
+        Button() {
+          Column() {
+            if (this.covers[this.video.hash] != undefined) {
+              Image(this.covers[this.video.hash])
+                .width("100%")
+                .borderRadius(10)
+            }
+            Text(this.video.title)
+              .maxLines(1)
+              .textOverflow({
+                overflow: TextOverflow.Ellipsis
+              })
+              .fontSize(16)
+              .margin({
+                left: "8vp",
+                right: "8vp",
+                top: "4vp"
+              })
+            if (this.metadatas[this.video.hash] != undefined) {
+              Text($r("app.string.duration", `${convertNumberToDurationString(parseInt(this.metadatas[this.video.hash].duration))}`))
+                .fontSize(10)
+                .fontColor($r("app.color.font_secondary"))
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                })
+            }
+            Text(DateUtil.getFormatDateStr(this.video.addedTime))
+              .maxLines(1)
+              .textOverflow({
+                overflow: TextOverflow.Ellipsis
+              })
               .fontSize(10)
               .fontColor($r("app.color.font_secondary"))
               .margin({
                 left: "8vp",
                 right: "8vp",
+                bottom: "8vp"
               })
           }
-          Text(DateUtil.getFormatDateStr(this.video.addedTime))
-            .maxLines(1)
-            .textOverflow({
-              overflow: TextOverflow.Ellipsis
-            })
-            .fontSize(10)
-            .fontColor($r("app.color.font_secondary"))
-            .margin({
-              left: "8vp",
-              right: "8vp",
-              bottom: "8vp"
-            })
+          .alignItems(HorizontalAlign.Start)
         }
-        .alignItems(HorizontalAlign.Start)
-      }
-      .onClick(() => {
-        let context = getContext(this) as common.UIAbilityContext
-        let want: Want = {
-          bundleName: 'org.rohy.player',
-          abilityName: 'VideoAbility',
-          parameters: {
-            'url': this.video.uri,
-            'title': this.video.title,
-            'hash': this.video.hash
+        .onClick(() => {
+          let context = getContext(this) as common.UIAbilityContext
+          let want: Want = {
+            bundleName: 'org.rohy.player',
+            abilityName: 'VideoAbility',
+            parameters: {
+              'url': this.video.uri,
+              'title': this.video.title,
+              'hash': this.video.hash
+            }
           }
-        }
-        context.startAbility(want)
-      })
-      .bindContextMenu(this.contextMenu, ResponseType.LongPress)
-      .type(ButtonType.Normal)
-      .margin(4)
-      .borderRadius(10)
+          context.startAbility(want)
+        })
+        .bindContextMenu(this.contextMenu, ResponseType.LongPress)
+        .type(ButtonType.Normal)
+        .margin(4)
+        .borderRadius(10)
+        .backgroundColor($r("app.color.rohy_card"))
+      }
+      .borderRadius(12)
+      .backgroundColor($r("app.color.rohy_card"))
+    } else {
+      Row() {
+        Blank()
+          .layoutWeight(1)
+        LoadingProgress()
+          .enableLoading(true)
+          .color($r("app.color.icon_secondary"))
+          .width(64)
+          .height(64)
+        Blank()
+          .layoutWeight(1)
+      }
+      .alignItems(VerticalAlign.Center)
+      .borderRadius(12)
       .backgroundColor($r("app.color.rohy_card"))
     }
-    .borderRadius(12)
-    .backgroundColor($r("app.color.rohy_card"))
   }
 
   @Builder

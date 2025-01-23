@@ -12,6 +12,14 @@ interface VideoMetadata {
 
 }
 
+export enum FileStatus {
+
+  Authorized,
+  Disappear,
+  None
+
+}
+
 @Observed
 export class VideoEntityV2Array extends Array<VideoEntityV2> {}
 
@@ -22,6 +30,7 @@ export class VideoEntityV2 {
   title: string
   hash: string
   addedTime: number
+  status: FileStatus = FileStatus.None
 
   constructor(
     uri: string,

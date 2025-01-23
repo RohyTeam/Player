@@ -305,14 +305,14 @@ export struct VideoLibraryPage {
         if (!this.loaded) {
           Column() {
             Blank()
-              .layoutWeight(1)
+              .layoutWeight(2)
             LoadingProgress()
               .enableLoading(true)
               .color($r("app.color.icon_secondary"))
               .width(64)
               .height(64)
             Blank()
-              .layoutWeight(1)
+              .layoutWeight(3)
           }
           .width("100%")
           .height("100%")
@@ -375,7 +375,7 @@ export struct VideoLibraryPage {
     }
     .onAppear(() => {
       this.gridOrList = PreferencesUtil.getSync("gridOrList", true) as boolean
-      VideoLibraryDatabase.list(getContext(this)).then((videos) => {
+      VideoLibraryDatabase.unsafeList(getContext(this)).then((videos) => {
         console.error(`${videos.length} videos loaded`)
         this.videos.push(...videos.map((v1) => VideoEntityV2.fromV1(v1)))
         this.hashes.push(...videos.map((v1) => v1.hash))
