@@ -1,4 +1,4 @@
-import { RohyPlayerHome } from './rohyplayer/RohyPlayerHome';
+import { RohyPlayerHome } from './rohyplayer/HomeScreen';
 
 @Entry
 @Component
