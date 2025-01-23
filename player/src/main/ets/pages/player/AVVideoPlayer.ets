@@ -90,6 +90,10 @@ export struct AVVideoPlayer {
 
   @State
   private speedingUp: boolean = false
+  @State
+  private movingPosition: number = 0
+  @State
+  private movingProgressBar: boolean = false
 
   @State
   private videoMetadata: media.AVMetadata | undefined = undefined
@@ -164,6 +168,24 @@ export struct AVVideoPlayer {
         if (this.speedingUp) {
           Stack() {
             Text($r("app.string.long_press_speeding_up"))
+              .fontSize(32)
+              .fontColor("#ffffffff")
+          }
+          .backgroundColor("#88000000")
+          .alignContent(Alignment.Center)
+          .width("100%")
+          .height("100%")
+        }
+      }
+      .alignContent(Alignment.Center)
+      .gestureModifier(this.videoPlayerGestureModifier)
+      .width("100%")
+      .height("100%")
+      .zIndex(99) // 由于字幕也有分层，把 zIndex 设置高一点防止被字幕遮挡
+      Stack() {
+        if (this.movingProgressBar) {
+          Stack() {
+            Text(`${convertNumberToDurationString(this.movingPosition)}/${convertNumberToDurationString(this.max)}`)
               .fontSize(32)
               .fontColor("#ffffffff")
           }
@@ -298,12 +320,18 @@ export struct AVVideoPlayer {
       Slider({
         min: 0,
         max: this.max,
+        step: 1,
         value: this.currentPosition
       })
         .onChange((value, mode: SliderChangeMode) => {
-          if (mode == SliderChangeMode.End || mode == SliderChangeMode.Click) {
-            this.avPlayer?.seek(value)
-          } else {
+          if (mode == SliderChangeMode.Begin) {
+            this.movingProgressBar = true
+            this.movingPosition = value
+          } else if (mode == SliderChangeMode.Moving) {
+            this.movingPosition = value
+          } else if (mode == SliderChangeMode.End || mode == SliderChangeMode.Click) {
+            this.movingProgressBar = false
+            this.avPlayer?.seek(value, media.SeekMode.SEEK_CLOSEST)
           }
         })
         .layoutWeight(1)
@@ -332,18 +360,18 @@ export struct AVVideoPlayer {
       this.leftAlignedCircleButton(
         $r("sys.symbol.gobackward_10"),
         () => {
-          this.avPlayer?.seek(Math.max(0, this.currentPosition - 10 * 1000))
+          this.avPlayer?.seek(Math.max(0, this.currentPosition - 10 * 1000), media.SeekMode.SEEK_CLOSEST)
         }
       )
       Button({
         type: ButtonType.Circle
       }) {
-        if (this.videoState.paused) {
-          SymbolGlyph($r("sys.symbol.play_fill"))
+        if (!this.videoState.paused) {
+          SymbolGlyph($r("sys.symbol.pause"))
             .fontSize(24)
             .fontColor([$r("app.color.icon_primary")])
         } else {
-          SymbolGlyph($r("sys.symbol.pause"))
+          SymbolGlyph($r("sys.symbol.play_fill"))
             .fontSize(24)
             .fontColor([$r("app.color.icon_primary")])
         }
@@ -359,7 +387,12 @@ export struct AVVideoPlayer {
           if (this.avPlayer.state == "paused") {
             this.avPlayer.play()
             this.videoState.paused = false
-          } else {
+          } else if (this.avPlayer.state == "completed") {
+            this.currentPosition = 0
+            this.avPlayer.seek(0, media.SeekMode.SEEK_CLOSEST)
+            this.avPlayer.play()
+            this.videoState.paused = false
+          } else if (this.avPlayer.state == "playing") {
             this.avPlayer.pause()
             this.videoState.paused = true
           }
@@ -370,7 +403,7 @@ export struct AVVideoPlayer {
       this.leftAlignedCircleButton(
         $r("sys.symbol.goforward_10"),
         () => {
-          this.avPlayer?.seek(Math.min(this.max, this.currentPosition + 10 * 1000))
+          this.avPlayer?.seek(Math.min(this.max, this.currentPosition + 10 * 1000), media.SeekMode.SEEK_CLOSEST)
         }
       )
 
@@ -953,9 +986,15 @@ export struct AVVideoPlayer {
         this.avPlayer = avPlayer
         avPlayer.on("timeUpdate", (time: number) => {
           this.currentPosition = time
+          if (!this.movingProgressBar) {
+            this.movingPosition = time
+          }
         })
         avPlayer.on('seekDone', (seekDoneTime: number) => {
           this.currentPosition = seekDoneTime
+          if (!this.movingProgressBar) {
+            this.movingPosition = seekDoneTime
+          }
         });
         avPlayer.on("durationUpdate", (duration: number) => {
           this.max = duration
@@ -969,14 +1008,16 @@ export struct AVVideoPlayer {
           if (state == "paused") {
             console.error("paused")
             this.videoState.paused = true
+          } else if (state == "completed") {
+            this.videoState.paused = true
+            avPlayer.pause()
           } else if (state == "playing") {
             console.error("playing")
             this.videoState.paused = false
           } else if (state == "idle") {
             console.error("idle")
-            /*
             this.videoState.paused = true
-            avPlayer.pause()*/
+            avPlayer.pause()
           } else if (state == "initialized") {
             console.error("initialized")
             avPlayer.surfaceId = this.xComponentController.getXComponentSurfaceId()

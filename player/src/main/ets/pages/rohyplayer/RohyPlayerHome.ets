@@ -56,6 +56,7 @@ export struct RohyPlayerHome {
   BottomTabBuilder(item: FooterTab, index: number) {
     Column() {
       SymbolGlyph(item.getIcon())
+        .symbolEffect(new BounceSymbolEffect(EffectScope.WHOLE, EffectDirection.DOWN), this.currentBottomIndex == index)
         .fontSize("24fp")
         .fontColor([index == this.currentBottomIndex ? $r("app.color.brand") : $r("app.color.font_tertiary")])
       Text(item.getName())
@@ -107,8 +108,8 @@ export struct RohyPlayerHome {
         .tabBar(this.BottomTabBuilder(this.tabs[3], 1))
       }
       .scrollable(false)
-      .onChange((index) => {
-        this.currentBottomIndex = index
+      .onAnimationStart((index, targetIndex) => {
+        this.currentBottomIndex = targetIndex
       })
       .barWidth(
         this.currentWidthBreakpoint === BreakpointConstants.BREAKPOINT_LG ?
