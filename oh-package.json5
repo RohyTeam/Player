@@ -3,8 +3,7 @@
   "description": "",
   "dependencies": {
     "@pura/harmony-utils": "^1.2.5",
-    "@pura/harmony-dialog": "^1.1.1",
-    "@ohos/danmakuflamemaster": "^2.1.0"
+    "@pura/harmony-dialog": "^1.1.1"
   },
   "devDependencies": {
     "@ohos/hypium": "1.0.19",
