@@ -147,6 +147,18 @@
     {
       "name": "import_unsupported_source_desc",
       "value": "我们目前仅支持从本地文件及图库中导入。"
+    },
+    {
+      "name": "service_info",
+      "value": "服务信息与规则"
+    },
+    {
+      "name": "reason_distributed_datasync",
+      "value": "使用应用接续功能需使用此权限，否则将无法在其他设备上打开此设备上的视频"
+    },
+    {
+      "name": "settings_continuation",
+      "value": "流转"
     }
   ]
 }

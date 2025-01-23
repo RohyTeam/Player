@@ -1,6 +1,6 @@
-import { ComposeTitleBar, LengthMetrics, promptAction, SymbolGlyphModifier } from '@kit.ArkUI'
+import { LengthMetrics, promptAction, SymbolGlyphModifier } from '@kit.ArkUI'
 import { fileIo, hash, picker } from '@kit.CoreFileKit'
-import { BusinessError, deviceInfo } from '@kit.BasicServicesKit'
+import { BusinessError } from '@kit.BasicServicesKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
 import { FileStatus, VideoEntityV2, VideoEntityV2Array } from '../../../entity/VideoEntity'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
@@ -11,12 +11,13 @@ import { StringArray } from '../../../entity/Arrays'
 import { showAlert } from '../../../util/AlertUtil'
 import { GridView } from './GridView'
 import { media } from '@kit.MediaKit'
-import { CommonConstants } from '../../../common/constants/CommonConstants'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { dataSharePredicates } from '@kit.ArkData'
-import { openVideo } from '../../../util/PlayerUtil'
-import { common } from '@kit.AbilityKit'
 import { hashByFd } from '../../../util/HashUtil'
+import { SettingsDivider, SettingsGroup, SettingsPage, SettingsRow,
+  SettingsSwitch } from '../../components/SettingsPage'
+import { checkPermissionGrant, requestPermissionsFromUser } from '../../../util/PermissionUtils'
+import { abilityAccessCtrl, common } from '@kit.AbilityKit'
 
 export interface VideoDeleter {
 
@@ -47,7 +48,6 @@ export struct VideoLibraryPage {
   private timeOrName: boolean = true // true for Name, false for time
   @State
   private sortReversed: boolean = false
-
   @State
   searching: string = ""
 
@@ -122,6 +122,7 @@ export struct VideoLibraryPage {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.videolibrary_view_sort_time"))
@@ -205,6 +206,7 @@ export struct VideoLibraryPage {
         }
       )
       .backgroundColor($r("app.color.comp_background_tertiary"))
+
       Button({
         type: ButtonType.Circle
       }) {
@@ -220,6 +222,7 @@ export struct VideoLibraryPage {
       .height(40)
       .bindMenu(this.browseMenus)
       .backgroundColor($r("app.color.comp_background_tertiary"))
+
       Button({
         type: ButtonType.Circle
       }) {
@@ -476,6 +479,7 @@ export struct VideoLibraryPage {
       .scrollBar(BarState.Off)
       .backgroundColor($r("app.color.rohy_settings_background"))
       .width("100%")
+
       Blank()
         .height("28vp")
         .width("100%")
@@ -484,89 +488,76 @@ export struct VideoLibraryPage {
     .width("100%")
   }
 
+  @State
+  settings$continuation: boolean = false
+
   @Builder
   settings() {
     Column() {
       Blank()
         .height(12)
         .width("100%")
-      List({ space: 12 }) {
-        ListItem() {
-          Row() {
-            Column() {
-              Row() {
-                Button() {
-                  Row() {
-                    SymbolGlyph($r("sys.symbol.questionmark_circle"))
-                      .fontColor([$r("app.color.icon_primary")])
-                      .fontSize(24)
-                      .margin(12)
-                    Text($r("app.string.questions"))
-                      .fontColor($r("app.color.font_primary"))
-                    Blank()
-                      .layoutWeight(1)
-                  }
-                  .alignItems(VerticalAlign.Center)
+      SettingsPage() {
+        SettingsGroup() {
+          SettingsSwitch({
+            settingsTitle: $r("app.string.settings_continuation"),
+            switchValue: this.settings$continuation,
+            switchEvent: {
+              action: (value: boolean) => {
+                if (this.settings$continuation) {
+                  PreferencesUtil.putSync("continuation", false)
+                  this.settings$continuation = false
+                } else {
+                  requestPermissionsFromUser(getContext(this) as common.UIAbilityContext, "ohos.permission.DISTRIBUTED_DATASYNC")
+                    .then((value: boolean) => {
+                      if (value) {
+                        PreferencesUtil.putSync("continuation", true)
+                        this.settings$continuation = true
+                      } else {
+                        PreferencesUtil.putSync("continuation", false)
+                        this.settings$continuation = false
+                      }
+                    })
                 }
-                .onClick(() => {
-                  promptAction.showToast({
-                    'message': $r("app.string.coming_soon")
-                  })
-                })
-                .width("100%")
-                .height("100%")
-                .borderRadius(10)
-                .type(ButtonType.Normal)
-                .backgroundColor($r("app.color.rohy_settings_card"))
               }
-              .height("48vp")
-              .width("100%")
-
-              Divider()
-                .margin({
-                  left: 48,
-                  right: 12
-                })
-              Row() {
-                Button() {
-                  Row() {
-                    SymbolGlyph($r("sys.symbol.info_circle"))
-                      .fontColor([$r("app.color.icon_primary")])
-                      .fontSize(24)
-                      .margin(12)
-                    Text($r("app.string.about"))
-                      .fontColor($r("app.color.font_primary"))
-                    Blank()
-                      .layoutWeight(1)
-                  }
-                  .alignItems(VerticalAlign.Center)
-                }
-                .onClick(() => {
-                  promptAction.showToast({
-                    'message': $r("app.string.coming_soon")
-                  })
-                })
-                .width("100%")
-                .height("100%")
-                .borderRadius(10)
-                .type(ButtonType.Normal)
-                .backgroundColor($r("app.color.rohy_settings_card"))
-              }
-              .height("48vp")
-              .width("100%")
             }
-          }
-          .padding(4)
-          .borderRadius(12)
-          .backgroundColor($r("app.color.rohy_settings_card"))
-          .width("90%")
+          })
         }
-        .width("100%")
+        SettingsGroup() {
+          SettingsRow({
+            settingsTitle: $r("app.string.questions"),
+            clickEvent: {
+              action: () => {
+                promptAction.showToast({
+                  'message': $r("app.string.coming_soon")
+                })
+              }
+            }
+          })
+          SettingsDivider()
+          SettingsRow({
+            settingsTitle: $r("app.string.service_info"),
+            clickEvent: {
+              action: () => {
+                promptAction.showToast({
+                  'message': $r("app.string.coming_soon")
+                })
+              }
+            }
+          })
+          SettingsDivider()
+          SettingsRow({
+            settingsTitle: $r("app.string.about"),
+            clickEvent: {
+              action: () => {
+                promptAction.showToast({
+                  'message': $r("app.string.coming_soon")
+                })
+              }
+            }
+          })
+        }
       }
-      .scrollBar(BarState.Off)
-      .backgroundColor($r("app.color.rohy_settings_background"))
-      .height("100%")
-      .width("100%")
     }
     .backgroundColor($r("app.color.rohy_settings_background"))
     .height("100%")
@@ -619,7 +610,8 @@ export struct VideoLibraryPage {
               })
           }
           if (duplicated) {
-            showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"))
+            showAlert(this.getUIContext(), $r("app.string.duplicated_imports"),
+              $r("app.string.duplicated_imports_desc"))
           }
         }
       })
@@ -659,17 +651,20 @@ export struct VideoLibraryPage {
         }
 
         if (duplicated) {
-          showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"), () => {
-            if (unsupported) {
-              showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"), $r("app.string.import_unsupported_source_desc"))
-            }
-          })
+          showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"),
+            () => {
+              if (unsupported) {
+                showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"),
+                  $r("app.string.import_unsupported_source_desc"))
+              }
+            })
         } else if (unsupported) {
-          showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"), $r("app.string.import_unsupported_source_desc"))
+          showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"),
+            $r("app.string.import_unsupported_source_desc"))
         }
       }).catch((err: BusinessError) => {
-        console.error(`Invoke documentViewPicker.select failed, code is ${err.code}, message is ${err.message}`);
-      })
+      console.error(`Invoke documentViewPicker.select failed, code is ${err.code}, message is ${err.message}`);
+    })
   }
 
   private sort() {
@@ -694,6 +689,18 @@ export struct VideoLibraryPage {
         })
       }
     }
+  }
+
+  aboutToAppear(): void {
+    checkPermissionGrant("ohos.permission.DISTRIBUTED_DATASYNC")
+      .then((status: abilityAccessCtrl.GrantStatus) => {
+        if (status == abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
+          this.settings$continuation = true
+        }
+        if (!PreferencesUtil.getBooleanSync("continuation", false)) {
+          this.settings$continuation = false
+        }
+      })
   }
 
 }

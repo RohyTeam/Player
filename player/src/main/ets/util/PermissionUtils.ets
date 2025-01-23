@@ -25,19 +25,21 @@ export async function checkPermissionGrant(permission: Permissions): Promise<abi
   return grantStatus;
 }
 
-export function requestPermissionsFromUser(context: common.UIAbilityContext, permissions: Permissions): void {
-  let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-  atManager.requestPermissionsFromUser(context, [permissions]).then((data) => {
-    let grantStatus: Array<number> = data.authResults;
-    let length: number = grantStatus.length;
-    for (let i = 0; i < length; i++) {
-      if (grantStatus[i] === 0) {
-        // approved
-      } else {
-        // not approved
+export function requestPermissionsFromUser(context: common.UIAbilityContext, permissions: Permissions): Promise<boolean> {
+  return new Promise((resultReturner) => {
+    let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
+    atManager.requestPermissionsFromUser(context, [permissions]).then((data) => {
+      let grantStatus: Array<number> = data.authResults;
+      let length: number = grantStatus.length;
+      for (let i = 0; i < length; i++) {
+        if (grantStatus[i] === 0) {
+          resultReturner(true)
+        } else {
+          resultReturner(false)
+        }
       }
-    }
-  }).catch((err: BusinessError) => {
-    console.error(`Failed to request permissions from user. Code is ${err.code}, message is ${err.message}`);
+    }).catch((err: BusinessError) => {
+      console.error(`Failed to request permissions from user. Code is ${err.code}, message is ${err.message}`);
+    })
   })
 }

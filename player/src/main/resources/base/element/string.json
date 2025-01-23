@@ -167,6 +167,14 @@
     {
       "name": "reason_distributed_datasync",
       "value": "To play local videos across devices"
+    },
+    {
+      "name": "service_info",
+      "value": "Service Info"
+    },
+    {
+      "name": "settings_continuation",
+      "value": "Continuation"
     }
   ]
 }

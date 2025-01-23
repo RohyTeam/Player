@@ -227,6 +227,26 @@
     {
       "name": "rohy_back_button",
       "value": "#ff202224"
+    },
+    {
+      "name": "settings_icon_blue",
+      "value": "#085af3"
+    },
+    {
+      "name": "settings_icon_green",
+      "value": "#32c85a"
+    },
+    {
+      "name": "settings_icon_orange",
+      "value": "#f9a01f"
+    },
+    {
+      "name": "settings_icon_red",
+      "value": "#fc6957"
+    },
+    {
+      "name": "settings_icon_purple",
+      "value": "#7655fe"
     }
   ]
 }

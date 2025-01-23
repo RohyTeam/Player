@@ -78,11 +78,6 @@ export default class PlayerAbility extends UIAbility {
         hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
         return;
       }
-      let asked = PreferencesUtil.getBooleanSync("askPermissions", false)
-      if (!asked) {
-        requestPermissionsFromUser(this.context, "ohos.permission.DISTRIBUTED_DATASYNC")
-        PreferencesUtil.putSync("askPermissions", true)
-      }
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
     });
   }

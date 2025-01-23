@@ -249,6 +249,9 @@ export struct AVVideoPlayer {
     .height("100%")
   }
 
+  @State
+  backTrigger: boolean = false
+
   /**
    * 播放器控制器的上方显示内容
    */
@@ -258,11 +261,22 @@ export struct AVVideoPlayer {
       this.leftAlignedCircleButton(
         $r("sys.symbol.chevron_left"),
         () => {
+          this.backTrigger = true
+          this.avPlayer?.pause()
           this.avPlayer?.release()
             .then(() => {
-              (getContext(this) as common.UIAbilityContext).terminateSelf()
-                .then(() => {
-                })
+              if (this.url.startsWith("dfs:")) {
+                disconnectDevice(this.videoHolder)
+                  .then(() => {
+                    (getContext(this) as common.UIAbilityContext).terminateSelf()
+                      .then(() => {
+                      })
+                  })
+              } else {
+                (getContext(this) as common.UIAbilityContext).terminateSelf()
+                  .then(() => {
+                  })
+              }
             })
         }
       )
@@ -811,21 +825,24 @@ export struct AVVideoPlayer {
   }
 
   aboutToDisappear(): void {
-    this.avPlayer?.release()
-      .then(() => {
-        if (this.url.startsWith("dfs:")) {
-          disconnectDevice(this.videoHolder)
-            .then(() => {
-              (getContext(this) as common.UIAbilityContext).terminateSelf()
-                .then(() => {
-                })
-            })
-        } else {
-          (getContext(this) as common.UIAbilityContext).terminateSelf()
-            .then(() => {
-            })
-        }
-      })
+    if (!this.backTrigger) {
+      this.avPlayer?.pause()
+      this.avPlayer?.release()
+        .then(() => {
+          if (this.url.startsWith("dfs:")) {
+            disconnectDevice(this.videoHolder)
+              .then(() => {
+                (getContext(this) as common.UIAbilityContext).terminateSelf()
+                  .then(() => {
+                  })
+              })
+          } else {
+            (getContext(this) as common.UIAbilityContext).terminateSelf()
+              .then(() => {
+              })
+          }
+        })
+    }
   }
 
   private updateSpeed(speed: media.PlaybackSpeed) {

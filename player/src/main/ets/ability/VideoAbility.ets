@@ -6,6 +6,7 @@ import { EventData } from "../pages/VideoIndex";
 import { connectDevice, copyFileToContinueDir, disconnectDevice } from "../util/ContinueUtil";
 import { distributedDeviceManager } from "@kit.DistributedServiceKit";
 import { JSON } from "@kit.ArkTS";
+import { PreferencesUtil } from "@pura/harmony-utils";
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
@@ -93,6 +94,13 @@ export default class VideoAbility extends UIAbility {
       })
     } else if (want.parameters) { // 如果是打开软件后通过 picker 打开视频
       AppStorage.setOrCreate("comesFromApp", true)
+      // 如果用户没有开启接续
+      if (!PreferencesUtil.getBooleanSync("continuation", false)) {
+        console.error("user didnt turn on continuation")
+        this.context.setMissionContinueState(AbilityConstant.ContinueState.INACTIVE, (result) => {
+          console.info(`setMissionContinueState: ${JSON.stringify(result)}`);
+        });
+      }
       this.context.eventHub.on('getAbilityData', (data: EventData): void => {
         data.launchWant = want
       })
