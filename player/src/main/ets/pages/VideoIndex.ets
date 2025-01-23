@@ -1,5 +1,5 @@
 import { Want } from '@kit.AbilityKit';
-import { NativePlayerPage } from './player/NativePlayerPage';
+import { AVVideoPlayer } from './player/AVVideoPlayer';
 
 class EventData {
   launchWant: Want | undefined = undefined
@@ -26,7 +26,7 @@ struct VideoIndex {
 
   build() {
     Stack() {
-      NativePlayerPage({
+      AVVideoPlayer({
         title: this.title,
         url: this.url
       })
