@@ -66,7 +66,7 @@
     },
     {
       "name": "videolibrary_view_mode_grid",
-      "value": "图标"
+      "value": "网格"
     },
     {
       "name": "videolibrary_view_sort_name",
@@ -139,6 +139,14 @@
     {
       "name": "surfaceFillingMode_stretch",
       "value": "拉伸"
+    },
+    {
+      "name": "import_unsupported_source",
+      "value": "不支持的来源"
+    },
+    {
+      "name": "import_unsupported_source_desc",
+      "value": "我们目前仅支持从本地文件及图库中导入。"
     }
   ]
 }

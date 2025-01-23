@@ -44,6 +44,7 @@
         "startWindowBackground": "$color:start_window_background",
         "orientation": "auto_rotation_landscape",
         "launchType": "specified",
+        "continuable": true,
         "exported": true,
         "removeMissionAfterTerminate": true,
         "backgroundModes": ["audioPlayback", "taskKeeping", "dataTransfer"],
@@ -92,6 +93,14 @@
       },
       {
         name: "ohos.permission.FILE_ACCESS_PERSIST"
+      },
+      {
+        name: "ohos.permission.DISTRIBUTED_DATASYNC",
+        reason: "$string:reason_distributed_datasync",
+        usedScene: {
+          abilities: ["VideoAbility"],
+          when: "always",
+        }
       },
       {
         name: "ohos.permission.KEEP_BACKGROUND_RUNNING",

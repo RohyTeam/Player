@@ -13,7 +13,8 @@ export class VideoLibraryDatabase {
     'LOCATION TEXT,' +
     'TITLE TEXT,' +
     'ADDED_TIME INTEGER,' +
-    'FILE_HASH TEXT' +
+    'FILE_HASH TEXT,' +
+    'FILE_SOURCE TEXT' +
     ');';
 
   private static databaseConfig: relationalStore.StoreConfig = {
@@ -32,13 +33,17 @@ export class VideoLibraryDatabase {
       if (store.version === 0) {
         store.executeSql(VideoLibraryDatabase.SQL_CREATE_TABLE)
         store.version = 1
+      } else if (store.version == 1) {
+        store.executeSql('\n' +
+          'ALTER TABLE VideoLibrary ADD COLUMN FILE_SOURCE TEXT DEFAULT `LOCAL_FILE`;');
+        store.version = 2
       }
 
       hilog.debug(0x0, "database", "created video database")
     })
   }
 
-  public static add(context: common.Context, uri: string): Promise<VideoEntity> {
+  public static addFromLocalFile(context: common.Context, uri: string): Promise<VideoEntity> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -63,14 +68,16 @@ export class VideoLibraryDatabase {
                     "LOCATION": uri,
                     "TITLE": FileUtil.getFileName(uri),
                     "ADDED_TIME": Date.now(),
-                    "FILE_HASH": hashValue
+                    "FILE_HASH": hashValue,
+                    "FILE_SOURCE": "LOCAL_FILE"
                   }
                 ).then(() => {
                   resultReturner({
                     uri: uri,
                     title: FileUtil.getFileName(uri),
                     addedTime: Date.now(),
-                    hash: hashValue
+                    hash: hashValue,
+                    fileSource: "local_file"
                   })
                 })
               })
@@ -78,6 +85,36 @@ export class VideoLibraryDatabase {
           .catch(() => {
 
           })
+      })
+    })
+  }
+
+  public static addFromPhotos(context: common.Context, uri: string, displayName: string, photoHash: string): Promise<VideoEntity> {
+    return new Promise((resultReturner) => {
+      relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
+        if (err) {
+          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          return;
+        }
+
+        store.insert(
+          "VideoLibrary",
+          {
+            "LOCATION": uri,
+            "TITLE": displayName,
+            "ADDED_TIME": Date.now(),
+            "FILE_HASH": photoHash,
+            "FILE_SOURCE": "PHOTOS"
+          }
+        ).then(() => {
+          resultReturner({
+            uri: uri,
+            title: displayName,
+            addedTime: Date.now(),
+            hash: photoHash,
+            fileSource: "photos"
+          })
+        })
       })
     })
   }
@@ -106,62 +143,12 @@ export class VideoLibraryDatabase {
                 uri: resultSet.getString(resultSet.getColumnIndex("LOCATION")),
                 title: resultSet.getString(resultSet.getColumnIndex("TITLE")),
                 addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
-                hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH"))
+                hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH")),
+                fileSource: resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase(),
               }
               videos.push(video)
             }
 
-            resultReturner(videos)
-          }
-        })
-      })
-    })
-  }
-
-  public static list(context: common.Context): Promise<Array<VideoEntity>> {
-    return new Promise((resultReturner) => {
-      relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
-        if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
-          return;
-        }
-        store.query(new relationalStore.RdbPredicates("VideoLibrary"), async (err: BusinessError, resultSet) => {
-          if (err) {
-            hilog.error(0x2, "database", `Failed to query data. Code:${err.code}, message:${err.message}`)
-            resultReturner(new Array())
-            return
-          }
-          if (resultSet.rowCount == 0) {
-            console.error("there are no data in database")
-            resultReturner(new Array())
-          } else {
-            let videos = new Array<VideoEntity>()
-
-            console.error(`starting listing data`)
-            while (resultSet.goToNextRow()) {
-              let video: VideoEntity = {
-                uri: resultSet.getString(resultSet.getColumnIndex("LOCATION")),
-                title: resultSet.getString(resultSet.getColumnIndex("TITLE")),
-                addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
-                hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH"))
-              }
-              try {
-                console.error(`activating data`)
-                await fileShare.activatePermission([{
-                  uri: video.uri,
-                  operationMode: 0b1
-                }])
-                let hashValue = await hash.hash(FileUtil.getFilePath(video.uri), "sha256")
-                if (hashValue != video.hash) {
-                  VideoLibraryDatabase.deleteByHash(context, video.hash)
-                } else {
-                  videos.push(video)
-                }
-              } catch (e) {
-                console.error(`error happend: ${JSON.stringify(e)}`)
-              }
-            }
-            console.error(`returning data`)
             resultReturner(videos)
           }
         })

@@ -3,7 +3,7 @@ import { media } from "@kit.MediaKit";
 import { fileIo, hash, picker } from "@kit.CoreFileKit";
 import { convertNumberToDurationString } from "../../util/TimeUtil";
 import { common } from "@kit.AbilityKit";
-import { curves, LengthMetrics, promptAction, SymbolGlyphModifier } from "@kit.ArkUI";
+import { curves, LengthMetrics, SymbolGlyphModifier } from "@kit.ArkUI";
 import { StringArray } from "../../entity/Arrays";
 import { SubtitleLibraryDatabase } from "../../database/SubtitleLibraryDatabase";
 import { FileUtil } from "@pura/harmony-utils";
@@ -13,6 +13,7 @@ import { AudioEntity, Audios } from "../../entity/AudioEntity";
 import { JSON } from "@kit.ArkTS";
 import { compile } from "../../lib/ass_compiler";
 import { AssSubtitleView } from "../subtitle/AssSubtitleView";
+import { connectDevice, disconnectDevice } from "../../util/ContinueUtil";
 
 @Observed
 export class VideoState {
@@ -37,6 +38,9 @@ export struct AVVideoPlayer {
   @Prop
   @Require
   url: string
+  @Prop
+  @Require
+  videoHolder: string
 
   @State
   private avPlayer: media.AVPlayer | undefined = undefined
@@ -257,6 +261,8 @@ export struct AVVideoPlayer {
           this.avPlayer?.release()
             .then(() => {
               (getContext(this) as common.UIAbilityContext).terminateSelf()
+                .then(() => {
+                })
             })
         }
       )
@@ -800,10 +806,25 @@ export struct AVVideoPlayer {
     .padding(0)
   }
 
-  onBackPress(): boolean | void {
+  aboutToAppear(): void {
+    console.error(`received screen width & height: ${this.screenWidth}, ${this.screenHeight}`)
+  }
+
+  aboutToDisappear(): void {
     this.avPlayer?.release()
       .then(() => {
-        (getContext(this) as common.UIAbilityContext).terminateSelf()
+        if (this.url.startsWith("dfs:")) {
+          disconnectDevice(this.videoHolder)
+            .then(() => {
+              (getContext(this) as common.UIAbilityContext).terminateSelf()
+                .then(() => {
+                })
+            })
+        } else {
+          (getContext(this) as common.UIAbilityContext).terminateSelf()
+            .then(() => {
+            })
+        }
       })
   }
 
@@ -942,7 +963,9 @@ export struct AVVideoPlayer {
         return `${((this.screenHeight / 9 * 16) / this.screenWidth) * 100}%`
       }
     } else {
-      if ((this.surfaceHeight / this.surfaceWidth) > (this.screenHeight / this.screenWidth)) {
+      if ((this.surfaceHeight / this.surfaceWidth) == (this.screenHeight / this.screenWidth)) {
+        return "100%"
+      } else if ((this.surfaceHeight / this.surfaceWidth) > (this.screenHeight / this.screenWidth)) {
         return `${((this.screenHeight / this.surfaceHeight * this.surfaceWidth) / this.screenWidth) * 100}%`
       } else {
         return "100%"
@@ -966,21 +989,47 @@ export struct AVVideoPlayer {
         return "100%"
       }
     } else {
-      if ((this.surfaceHeight / this.surfaceWidth) > (this.screenHeight / this.screenWidth)) {
+      if ((this.surfaceHeight / this.surfaceWidth) == (this.screenHeight / this.screenWidth)) {
+        return "100%"
+      } else if ((this.surfaceHeight / this.surfaceWidth) > (this.screenHeight / this.screenWidth)) {
         return "100%"
       } else {
-        return `${((this.screenWidth / this.surfaceWidth * this.surfaceHeight) / this.screenHeight) * 100}%`
+        console.error(`height percent: ${`${((this.surfaceHeight / this.surfaceWidth * this.screenWidth) / this.screenHeight) * 100}%`}`)
+        return `${((this.surfaceHeight / this.surfaceWidth * this.screenWidth) / this.screenHeight) * 100}%`
       }
     }
   }
 
   private initAvPlayer() {
-    this.findMetadata(this.url)
-      .then((videoMetadata) => {
-        this.videoMetadata = videoMetadata
-        this.surfaceWidth = parseInt(this.videoMetadata.videoWidth!)
-        this.surfaceHeight = parseInt(this.videoMetadata.videoHeight!)
-      })
+    let finderUrl = this.url
+    if (finderUrl.startsWith("dfs:")) {
+      finderUrl = finderUrl.substring(4)
+      connectDevice(this.videoHolder)
+        .then(() => {
+          console.error("connected to another device file system")
+          this.findMetadata(finderUrl)
+            .then((videoMetadata) => {
+              this.videoMetadata = videoMetadata
+              this.surfaceWidth = parseInt(this.videoMetadata.videoWidth!)
+              this.surfaceHeight = parseInt(this.videoMetadata.videoHeight!)
+            })
+          this.createAvPlayer()
+        })
+        .catch((error: BusinessError) => {
+          console.error(`error when connect file system: ${JSON.stringify(error)}`)
+        })
+    } else {
+      this.findMetadata(finderUrl)
+        .then((videoMetadata) => {
+          this.videoMetadata = videoMetadata
+          this.surfaceWidth = parseInt(this.videoMetadata.videoWidth!)
+          this.surfaceHeight = parseInt(this.videoMetadata.videoHeight!)
+        })
+      this.createAvPlayer()
+    }
+  }
+
+  private createAvPlayer() {
     media.createAVPlayer()
       .then((avPlayer: media.AVPlayer) => {
         this.avPlayer = avPlayer
@@ -1082,39 +1131,58 @@ export struct AVVideoPlayer {
           console.error(`Invoke avPlayer failed, code is ${err.code}, message is ${err.message}`);
           avPlayer.reset();
         });
-        console.error("hashing video")
-        hash.hash(FileUtil.getFilePath(this.url), "sha256")
-          .then((fileHash) => {
-            console.error("opening file")
-            fileIo.open(this.url)
-              .then((file) => {
-                console.error("getting subtitles")
-                SubtitleLibraryDatabase.get(getContext(this), fileHash)
-                  .then((subtitleUris) => {
-                    avPlayer.url = `fd://${file.fd}`
-                    subtitleUris.forEach(subtitleUrl => {
-                      fileIo.open(subtitleUrl)
-                        .then((subtitleFile) => {
-                          hash.hash(subtitleFile.path, "sha256")
-                            .then((subtitleHash) => {
-                              fileIo.readText(subtitleFile.path)
-                                .then((readText) => {
-                                  let compiledASS = compile(readText, void 0)
-                                  let fileName = FileUtil.getFileName(subtitleUrl)
-                                  this.subtitleHashes.push(subtitleHash)
-                                  this.availableSubtitles.push({
-                                    index: this.availableSubtitles.length,
-                                    name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
-                                    language: "Ukn",
-                                    compiledASS: compiledASS
+        if (this.url.startsWith("file://media")) {
+          console.error("opening file")
+          fileIo.open(this.url)
+            .then((file) => {
+              console.error("playing video")
+              avPlayer.url = `fd://${file.fd}`
+            })
+        } else if (this.url.startsWith("file://")) {
+          console.error("hashing video")
+          hash.hash(FileUtil.getFilePath(this.url), "sha256")
+            .then((fileHash) => {
+              console.error("opening file")
+              fileIo.open(this.url)
+                .then((file) => {
+                  console.error("getting subtitles")
+                  SubtitleLibraryDatabase.get(getContext(this), fileHash)
+                    .then((subtitleUris) => {
+                      avPlayer.url = `fd://${file.fd}`
+                      subtitleUris.forEach(subtitleUrl => {
+                        fileIo.open(subtitleUrl)
+                          .then((subtitleFile) => {
+                            hash.hash(subtitleFile.path, "sha256")
+                              .then((subtitleHash) => {
+                                fileIo.readText(subtitleFile.path)
+                                  .then((readText) => {
+                                    let compiledASS = compile(readText, void 0)
+                                    let fileName = FileUtil.getFileName(subtitleUrl)
+                                    this.subtitleHashes.push(subtitleHash)
+                                    this.availableSubtitles.push({
+                                      index: this.availableSubtitles.length,
+                                      name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
+                                      language: "Ukn",
+                                      compiledASS: compiledASS
+                                    })
                                   })
-                                })
-                            })
-                        })
+                              })
+                          })
+                      })
                     })
-                  })
-              })
-          })
+                })
+            })
+        } else if (this.url.startsWith("dfs:")) {
+          console.error("opening file")
+          fileIo.open(this.url.substring(4))
+            .then((file) => {
+              console.error("playing video")
+              avPlayer.url = `fd://${file.fd}`
+            })
+            .catch((error: BusinessError) => {
+              console.error(`error occurs when accessing remote files: ${JSON.stringify(error)}`)
+            })
+        }
       })
   }
 

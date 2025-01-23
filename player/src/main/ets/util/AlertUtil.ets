@@ -2,6 +2,7 @@ export function showAlert(
   context: UIContext,
   title: ResourceStr,
   text: ResourceStr,
+  onClose?: () => void
 ) {
   context.showAlertDialog(
     {
@@ -22,11 +23,11 @@ export function showAlert(
       cancel: () => {
       },
       onWillDismiss: (dismissDialogAction: DismissDialogAction) => {
-        if (dismissDialogAction.reason == DismissReason.PRESS_BACK) {
+        if (dismissDialogAction.reason == DismissReason.PRESS_BACK || dismissDialogAction.reason == DismissReason.TOUCH_OUTSIDE) {
           dismissDialogAction.dismiss()
         }
-        if (dismissDialogAction.reason == DismissReason.TOUCH_OUTSIDE) {
-          dismissDialogAction.dismiss()
+        if (onClose) {
+          onClose()
         }
       }
     })

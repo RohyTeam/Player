@@ -155,6 +155,18 @@
     {
       "name": "surfaceFillingMode_16by9",
       "value": "16: 9"
+    },
+    {
+      "name": "import_unsupported_source",
+      "value": "Unsupported"
+    },
+    {
+      "name": "import_unsupported_source_desc",
+      "value": "Now we only accept imports from local files and photos."
+    },
+    {
+      "name": "reason_distributed_datasync",
+      "value": "To play local videos across devices"
     }
   ]
 }

@@ -1,17 +1,15 @@
-import { FileStatus, VideoEntity, VideoEntityV2, VideoEntityV2Array } from "../../../entity/VideoEntity"
-import Want from "@ohos.app.ability.Want"
+import { FileSources, FileStatus, VideoEntityV2, VideoEntityV2Array } from "../../../entity/VideoEntity"
 import common from "@ohos.app.ability.common"
 import { BreakpointConstants } from "../../../common/constants/BreakpointConstants"
 import { media } from "@kit.MediaKit"
 import { VideoDeleter } from "./VideoLibraryPage"
 import { fileIo, fileShare, hash } from "@kit.CoreFileKit"
-import { deviceInfo } from "@kit.BasicServicesKit"
-import { CommonConstants } from "../../../common/constants/CommonConstants"
 import { convertNumberToDurationString } from "../../../util/TimeUtil"
 import { DateUtil, FileUtil } from "@pura/harmony-utils"
 import { LengthMetrics } from "@kit.ArkUI"
 import { DialogHelper } from "@pura/harmony-dialog"
 import { VideoLibraryDatabase } from "../../../database/VideoLibraryDatabase"
+import { openVideo } from "../../../util/PlayerUtil"
 
 @Component
 export struct GridView {
@@ -50,22 +48,41 @@ export struct GridView {
                     this.findMetadata(video)
                     this.findCover(video)
                   } else if (video.status == FileStatus.None) {
-                    fileShare.activatePermission([{
-                      uri: video.uri,
-                      operationMode: 0b1
-                    }])
-                      .then(() => {
-                        hash.hash(FileUtil.getFilePath(video.uri), "sha256")
-                          .then((fileHash) => {
-                            if (fileHash != video.hash) {
-                              VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
-                            } else {
-                              video.status = FileStatus.Authorized
-                              this.findMetadata(video)
-                              this.findCover(video)
-                            }
-                          })
-                      })
+                    if (video.fileSource == FileSources.LOCAL_FILE) {
+                      fileShare.activatePermission([{
+                        uri: video.uri,
+                        operationMode: 0b1
+                      }])
+                        .then(() => {
+                          hash.hash(FileUtil.getFilePath(video.uri), "sha256")
+                            .then((fileHash) => {
+                              if (fileHash != video.hash) {
+                                video.status = FileStatus.Disappear
+                                this.deleter.action(video)
+                              } else {
+                                video.status = FileStatus.Authorized
+                                this.findMetadata(video)
+                                this.findCover(video)
+                              }
+                            })
+                        })
+                        .catch(() => {
+                          video.status = FileStatus.Disappear
+                          this.deleter.action(video)
+                        })
+                    } else if (video.fileSource == FileSources.PHOTOS) {
+                      // 由于用户无法直接修改视频在相册里的名称（除非删除）所以只验证文件是否存在，而不验证是否对的上哈希值
+                      fileIo.open(video.uri)
+                        .then((file) => {
+                          video.status = FileStatus.Authorized
+                          this.findMetadata(video)
+                          this.findCover(video)
+                        })
+                        .catch(() => {
+                          video.status = FileStatus.Disappear
+                          this.deleter.action(video)
+                        })
+                    }
                   }
                 })
             }
@@ -162,6 +179,7 @@ struct VideoRow {
             if (this.covers[this.video.hash] != undefined) {
               Image(this.covers[this.video.hash])
                 .width("100%")
+                .aspectRatio(4 / 3)
                 .borderRadius(10)
             }
             Text(this.video.title)
@@ -200,17 +218,7 @@ struct VideoRow {
           .alignItems(HorizontalAlign.Start)
         }
         .onClick(() => {
-          let context = getContext(this) as common.UIAbilityContext
-          let want: Want = {
-            bundleName: 'org.rohy.player',
-            abilityName: 'VideoAbility',
-            parameters: {
-              'url': this.video.uri,
-              'title': this.video.title,
-              'hash': this.video.hash
-            }
-          }
-          context.startAbility(want)
+          openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
         })
         .bindContextMenu(this.contextMenu, ResponseType.LongPress)
         .type(ButtonType.Normal)

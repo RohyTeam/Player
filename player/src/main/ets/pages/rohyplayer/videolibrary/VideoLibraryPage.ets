@@ -1,8 +1,8 @@
 import { ComposeTitleBar, LengthMetrics, promptAction, SymbolGlyphModifier } from '@kit.ArkUI'
-import { hash, picker } from '@kit.CoreFileKit'
+import { fileIo, hash, picker } from '@kit.CoreFileKit'
 import { BusinessError, deviceInfo } from '@kit.BasicServicesKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
-import { VideoEntityV2, VideoEntityV2Array } from '../../../entity/VideoEntity'
+import { FileStatus, VideoEntityV2, VideoEntityV2Array } from '../../../entity/VideoEntity'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
 import { ListView } from './ListView'
 import { getIcon } from '../../../util/IconUtil'
@@ -13,6 +13,10 @@ import { GridView } from './GridView'
 import { media } from '@kit.MediaKit'
 import { CommonConstants } from '../../../common/constants/CommonConstants'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
+import { dataSharePredicates } from '@kit.ArkData'
+import { openVideo } from '../../../util/PlayerUtil'
+import { common } from '@kit.AbilityKit'
+import { hashByFd } from '../../../util/HashUtil'
 
 export interface VideoDeleter {
 
@@ -269,7 +273,7 @@ export struct VideoLibraryPage {
             .width("50%")
             .margin({
               left: 16,
-              right: 16,
+              right: 12,
             })
             .height(40)
             .onChange((value) => {
@@ -450,11 +454,7 @@ export struct VideoLibraryPage {
                 }
                 .onClick(() => {
                   this.showPickerSelection = false
-                  // this.showPhotosPicker()
-
-                  promptAction.showToast({
-                    'message': "由于暂时无法持久化访问媒体库的视频，所以此功能暂时无法使用"
-                  })
+                  this.showPhotosPicker()
                 })
                 .width("100%")
                 .height("100%")
@@ -581,36 +581,46 @@ export struct VideoLibraryPage {
     photoSelectOptions.isPhotoTakingSupported = false // 临时拍一段视频导入进来？谁会这么干。。。
 
     photoPicker.select(photoSelectOptions)
-      .then((photoSelectResult: photoAccessHelper.PhotoSelectResult) => {
+      .then(async (photoSelectResult: photoAccessHelper.PhotoSelectResult) => {
         if (photoSelectResult.photoUris.length == 0) {
           return
         }
+
         let accessor = photoAccessHelper.getPhotoAccessHelper(getContext(this))
+
+        let duplicated = false
         for (let photoUri of photoSelectResult.photoUris) {
-          VideoLibraryDatabase.add(getContext(this), photoUri)
-            .then((video) => {
-              this.videos.push(VideoEntityV2.fromV1(video))
-              this.hashes.push(video.hash)
+          let photoFile = fileIo.openSync(photoUri)
+          let pre1 = await hashByFd(photoFile.fd, "sha256")
+          let pre2 = await hashByFd(photoFile.fd, "sha256")
+          let photoHash = await hashByFd(photoFile.fd, "sha256")
+          if (this.hashes.indexOf(photoHash) >= 0) {
+            duplicated = true
+          } else {
+            let predicates = new dataSharePredicates.DataSharePredicates()
+            predicates.equalTo("uri", photoUri)
+            accessor.getAssets({
+              fetchColumns: [photoAccessHelper.PhotoKeys.TITLE],
+              predicates: predicates
             })
-          /*let predicates = new dataSharePredicates.DataSharePredicates()
-          predicates.equalTo("uri", photoUri)
-          accessor.getAssets({
-            fetchColumns: [photoAccessHelper.PhotoKeys.URI, photoAccessHelper.PhotoKeys.WIDTH,
-              photoAccessHelper.PhotoKeys.HEIGHT, photoAccessHelper.PhotoKeys.TITLE,
-              photoAccessHelper.PhotoKeys.DURATION],
-            predicates: predicates
-          })
-            .then((fetchResult: photoAccessHelper.FetchResult<photoAccessHelper.PhotoAsset>) => {
-              if (fetchResult.getCount() > 0) {
-                fetchResult.getAllObjects()
-                  .then((assets: Array<photoAccessHelper.PhotoAsset>) => {
-                    for (let asset of assets) {
-                      // todo: 处理
-                      console.error(asset.uri)
-                    }
-                  })
-              }
-            })*/
+              .then((fetchResult: photoAccessHelper.FetchResult<photoAccessHelper.PhotoAsset>) => {
+                if (fetchResult.getCount() > 0) {
+                  fetchResult.getFirstObject()
+                    .then((photoAsset: photoAccessHelper.PhotoAsset) => {
+                      VideoLibraryDatabase.addFromPhotos(getContext(this), photoUri, photoAsset.displayName, photoHash)
+                        .then((video) => {
+                          let videoV2 = VideoEntityV2.fromV1(video)
+                          videoV2.status = FileStatus.Authorized
+                          this.videos.push(videoV2)
+                          this.hashes.push(video.hash)
+                        })
+                    })
+                }
+              })
+          }
+          if (duplicated) {
+            showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"))
+          }
         }
       })
   }
@@ -628,21 +638,34 @@ export struct VideoLibraryPage {
         }
 
         let duplicated = false
+        let unsupported = false
         for (let fileUrl of documentSelectResult) {
+          if (!fileUrl.startsWith("file://")) {
+            unsupported = true
+            continue
+          }
           let hashValue = await hash.hash(FileUtil.getFilePath(fileUrl), "sha256")
           if (this.hashes.indexOf(hashValue) >= 0) {
             duplicated = true
           } else {
-            VideoLibraryDatabase.add(getContext(this), fileUrl)
+            VideoLibraryDatabase.addFromLocalFile(getContext(this), fileUrl)
               .then((video) => {
-                this.videos.push(VideoEntityV2.fromV1(video))
+                let videoV2 = VideoEntityV2.fromV1(video)
+                videoV2.status = FileStatus.Authorized
+                this.videos.push(videoV2)
                 this.hashes.push(video.hash)
               })
           }
         }
 
         if (duplicated) {
-          showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"))
+          showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"), () => {
+            if (unsupported) {
+              showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"), $r("app.string.import_unsupported_source_desc"))
+            }
+          })
+        } else if (unsupported) {
+          showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"), $r("app.string.import_unsupported_source_desc"))
         }
       }).catch((err: BusinessError) => {
         console.error(`Invoke documentViewPicker.select failed, code is ${err.code}, message is ${err.message}`);

@@ -1,7 +1,9 @@
 import { Want } from '@kit.AbilityKit';
 import { AVVideoPlayer } from './player/AVVideoPlayer';
+import { deviceInfo } from '@kit.BasicServicesKit';
+import { FileUtil } from '@pura/harmony-utils';
 
-class EventData {
+export class EventData {
   launchWant: Want | undefined = undefined
 }
 
@@ -15,20 +17,35 @@ struct VideoIndex {
   @State
   private url: string | undefined = undefined
 
+  @State
+  private videoHolder: string | undefined = undefined
+
   aboutToAppear(): void {
     console.error("trying to play video")
     let eventData = new EventData()
     getContext(this).eventHub.emit('getAbilityData', eventData)
-    this.url = eventData.launchWant!.parameters!.url as string
-    console.error(`received url is: ${this.url}`)
-    this.title = eventData.launchWant!.parameters!.title as string
+    let want = eventData.launchWant!
+    if (want.parameters!['originalDevice'] != undefined) {
+      console.error("find continue video")
+      if (want.parameters!.originalDevice as string != deviceInfo.ODID) {
+        console.error(`is remote file, url is: ${FileUtil.getUriFromPath(`${getContext(this).distributedFilesDir}/${want.parameters!.hash}.vid`)}`)
+        this.url = `dfs:${getContext(this).distributedFilesDir}/${want.parameters!.hash}.vid`
+        this.videoHolder = want.parameters!.videoHolder as string
+      } else {
+        this.url = want.parameters!.url as string
+      }
+    } else {
+      this.url = want.parameters!.url as string
+    }
+    this.title = want.parameters!.title as string
   }
 
   build() {
     Stack() {
       AVVideoPlayer({
         title: this.title,
-        url: this.url
+        url: this.url,
+        videoHolder: this.videoHolder
       })
     }
     .width("100%")

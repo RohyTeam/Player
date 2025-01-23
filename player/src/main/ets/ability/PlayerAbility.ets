@@ -2,9 +2,10 @@ import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.Ab
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
 import { CommonConstants } from '../common/constants/CommonConstants';
-import { AppUtil } from '@pura/harmony-utils';
+import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { DatabaseManager } from '../database/DatabaseManager';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { requestPermissionsFromUser } from '../util/PermissionUtils';
 
 export default class PlayerAbility extends UIAbility {
 
@@ -76,6 +77,11 @@ export default class PlayerAbility extends UIAbility {
       if (err.code) {
         hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
         return;
+      }
+      let asked = PreferencesUtil.getBooleanSync("askPermissions", false)
+      if (!asked) {
+        requestPermissionsFromUser(this.context, "ohos.permission.DISTRIBUTED_DATASYNC")
+        PreferencesUtil.putSync("askPermissions", true)
       }
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
     });
