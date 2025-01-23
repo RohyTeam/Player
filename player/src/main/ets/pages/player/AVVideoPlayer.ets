@@ -1122,8 +1122,6 @@ export struct AVVideoPlayer {
 
 class VideoPlayerGestureModifier implements GestureModifier {
 
-  supportDoubleTap: boolean = true
-
   private togglePause: () => void
   private showControls: () => void
   private startSpeedUp: () => void
