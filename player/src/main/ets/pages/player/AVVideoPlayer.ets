@@ -211,139 +211,7 @@ export struct AVVideoPlayer {
           .height(this.calculateHeightPercent(this.surfaceFillingMode))
           .width(this.calculateWidthPercent(this.surfaceFillingMode))
           .onAppear(() => {
-            this.findMetadata(this.url)
-              .then((videoMetadata) => {
-                this.videoMetadata = videoMetadata
-                this.surfaceWidth = parseInt(this.videoMetadata.videoWidth!)
-                this.surfaceHeight = parseInt(this.videoMetadata.videoHeight!)
-            })
-            media.createAVPlayer()
-              .then((avPlayer: media.AVPlayer) => {
-                this.avPlayer = avPlayer
-                avPlayer.on("timeUpdate", (time: number) => {
-                  this.currentPosition = time
-                })
-                avPlayer.on('seekDone', (seekDoneTime: number) => {
-                  this.currentPosition = seekDoneTime
-                });
-                avPlayer.on("durationUpdate", (duration: number) => {
-                  this.max = duration
-                })
-                avPlayer.on("subtitleUpdate", (subtitle: media.SubtitleInfo) => {
-                  avPlayer.getTrackDescription()
-                    .then((trackDescriptions) => {
-                    })
-                })
-                avPlayer.on("stateChange", (state: string, reason: media.StateChangeReason) => {
-                  if (state == "paused") {
-                    console.error("paused")
-                    this.videoState.paused = true
-                  } else if (state == "playing") {
-                    console.error("playing")
-                    this.videoState.paused = false
-                  } else if (state == "idle") {
-                    console.error("idle")
-                    /*
-                    this.videoState.paused = true
-                    avPlayer.pause()*/
-                  } else if (state == "initialized") {
-                    console.error("initialized")
-                    avPlayer.surfaceId = this.xComponentController.getXComponentSurfaceId()
-                    avPlayer.prepare();
-                  } else if (state == "prepared") {
-                    console.error("prepared")
-                    avPlayer.play();
-
-                    avPlayer.getTrackDescription()
-                      .then((trackDescriptions) => {
-                        this.subtitleHashes = []
-                        let audioTracks: number[] = []
-                        trackDescriptions.forEach((trackDescription) => {
-                          console.error(`track description: ${
-                          JSON.stringify(
-                            [
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_INDEX],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_TYPE],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_CODEC_MIME],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_DURATION],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_BITRATE],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_WIDTH],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_HEIGHT],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_FRAME_RATE],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_CHANNEL_COUNT],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_SAMPLE_RATE],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_SAMPLE_DEPTH],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_LANGUAGE],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_NAME],
-                              trackDescription[media.MediaDescriptionKey.MD_KEY_HDR_TYPE]
-                            ]
-                          )
-                          }`)
-                          let trackType = trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_TYPE]
-                          if (trackType == 0) {
-                            let index = parseInt(trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_INDEX] as string)
-                            let language = trackDescription[media.MediaDescriptionKey.MD_KEY_LANGUAGE]
-                            let name = trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_NAME]
-                            audioTracks.push(index)
-                            this.availableAudios.push({
-                              index: index,
-                              name: name ? name as string : "?",
-                              language: language ? language as string : "?"
-                            })
-                          }
-
-                        })
-
-                        avPlayer.getSelectedTracks().then((selectedTracks) => {
-                          for (let selectedTrack of selectedTracks) {
-                            if (audioTracks.indexOf(selectedTrack) >= 0) {
-                              this.selectedAudio = selectedTrack
-                              break
-                            }
-                          }
-                        })
-                      })
-                  }
-                })
-
-                avPlayer.on('error', (err: BusinessError) => {
-                  console.error(`Invoke avPlayer failed, code is ${err.code}, message is ${err.message}`);
-                  avPlayer.reset();
-                });
-                console.error("hashing video")
-                hash.hash(FileUtil.getFilePath(this.url), "sha256")
-                  .then((fileHash) => {
-                    console.error("opening file")
-                    fileIo.open(this.url)
-                      .then((file) => {
-                        console.error("getting subtitles")
-                        SubtitleLibraryDatabase.get(getContext(this), fileHash)
-                          .then((subtitleUris) => {
-                            avPlayer.url = `fd://${file.fd}`
-                            subtitleUris.forEach(subtitleUrl => {
-                              fileIo.open(subtitleUrl)
-                                .then((subtitleFile) => {
-                                  hash.hash(subtitleFile.path, "sha256")
-                                    .then((subtitleHash) => {
-                                      fileIo.readText(subtitleFile.path)
-                                        .then((readText) => {
-                                          let compiledASS = compile(readText, void 0)
-                                          let fileName = FileUtil.getFileName(subtitleUrl)
-                                          this.subtitleHashes.push(subtitleHash)
-                                          this.availableSubtitles.push({
-                                            index: this.availableSubtitles.length,
-                                            name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
-                                            language: "Ukn",
-                                            compiledASS: compiledASS
-                                          })
-                                        })
-                                    })
-                                })
-                            })
-                          })
-                      })
-                  })
-              })
+            this.initAvPlayer()
           })
       }
       .backgroundColor(Color.Black)
@@ -356,6 +224,9 @@ export struct AVVideoPlayer {
     .height("100%")
   }
 
+  /**
+   * 播放器控制器的上方显示内容
+   */
   @Builder
   private topBar() {
     Row() {
@@ -390,6 +261,9 @@ export struct AVVideoPlayer {
     })
   }
 
+  /**
+   * 播放器控制器中间留空显示未被遮挡视频内容的部分
+   */
   @Builder
   private surfaceOverlay() {
     Row() {
@@ -410,6 +284,9 @@ export struct AVVideoPlayer {
     )
   }
 
+  /**
+   * 播放器控制器的进度条
+   */
   @Builder
   private progressBar() {
     Row() {
@@ -447,6 +324,9 @@ export struct AVVideoPlayer {
     .width("100%")
   }
 
+  /**
+   * 播放器控制器的下方显示内容
+   */
   @Builder
   private bottomBar() {
     Row() {
@@ -1060,6 +940,142 @@ export struct AVVideoPlayer {
         return `${((this.screenWidth / this.surfaceWidth * this.surfaceHeight) / this.screenHeight) * 100}%`
       }
     }
+  }
+
+  private initAvPlayer() {
+    this.findMetadata(this.url)
+      .then((videoMetadata) => {
+        this.videoMetadata = videoMetadata
+        this.surfaceWidth = parseInt(this.videoMetadata.videoWidth!)
+        this.surfaceHeight = parseInt(this.videoMetadata.videoHeight!)
+      })
+    media.createAVPlayer()
+      .then((avPlayer: media.AVPlayer) => {
+        this.avPlayer = avPlayer
+        avPlayer.on("timeUpdate", (time: number) => {
+          this.currentPosition = time
+        })
+        avPlayer.on('seekDone', (seekDoneTime: number) => {
+          this.currentPosition = seekDoneTime
+        });
+        avPlayer.on("durationUpdate", (duration: number) => {
+          this.max = duration
+        })
+        avPlayer.on("subtitleUpdate", (subtitle: media.SubtitleInfo) => {
+          avPlayer.getTrackDescription()
+            .then((trackDescriptions) => {
+            })
+        })
+        avPlayer.on("stateChange", (state: string, reason: media.StateChangeReason) => {
+          if (state == "paused") {
+            console.error("paused")
+            this.videoState.paused = true
+          } else if (state == "playing") {
+            console.error("playing")
+            this.videoState.paused = false
+          } else if (state == "idle") {
+            console.error("idle")
+            /*
+            this.videoState.paused = true
+            avPlayer.pause()*/
+          } else if (state == "initialized") {
+            console.error("initialized")
+            avPlayer.surfaceId = this.xComponentController.getXComponentSurfaceId()
+            avPlayer.prepare();
+          } else if (state == "prepared") {
+            console.error("prepared")
+            avPlayer.play();
+
+            avPlayer.getTrackDescription()
+              .then((trackDescriptions) => {
+                this.subtitleHashes = []
+                let audioTracks: number[] = []
+                trackDescriptions.forEach((trackDescription) => {
+                  console.error(`track description: ${
+                  JSON.stringify(
+                    [
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_INDEX],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_TYPE],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_CODEC_MIME],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_DURATION],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_BITRATE],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_WIDTH],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_HEIGHT],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_FRAME_RATE],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_CHANNEL_COUNT],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_SAMPLE_RATE],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_SAMPLE_DEPTH],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_LANGUAGE],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_NAME],
+                      trackDescription[media.MediaDescriptionKey.MD_KEY_HDR_TYPE]
+                    ]
+                  )
+                  }`)
+                  let trackType = trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_TYPE]
+                  if (trackType == 0) {
+                    let index = parseInt(trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_INDEX] as string)
+                    let language = trackDescription[media.MediaDescriptionKey.MD_KEY_LANGUAGE]
+                    let name = trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_NAME]
+                    audioTracks.push(index)
+                    this.availableAudios.push({
+                      index: index,
+                      name: name ? name as string : "?",
+                      language: language ? language as string : "?"
+                    })
+                  }
+
+                })
+
+                avPlayer.getSelectedTracks().then((selectedTracks) => {
+                  for (let selectedTrack of selectedTracks) {
+                    if (audioTracks.indexOf(selectedTrack) >= 0) {
+                      this.selectedAudio = selectedTrack
+                      break
+                    }
+                  }
+                })
+              })
+          }
+        })
+
+        avPlayer.on('error', (err: BusinessError) => {
+          console.error(`Invoke avPlayer failed, code is ${err.code}, message is ${err.message}`);
+          avPlayer.reset();
+        });
+        console.error("hashing video")
+        hash.hash(FileUtil.getFilePath(this.url), "sha256")
+          .then((fileHash) => {
+            console.error("opening file")
+            fileIo.open(this.url)
+              .then((file) => {
+                console.error("getting subtitles")
+                SubtitleLibraryDatabase.get(getContext(this), fileHash)
+                  .then((subtitleUris) => {
+                    avPlayer.url = `fd://${file.fd}`
+                    subtitleUris.forEach(subtitleUrl => {
+                      fileIo.open(subtitleUrl)
+                        .then((subtitleFile) => {
+                          hash.hash(subtitleFile.path, "sha256")
+                            .then((subtitleHash) => {
+                              fileIo.readText(subtitleFile.path)
+                                .then((readText) => {
+                                  let compiledASS = compile(readText, void 0)
+                                  let fileName = FileUtil.getFileName(subtitleUrl)
+                                  this.subtitleHashes.push(subtitleHash)
+                                  this.availableSubtitles.push({
+                                    index: this.availableSubtitles.length,
+                                    name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
+                                    language: "Ukn",
+                                    compiledASS: compiledASS
+                                  })
+                                })
+                            })
+                        })
+                    })
+                  })
+              })
+          })
+      })
   }
 
 }
