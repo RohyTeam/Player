@@ -181,7 +181,6 @@ export struct AVVideoPlayer {
 
       Stack() {
         Stack() {
-          // TODO: 字幕层
           if (this.selectedSubtitle != undefined) {
             AssSubtitleView({
               subtitle: this.availableSubtitles[this.selectedSubtitle].compiledASS,
