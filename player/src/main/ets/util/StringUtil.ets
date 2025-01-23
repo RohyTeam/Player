@@ -6,6 +6,10 @@ export function abgrColorStr2rgbColor(colorStr: string): string {
   return `#${colorStr.substring(6, 8)}${colorStr.substring(4, 6)}${colorStr.substring(2, 4)}`.toLowerCase()
 }
 
+export function bgrColorStr2rgbColor(colorStr: string): string {
+  return `#${colorStr.substring(4, 6)}${colorStr.substring(2, 4)}${colorStr.substring(0, 2)}`.toLowerCase()
+}
+
 export function reverseHexColor(content: string): string {
   let result = ""
   for (let char of content) {
