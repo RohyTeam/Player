@@ -54,11 +54,6 @@
             "uris": [
               {
                 "scheme": "file",
-                "type": "general.audio",
-                "linkFeature": "FileOpen"
-              },
-              {
-                "scheme": "file",
                 "type": "general.video",
                 "linkFeature": "FileOpen"
               }
