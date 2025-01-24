@@ -79,6 +79,11 @@ export struct AVVideoPlayer {
   )
 
   @State
+  private parameterStartTime: number = -1
+  @State
+  private parameterStartPaused: boolean | undefined = undefined
+
+  @State
   private showControls: boolean = false
 
   @State
@@ -239,6 +244,8 @@ export struct AVVideoPlayer {
           .height(this.calculateHeightPercent(this.surfaceFillingMode))
           .width(this.calculateWidthPercent(this.surfaceFillingMode))
           .onAppear(() => {
+            this.parameterStartTime = AppStorage.get("videoPosition") || -1
+            this.parameterStartPaused = AppStorage.get("videoPaused") || undefined
             this.initAvPlayer()
           })
       }
@@ -347,6 +354,7 @@ export struct AVVideoPlayer {
             this.movingPosition = value
           } else if (mode == SliderChangeMode.End || mode == SliderChangeMode.Click) {
             this.movingProgressBar = false
+            this.currentPosition = value
             this.avPlayer?.seek(value, media.SeekMode.SEEK_CLOSEST)
           }
         })
@@ -1054,34 +1062,35 @@ export struct AVVideoPlayer {
           if (!this.movingProgressBar) {
             this.movingPosition = time
           }
+          AppStorage.setOrCreate("videoPosition", time)
         })
         avPlayer.on('seekDone', (seekDoneTime: number) => {
           this.currentPosition = seekDoneTime
           if (!this.movingProgressBar) {
             this.movingPosition = seekDoneTime
           }
+          AppStorage.setOrCreate("videoPosition", seekDoneTime)
         });
         avPlayer.on("durationUpdate", (duration: number) => {
           this.max = duration
-        })
-        avPlayer.on("subtitleUpdate", (subtitle: media.SubtitleInfo) => {
-          avPlayer.getTrackDescription()
-            .then((trackDescriptions) => {
-            })
         })
         avPlayer.on("stateChange", (state: string, reason: media.StateChangeReason) => {
           if (state == "paused") {
             console.error("paused")
             this.videoState.paused = true
+            AppStorage.setOrCreate("videoPaused", true)
           } else if (state == "completed") {
             this.videoState.paused = true
             avPlayer.pause()
+            AppStorage.setOrCreate("videoPaused", true)
           } else if (state == "playing") {
             console.error("playing")
             this.videoState.paused = false
+            AppStorage.setOrCreate("videoPaused", false)
           } else if (state == "idle") {
             console.error("idle")
             this.videoState.paused = true
+            AppStorage.setOrCreate("videoPaused", true)
             avPlayer.pause()
           } else if (state == "initialized") {
             console.error("initialized")
@@ -1089,8 +1098,18 @@ export struct AVVideoPlayer {
             avPlayer.prepare();
           } else if (state == "prepared") {
             console.error("prepared")
-            avPlayer.play();
-
+            if (this.parameterStartTime != -1) {
+              avPlayer.seek(this.parameterStartTime, media.SeekMode.SEEK_CLOSEST)
+            }
+            if (this.parameterStartPaused != undefined && this.parameterStartPaused) {
+              this.videoState.paused = true
+              avPlayer.pause()
+              AppStorage.setOrCreate("videoPaused", false)
+            } else {
+              this.videoState.paused = false
+              avPlayer.play();
+              AppStorage.setOrCreate("videoPaused", true)
+            }
             avPlayer.getTrackDescription()
               .then((trackDescriptions) => {
                 this.subtitleHashes = []

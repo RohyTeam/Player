@@ -6,7 +6,8 @@ import { EventData } from "../pages/VideoIndex";
 import { connectDevice, copyFileToContinueDir, disconnectDevice } from "../util/ContinueUtil";
 import { distributedDeviceManager } from "@kit.DistributedServiceKit";
 import { JSON } from "@kit.ArkTS";
-import { PreferencesUtil } from "@pura/harmony-utils";
+import { AppUtil, PreferencesUtil } from "@pura/harmony-utils";
+import { checkPermissionGrant } from "../util/PermissionUtils";
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
@@ -47,6 +48,8 @@ export default class VideoAbility extends UIAbility {
       wantParam['url'] = want.parameters!.url as string
       wantParam['title'] = want.parameters!.title as string
       wantParam['hash'] = want.parameters!.hash as string
+      wantParam['videoPosition'] = AppStorage.get('videoPosition') || 0
+      wantParam['videoPaused'] = AppStorage.get('videoPaused') || false
       if (want.parameters!['originalDevice'] == undefined) {
         console.error('not have original device')
         wantParam['originalDevice'] = deviceInfo.ODID
@@ -94,12 +97,16 @@ export default class VideoAbility extends UIAbility {
       })
     } else if (want.parameters) { // 如果是打开软件后通过 picker 打开视频
       AppStorage.setOrCreate("comesFromApp", true)
-      // 如果用户没有开启接续
-      if (!PreferencesUtil.getBooleanSync("continuation", false)) {
+      // 如果用户没有授权分布式文件权限或者关闭了接续，关闭接续功能
+      if (!checkPermissionGrant("ohos.permission.DISTRIBUTED_DATASYNC") || !tryGetPreference("continuation")) {
         console.error("user didnt turn on continuation")
         this.context.setMissionContinueState(AbilityConstant.ContinueState.INACTIVE, (result) => {
           console.info(`setMissionContinueState: ${JSON.stringify(result)}`);
         });
+      }
+      if (want.parameters!['videoPosition'] != undefined) {
+        AppStorage.setOrCreate('videoPosition', want.parameters!.videoPosition as number)
+        AppStorage.setOrCreate('videoPaused', want.parameters!.videoPaused as boolean)
       }
       this.context.eventHub.on('getAbilityData', (data: EventData): void => {
         data.launchWant = want
@@ -181,4 +188,13 @@ export default class VideoAbility extends UIAbility {
     });
   }
 
+}
+
+function tryGetPreference(key: string): boolean {
+  try {
+    // 因为如果是接续了话，AppUtil 不会被初始化，所以需要 try catch
+    return PreferencesUtil.getBooleanSync(key, false)
+  } catch (error) {
+    return true // 如果出错了，说明是被接续过来的，那就应该允许被接续回去，所以返回 true
+  }
 }
