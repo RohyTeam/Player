@@ -175,6 +175,22 @@
     {
       "name": "settings_continuation",
       "value": "Continuation"
+    },
+    {
+      "name": "color_mode_system",
+      "value": "System"
+    },
+    {
+      "name": "color_mode_light",
+      "value": "Light"
+    },
+    {
+      "name": "color_mode_dark",
+      "value": "Dark"
+    },
+    {
+      "name": "color_mode",
+      "value": "Color Mode"
     }
   ]
 }

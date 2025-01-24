@@ -23,6 +23,9 @@ struct VideoIndex {
   @State
   private backTrigger: boolean = false
 
+  @StorageLink('appColorMode')
+  colorMode: string = "system";
+
   aboutToAppear(): void {
     console.error("trying to play video")
     let eventData = new EventData()
@@ -44,16 +47,20 @@ struct VideoIndex {
   }
 
   build() {
-    Stack() {
-      AVVideoPlayer({
-        title: this.title,
-        url: this.url,
-        videoHolder: this.videoHolder,
-        backTrigger: this.backTrigger,
-      })
+    WithTheme({
+      colorMode: this.colorMode == "system" ? ThemeColorMode.SYSTEM: this.colorMode == "dark" ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
+    }) {
+      Stack() {
+        AVVideoPlayer({
+          title: this.title,
+          url: this.url,
+          videoHolder: this.videoHolder,
+          backTrigger: this.backTrigger,
+        })
+      }
+      .width("100%")
+      .height("100%")
     }
-    .width("100%")
-    .height("100%")
   }
 
   onBackPress(): boolean | void {

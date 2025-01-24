@@ -8,6 +8,7 @@ import { distributedDeviceManager } from "@kit.DistributedServiceKit";
 import { JSON } from "@kit.ArkTS";
 import { AppUtil, PreferencesUtil } from "@pura/harmony-utils";
 import { checkPermissionGrant } from "../util/PermissionUtils";
+import { preferences } from "@kit.ArkData";
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
@@ -74,6 +75,11 @@ export default class VideoAbility extends UIAbility {
    * 处理 want
    */
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    if (!appUtilInited()) {
+      // 这种情况一般是流转导致的，但是从文件预览打开也会导致这个情况
+      AppUtil.init(this.context)
+    }
+    AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
     /**
      * 此处用于解决在 ability 中打开页面无法传参的问题
      */
@@ -196,5 +202,14 @@ function tryGetPreference(key: string): boolean {
     return PreferencesUtil.getBooleanSync(key, false)
   } catch (error) {
     return true // 如果出错了，说明是被接续过来的，那就应该允许被接续回去，所以返回 true
+  }
+}
+
+function appUtilInited(): boolean {
+  try {
+    AppUtil.getContext()
+    return true
+  } catch (error) {
+    return false
   }
 }

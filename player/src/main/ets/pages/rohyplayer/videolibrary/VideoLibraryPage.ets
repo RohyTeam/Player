@@ -15,6 +15,7 @@ import { BreakpointConstants } from '../../../common/constants/BreakpointConstan
 import { dataSharePredicates } from '@kit.ArkData'
 import { hashByFd } from '../../../util/HashUtil'
 import { SettingsDivider, SettingsGroup, SettingsPage, SettingsRow,
+  SettingsSelection,
   SettingsSwitch } from '../../components/SettingsPage'
 import { checkPermissionGrant, requestPermissionsFromUser } from '../../../util/PermissionUtils'
 import { abilityAccessCtrl, common } from '@kit.AbilityKit'
@@ -199,9 +200,6 @@ export struct VideoLibraryPage {
         {
           height: SheetSize.FIT_CONTENT,
           showClose: true,
-          title: {
-            title: $r("app.string.choose_picker")
-          },
           backgroundColor: $r("app.color.rohy_settings_background")
         }
       )
@@ -245,10 +243,7 @@ export struct VideoLibraryPage {
         this.settings(),
         {
           height: SheetSize.LARGE,
-          showClose: true,
-          title: {
-            title: $r("app.string.settings")
-          },
+          showClose: false,
           backgroundColor: $r("app.color.rohy_settings_background")
         }
       )
@@ -393,10 +388,47 @@ export struct VideoLibraryPage {
     .height("100%")
     .width("100%")
   }
+  @Builder
+  pickerSelectionTitle() {
+    Row(){
+      Text($r("app.string.choose_picker"))
+        .fontSize(24)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r("app.color.font_primary"))
+        .margin(16)
+      Blank()
+        .layoutWeight(1)
+
+      Button({
+        type: ButtonType.Circle
+      }) {
+        SymbolGlyph($r("sys.symbol.xmark"))
+          .fontSize(24)
+          .fontColor([$r("app.color.icon_primary")])
+      }
+      .onClick(() => {
+        this.showPickerSelection = false
+      })
+      .align(Alignment.Center)
+      .margin({
+        right: 12
+      })
+      .width(40)
+      .height(40)
+      .backgroundColor($r("app.color.comp_background_tertiary"))
+    }
+    .margin({
+      left: 12,
+      right: 12,
+      top: 12
+    })
+    .backgroundColor($r("app.color.rohy_settings_background"))
+  }
 
   @Builder
   pickerSelection() {
     Column() {
+      this.pickerSelectionTitle()
       Blank()
         .height(12)
         .width("100%")
@@ -490,14 +522,102 @@ export struct VideoLibraryPage {
 
   @State
   settings$continuation: boolean = false
+  @StorageLink('appColorMode')
+  colorMode: string = "system";
+  colorModes: string[] = ["system", "light", "dark"];
+
+  @Builder
+  settingsTitle() {
+    Row() {
+      Text($r("app.string.settings"))
+        .fontSize(24)
+        .fontWeight(FontWeight.Bold)
+        .fontColor($r("app.color.font_primary"))
+        .margin(16)
+      Blank()
+        .layoutWeight(1)
+
+      Button({
+        type: ButtonType.Circle
+      }) {
+        SymbolGlyph($r("sys.symbol.xmark"))
+          .fontSize(24)
+          .fontColor([$r("app.color.icon_primary")])
+      }
+      .onClick(() => {
+        this.showSettings = false
+      })
+      .align(Alignment.Center)
+      .margin({
+        right: 12
+      })
+      .width(40)
+      .height(40)
+      .backgroundColor($r("app.color.comp_background_tertiary"))
+    }
+    .margin({
+      left: 12,
+      right: 12,
+      top: 12
+    })
+    .backgroundColor($r("app.color.rohy_settings_background"))
+  }
 
   @Builder
   settings() {
     Column() {
+      this.settingsTitle()
       Blank()
         .height(12)
         .width("100%")
       SettingsPage() {
+        SettingsGroup() {
+          SettingsSelection({
+            settingsTitle: $r("app.string.color_mode"),
+            choices: [
+              {
+                title: $r("app.string.color_mode_system"),
+                onSwitch: () => {
+                  animateTo({
+                    duration: 300,
+                    curve: Curve.Linear,
+                    playMode: PlayMode.Normal
+                  }, () => {
+                    AppStorage.setOrCreate("appColorMode", "system")
+                  })
+                  PreferencesUtil.putSync("colorMode", "system")
+                }
+              },
+              {
+                title: $r("app.string.color_mode_light"),
+                onSwitch: () => {
+                  animateTo({
+                    duration: 300,
+                    curve: Curve.Linear,
+                    playMode: PlayMode.Normal
+                  }, () => {
+                    AppStorage.setOrCreate("appColorMode", "light")
+                  })
+                  PreferencesUtil.putSync("colorMode", "light")
+                }
+              },
+              {
+                title: $r("app.string.color_mode_dark"),
+                onSwitch: () => {
+                  animateTo({
+                    duration: 300,
+                    curve: Curve.Linear,
+                    playMode: PlayMode.Normal
+                  }, () => {
+                    AppStorage.setOrCreate("appColorMode", "dark")
+                  })
+                  PreferencesUtil.putSync("colorMode", "dark")
+                }
+              }
+            ],
+            selectedButtons: [this.colorModes.indexOf(this.colorMode)]
+          })
+        }
         SettingsGroup() {
           SettingsSwitch({
             settingsTitle: $r("app.string.settings_continuation"),

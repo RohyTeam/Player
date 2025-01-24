@@ -159,6 +159,22 @@
     {
       "name": "settings_continuation",
       "value": "流转"
+    },
+    {
+      "name": "color_mode_system",
+      "value": "系统"
+    },
+    {
+      "name": "color_mode_light",
+      "value": "浅色"
+    },
+    {
+      "name": "color_mode_dark",
+      "value": "深色"
+    },
+    {
+      "name": "color_mode",
+      "value": "颜色模式"
     }
   ]
 }
