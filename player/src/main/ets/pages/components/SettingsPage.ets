@@ -115,6 +115,9 @@ export struct SettingsSwitch {
             type: ToggleType.Switch,
             isOn: this.switchValue
           })
+            .margin({
+              right: 12
+            })
             .onChange((value) => {
               this.switchEvent.action(value)
             })

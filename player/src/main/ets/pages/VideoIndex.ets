@@ -1,4 +1,4 @@
-import { Want } from '@kit.AbilityKit';
+import { common, Want } from '@kit.AbilityKit';
 import { AVVideoPlayer } from './player/AVVideoPlayer';
 import { deviceInfo } from '@kit.BasicServicesKit';
 import { FileUtil } from '@pura/harmony-utils';
@@ -19,6 +19,9 @@ struct VideoIndex {
 
   @State
   private videoHolder: string | undefined = undefined
+
+  @State
+  private backTrigger: boolean = false
 
   aboutToAppear(): void {
     console.error("trying to play video")
@@ -45,11 +48,19 @@ struct VideoIndex {
       AVVideoPlayer({
         title: this.title,
         url: this.url,
-        videoHolder: this.videoHolder
+        videoHolder: this.videoHolder,
+        backTrigger: this.backTrigger,
       })
     }
     .width("100%")
     .height("100%")
+  }
+
+  onBackPress(): boolean | void {
+    this.backTrigger = true;
+    (getContext(this) as common.UIAbilityContext).terminateSelf()
+      .then(() => {
+      })
   }
 
 }

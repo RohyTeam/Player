@@ -505,6 +505,7 @@ export struct VideoLibraryPage {
             switchEvent: {
               action: (value: boolean) => {
                 if (this.settings$continuation) {
+                  // 如果开关是开的我就默认用户有权限了
                   PreferencesUtil.putSync("continuation", false)
                   this.settings$continuation = false
                 } else {

@@ -42,6 +42,9 @@ export struct AVVideoPlayer {
   @Require
   videoHolder: string
 
+  @Link
+  backTrigger: boolean
+
   @State
   private avPlayer: media.AVPlayer | undefined = undefined
 
@@ -249,9 +252,6 @@ export struct AVVideoPlayer {
     .height("100%")
   }
 
-  @State
-  backTrigger: boolean = false
-
   /**
    * 播放器控制器的上方显示内容
    */
@@ -262,22 +262,18 @@ export struct AVVideoPlayer {
         $r("sys.symbol.chevron_left"),
         () => {
           this.backTrigger = true
-          this.avPlayer?.pause()
-          this.avPlayer?.release()
-            .then(() => {
-              if (this.url.startsWith("dfs:")) {
-                disconnectDevice(this.videoHolder)
-                  .then(() => {
-                    (getContext(this) as common.UIAbilityContext).terminateSelf()
-                      .then(() => {
-                      })
-                  })
-              } else {
+          if (this.url.startsWith("dfs:")) {
+            disconnectDevice(this.videoHolder)
+              .then(() => {
                 (getContext(this) as common.UIAbilityContext).terminateSelf()
                   .then(() => {
                   })
-              }
-            })
+              })
+          } else {
+            (getContext(this) as common.UIAbilityContext).terminateSelf()
+              .then(() => {
+              })
+          }
         }
       )
       Text(this.title)
@@ -842,6 +838,9 @@ export struct AVVideoPlayer {
               })
           }
         })
+    } else {
+      this.avPlayer?.pause()
+      this.avPlayer?.release()
     }
   }
 
