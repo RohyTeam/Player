@@ -199,7 +199,7 @@ export struct VideoLibraryPage {
         this.pickerSelection(),
         {
           height: SheetSize.FIT_CONTENT,
-          showClose: true,
+          showClose: false,
           backgroundColor: $r("app.color.rohy_settings_background")
         }
       )
