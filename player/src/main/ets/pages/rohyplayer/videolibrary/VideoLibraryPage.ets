@@ -223,7 +223,7 @@ export struct VideoLibraryPage {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.browseMenus)
+      .bindMenu(this.browseMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({

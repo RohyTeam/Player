@@ -350,7 +350,7 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.slidersMenus)
+      .bindMenu(this.slidersMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
@@ -512,7 +512,7 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.surfaceFillingModeMenus)
+      .bindMenu(this.surfaceFillingModeMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -528,7 +528,7 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.speedMenus)
+      .bindMenu(this.speedMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -544,7 +544,7 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.audioMenus)
+      .bindMenu(this.audioMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -560,7 +560,7 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.subtitleMenus)
+      .bindMenu(this.subtitleMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({

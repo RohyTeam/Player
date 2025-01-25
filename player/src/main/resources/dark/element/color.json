@@ -247,6 +247,10 @@
     {
       "name": "settings_icon_purple",
       "value": "#7655fe"
+    },
+    {
+      "name": "menus_background",
+      "value": "#ff2e3033"
     }
   ]
 }
