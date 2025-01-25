@@ -57,9 +57,6 @@ export struct VideoLibraryPage {
   @State
   searching: string = ""
 
-  @StorageLink('appColorMode')
-  colorMode: string = "system";
-
   @Builder
   browseMenus() {
     Menu() {
@@ -230,6 +227,15 @@ export struct VideoLibraryPage {
         {
           height: SheetSize.FIT_CONTENT,
           showClose: false,
+          shadow: ShadowStyle.OUTER_DEFAULT_MD,
+          enableOutsideInteractive: false,
+          shouldDismiss: (sheetDismiss) => {
+            sheetDismiss.dismiss()
+            this.showPickerSelection = false
+          },
+          onWillDismiss: () => {
+            this.showPickerSelection = false
+          },
           backgroundColor: $r("app.color.rohy_settings_background")
         }
       )
@@ -274,6 +280,15 @@ export struct VideoLibraryPage {
         {
           height: SheetSize.LARGE,
           showClose: false,
+          shadow: ShadowStyle.OUTER_DEFAULT_MD,
+          enableOutsideInteractive: false,
+          shouldDismiss: (sheetDismiss) => {
+            sheetDismiss.dismiss()
+            this.showSettings = false
+          },
+          onWillDismiss: () => {
+            this.showSettings = false
+          },
           backgroundColor: $r("app.color.rohy_settings_background")
         }
       )
@@ -594,6 +609,11 @@ export struct VideoLibraryPage {
     .backgroundColor($r("app.color.rohy_settings_background"))
   }
 
+  @StorageLink('appColorMode')
+  colorMode: string = "system";
+  @StorageLink('autoShutdown')
+  autoShutdown: boolean = false;
+
   @Builder
   settings() {
     Column() {
@@ -653,11 +673,11 @@ export struct VideoLibraryPage {
         SettingsGroup() {
           SettingsSwitch({
             settingsTitle: $r("app.string.settings_continuation"),
+            settingsTips: $r("app.string.settings_continuation_tips"),
             switchValue: this.settings$continuation,
             switchEvent: {
               action: (value: boolean) => {
                 if (this.settings$continuation) {
-                  // 如果开关是开的我就默认用户有权限了
                   PreferencesUtil.putSync("continuation", false)
                   this.settings$continuation = false
                 } else {
@@ -672,6 +692,23 @@ export struct VideoLibraryPage {
                         this.settings$continuation = false
                       }
                     })
+                }
+              }
+            }
+          })
+          SettingsDivider()
+          SettingsSwitch({
+            settingsTitle: $r("app.string.settings_auto_shutdown"),
+            settingsTips: $r("app.string.settings_auto_shutdown_tips"),
+            switchValue: this.autoShutdown,
+            switchEvent: {
+              action: (value: boolean) => {
+                if (this.autoShutdown) {
+                  AppStorage.setOrCreate("autoShutdown", false)
+                  PreferencesUtil.putSync("autoShutdown", false)
+                } else {
+                  AppStorage.setOrCreate("autoShutdown", true)
+                  PreferencesUtil.putSync("autoShutdown", true)
                 }
               }
             }

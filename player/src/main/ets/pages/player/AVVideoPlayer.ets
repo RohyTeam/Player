@@ -146,6 +146,10 @@ export struct AVVideoPlayer {
   private adjustingBrightness: boolean = false
   @State
   private adjustingVolume: boolean = false
+  @StorageLink('autoShutdown')
+  autoShutdown: boolean = false;
+  @StorageLink('videoAbility_shouldDie')
+  videoAbility_shouldDie: boolean = false;
 
   build() {
     Stack() {
@@ -294,6 +298,29 @@ export struct AVVideoPlayer {
       .width("100%")
       .height("100%")
       .zIndex(-100) // 由于字幕也有分层，把 zIndex 设置小一点防止遮挡字幕
+      if (this.videoAbility_shouldDie && this.autoShutdown) {
+        Stack() { // 自动关闭设置专用
+        }
+        .onAppear(() => {
+          if (this.autoShutdown) {
+            console.error('detected auto shutdown, shutting down')
+            this.backTrigger = true
+            if (this.url.startsWith("dfs:")) {
+              disconnectDevice(this.videoHolder)
+                .then(() => {
+                  (getContext(this) as common.UIAbilityContext).terminateSelf()
+                    .then(() => {
+                    })
+                })
+            } else {
+              (getContext(this) as common.UIAbilityContext).terminateSelf()
+                .then(() => {
+                })
+            }
+          }
+        })
+        .zIndex(101)
+      }
     }
     .width("100%")
     .height("100%")

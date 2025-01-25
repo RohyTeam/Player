@@ -191,6 +191,18 @@
     {
       "name": "file_deleted_desc",
       "value": "该设备上的文件已被删除，其也会从视频库中删除。"
+    },
+    {
+      "name": "settings_continuation_tips",
+      "value": "开启此选项后，您可以将正在播放的视频转移到另一个登录了相同账号的设备下继续播放。"
+    },
+    {
+      "name": "settings_auto_shutdown",
+      "value": "自动关闭"
+    },
+    {
+      "name": "settings_auto_shutdown_tips",
+      "value": "开启此选项后，一旦视频播放器的窗口失焦便会自动退出。"
     }
   ]
 }

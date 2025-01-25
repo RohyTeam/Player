@@ -93,10 +93,27 @@ export struct SettingsSwitch {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  settingsTips: ResourceStr
+  @Prop
   @Require
   switchEvent: SwitchEvent
   @Prop
   switchValue: boolean
+
+  @State
+  showPopup: boolean = false
+
+  @Builder
+  popupText() {
+    Column() {
+      Text(this.settingsTips)
+        .fontColor($r("app.color.font_primary"))
+        .padding(16)
+    }
+    .constraintSize({
+      maxWidth: "50%"
+    })
+  }
 
   build() {
     Row() {
@@ -107,6 +124,33 @@ export struct SettingsSwitch {
               left: 12
             })
             .fontColor($r("app.color.font_primary"))
+          if (this.settingsTips != undefined) {
+            SymbolGlyph($r('sys.symbol.questionmark_circle'))
+              .fontSize(20)
+              .fontColor([$r('app.color.icon_primary')])
+              .onClick(() => {
+                this.showPopup = true
+              })
+              .margin({
+                left: 4
+              })
+              .bindPopup(
+                this.showPopup,
+                {
+                  builder: this.popupText,
+                  placement: Placement.Bottom,
+                  enableArrow: true,
+                  showInSubWindow: false,
+                  popupColor: $r("app.color.rohy_settings_card"),
+                  backgroundBlurStyle: BlurStyle.NONE,
+                  onStateChange: (state) => {
+                    if (!state.isVisible) {
+                      this.showPopup = false
+                    }
+                  }
+                }
+              )
+          }
           Blank()
             .layoutWeight(1)
           Toggle({

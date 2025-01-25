@@ -207,6 +207,18 @@
     {
       "name": "file_deleted_desc",
       "value": "This file has been deleted from the device, it will be removed from video library too."
+    },
+    {
+      "name": "settings_continuation_tips",
+      "value": "Turn on this, you can transfer your current playing video to another device under the same account."
+    },
+    {
+      "name": "settings_auto_shutdown",
+      "value": "Auto Shutdown"
+    },
+    {
+      "name": "settings_auto_shutdown_tips",
+      "value": "Turn on this, once you leave the player window, the window will automatically be shut down."
     }
   ]
 }

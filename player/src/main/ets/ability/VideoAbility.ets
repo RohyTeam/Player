@@ -82,6 +82,8 @@ export default class VideoAbility extends UIAbility {
       AppUtil.init(this.context)
     }
     AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
+    AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
+    AppStorage.setOrCreate("videoAbility_shouldDie", false)
     /**
      * 此处用于解决在 ability 中打开页面无法传参的问题
      */
@@ -128,6 +130,12 @@ export default class VideoAbility extends UIAbility {
       VideoAbility.windowObj.on('windowSizeChange', (windowSize: window.Size) => {
         this.calculateWindowSize()
       })
+      VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
+        console.error(`current window event type: ${windowEventType}`)
+        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE) {
+          AppStorage.setOrCreate("videoAbility_shouldDie", true)
+        }
+      })
       data.setWindowKeepScreenOn(true);
     })
 
@@ -164,6 +172,12 @@ export default class VideoAbility extends UIAbility {
       VideoAbility.windowObj = data;
       VideoAbility.windowObj.on('windowSizeChange', (windowSize: window.Size) => {
         this.calculateWindowSize()
+      })
+      VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
+        console.error(`current window event type: ${windowEventType}`)
+        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE) {
+          AppStorage.setOrCreate("videoAbility_shouldDie", true)
+        }
       })
       data.setWindowKeepScreenOn(true);
     })
