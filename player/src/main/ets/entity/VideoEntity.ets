@@ -13,6 +13,7 @@ interface VideoMetadata {}
 export enum FileStatus {
 
   Authorized,
+  Importing,
   Disappear,
   None
 

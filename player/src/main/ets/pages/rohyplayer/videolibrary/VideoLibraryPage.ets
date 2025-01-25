@@ -772,11 +772,24 @@ export struct VideoLibraryPage {
           if (this.hashes.indexOf(hashValue) >= 0) {
             duplicated = true
           } else {
+            let videoV2 = new VideoEntityV2(
+              "",
+              "",
+              "",
+              0,
+              ""
+            )
+            videoV2.status = FileStatus.Importing
+            this.videos.push(videoV2)
             VideoLibraryDatabase.addFromLocalFile(getContext(this), fileUrl)
               .then((video) => {
-                let videoV2 = VideoEntityV2.fromV1(video)
+                videoV2.uri = video.uri
+                videoV2.title = video.title
+                videoV2.hash = video.hash
+                videoV2.addedTime = video.addedTime
+                videoV2.fileSource = video.fileSource
                 videoV2.status = FileStatus.Authorized
-                this.videos.push(videoV2)
+                this.sort()
                 this.hashes.push(video.hash)
               })
           }
