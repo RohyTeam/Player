@@ -321,10 +321,15 @@ export struct AVVideoPlayer {
         }
       )
       Text(this.title)
+        .maxLines(1)
+        .textOverflow({
+          overflow: TextOverflow.Ellipsis
+        })
         .margin({
           left: 4,
           right: 4
         })
+        .layoutWeight(2)
         .fontColor($r("app.color.font_primary"))
       Blank()
         .layoutWeight(1)
