@@ -57,35 +57,60 @@ export struct VideoLibraryPage {
   @State
   searching: string = ""
 
+  @StorageLink('appColorMode')
+  colorMode: string = "system";
+
   @Builder
   browseMenus() {
     Menu() {
       MenuItemGroup() {
-        MenuItem({
-          content: $r("app.string.videolibrary_view_mode_grid"),
-          symbolEndIcon: !this.gridOrList ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        MenuItem() {
+          Row() {
+            Text($r("app.string.videolibrary_view_mode_grid"))
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("96vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(!this.gridOrList ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.gridOrList = false
+          PreferencesUtil.putSync("gridOrList", false)
         })
-          .onClick(() => {
-            this.gridOrList = false
-            PreferencesUtil.putSync("gridOrList", false)
-          })
-          .margin({
-            top: 4,
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: $r("app.string.videolibrary_view_mode_list"),
-          symbolEndIcon: this.gridOrList ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        .margin({
+          left: 4,
+          right: 4,
+          top: 4
         })
-          .onClick(() => {
-            this.gridOrList = true
-            PreferencesUtil.putSync("gridOrList", true)
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
+        MenuItem() {
+          Row() {
+            Text($r("app.string.videolibrary_view_mode_list"))
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("96vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.gridOrList ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.gridOrList = true
+          PreferencesUtil.putSync("gridOrList", true)
+        })
+        .margin({
+          left: 4,
+          right: 4
+        })
         MenuItem()
           .margin({
             bottom: "8vp"
@@ -530,8 +555,6 @@ export struct VideoLibraryPage {
 
   @State
   settings$continuation: boolean = false
-  @StorageLink('appColorMode')
-  colorMode: string = "system";
   colorModes: string[] = ["system", "light", "dark"];
 
   @Builder

@@ -684,35 +684,53 @@ export struct AVVideoPlayer {
   subtitleMenus() {
     Menu() {
       MenuItemGroup() {
-        MenuItem({
-          content: $r("app.string.no_subtitle"),
-          symbolEndIcon: this.selectedSubtitle == undefined ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) :
-            undefined
+        MenuItem() {
+          Row() {
+            Text($r("app.string.no_subtitle"))
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.selectedSubtitle == undefined ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.selectedSubtitle = undefined
         })
+        .margin({
+          top: 4,
+          left: 4,
+          right: 4
+        })
+        ForEach(this.availableSubtitles, (subtitle: SubtitleEntity, index: number) => {
+          MenuItem() {
+            Row() {
+              Text(`${subtitle.name} (${subtitle.language})`)
+                .fontWeight(FontWeight.Medium)
+                .margin(12)
+              Blank()
+                .width("76vp")
+              SymbolGlyph($r("sys.symbol.checkmark"))
+                .fontColor([$r("app.color.icon_primary")])
+                .visibility(this.selectedSubtitle == subtitle.index ? Visibility.Visible : Visibility.Hidden)
+                .margin(12)
+                .fontSize(24)
+            }
+            .alignItems(VerticalAlign.Center)
+          }
           .onClick(() => {
-            this.selectedSubtitle = undefined
+            this.selectedSubtitle = index
           })
           .margin({
-            top: 4,
             left: 4,
             right: 4
           })
-
-        ForEach(this.availableSubtitles, (subtitle: SubtitleEntity, index: number) => {
-          MenuItem({
-            content: `${subtitle.name} (${subtitle.language})`,
-            symbolEndIcon: this.selectedSubtitle == subtitle.index ?
-              new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
-          })
-            .onClick(() => {
-              this.selectedSubtitle = index
-            })
-            .margin({
-              left: 4,
-              right: 4
-            })
         })
-
         MenuItem()
           .margin({
             bottom: "8vp"
@@ -721,15 +739,11 @@ export struct AVVideoPlayer {
 
       MenuItemGroup() {
         MenuItem()
-
         MenuItem({
           content: $r("app.string.import")
         })
           .onClick(() => {
-            this.showSubtitlePicker() /*
-            promptAction.showToast({
-              message: "由于字幕导入有问题，为了使用正常，暂时先屏蔽此功能"
-            })*/
+            this.showSubtitlePicker()
           })
           .margin({
             bottom: 4,
@@ -756,40 +770,51 @@ export struct AVVideoPlayer {
     Menu() {
       MenuItemGroup() {
         ForEach(this.availableAudios, (audio: AudioEntity, index: number) => {
-          MenuItem({
-            content: `${audio.name} (${audio.language})`,
-            symbolEndIcon: this.selectedAudio == audio.index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) :
-              undefined
+
+          MenuItem() {
+            Row() {
+              Text(`${audio.name} (${audio.language})`)
+                .fontWeight(FontWeight.Medium)
+                .margin(12)
+              Blank()
+                .width("76vp")
+              SymbolGlyph($r("sys.symbol.checkmark"))
+                .fontColor([$r("app.color.icon_primary")])
+                .visibility(this.selectedAudio == audio.index ? Visibility.Visible : Visibility.Hidden)
+                .margin(12)
+                .fontSize(24)
+            }
+            .alignItems(VerticalAlign.Center)
+          }
+          .onClick(() => {
+            if (this.selectedSubtitle != undefined) {
+              this.avPlayer?.deselectTrack(this.selectedAudio)
+              this.selectedAudio = undefined
+            }
+            this.avPlayer?.selectTrack(audio.index)
+            this.selectedAudio = audio.index
           })
-            .onClick(() => {
-              if (this.selectedSubtitle != undefined) {
-                this.avPlayer?.deselectTrack(this.selectedAudio)
-                this.selectedAudio = undefined
-              }
-              this.avPlayer?.selectTrack(audio.index)
-              this.selectedAudio = audio.index
-            })
-            .margin(
-              index == 0 ? (
-                this.availableAudios.length == 1 ? {
-                  top: 4,
-                  bottom: 4,
-                  left: 4,
-                  right: 4
-                } : {
-                  top: 4,
-                  left: 4,
-                  right: 4
-                }
-              ) : (index == this.availableSubtitles.length - 1 ? {
+          .margin(
+            index == 0 ? (
+              this.availableAudios.length == 1 ? {
+                top: 4,
                 bottom: 4,
                 left: 4,
                 right: 4
               } : {
+                top: 4,
                 left: 4,
                 right: 4
-              })
-            )
+              }
+            ) : (index == this.availableSubtitles.length - 1 ? {
+              bottom: 4,
+              left: 4,
+              right: 4
+            } : {
+              left: 4,
+              right: 4
+            })
+          )
         })
       }
     }
@@ -804,57 +829,96 @@ export struct AVVideoPlayer {
   surfaceFillingModeMenus() {
     Menu() {
       MenuItemGroup() {
-        MenuItem({
-          content: $r("app.string.surfaceFillingMode_fit"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.Fit ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        MenuItem() {
+          Row() {
+            Text($r("app.string.surfaceFillingMode_fit"))
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.Fit ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.surfaceFillingMode = SurfaceFillingMode.Fit
         })
-          .onClick(() => {
-            this.surfaceFillingMode = SurfaceFillingMode.Fit
-          })
-          .margin({
-            top: 4,
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: $r("app.string.surfaceFillingMode_stretch"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.Stretch ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        .margin({
+          top: 4,
+          left: 4,
+          right: 4
         })
-          .onClick(() => {
-            this.surfaceFillingMode = SurfaceFillingMode.Stretch
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: $r("app.string.surfaceFillingMode_4by3"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.FourByThree ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        MenuItem() {
+          Row() {
+            Text($r("app.string.surfaceFillingMode_stretch"))
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.Stretch ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.surfaceFillingMode = SurfaceFillingMode.Stretch
         })
-          .onClick(() => {
-            this.surfaceFillingMode = SurfaceFillingMode.FourByThree
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: $r("app.string.surfaceFillingMode_16by9"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        .margin({
+          left: 4,
+          right: 4
         })
-          .onClick(() => {
-            this.surfaceFillingMode = SurfaceFillingMode.SixteenByNine
-          })
-          .margin({
-            bottom: 4,
-            left: 4,
-            right: 4
-          })
-
+        MenuItem() {
+          Row() {
+            Text($r("app.string.surfaceFillingMode_4by3"))
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.surfaceFillingMode = SurfaceFillingMode.FourByThree
+        })
+        .margin({
+          left: 4,
+          right: 4
+        })
+        MenuItem() {
+          Row() {
+            Text($r("app.string.surfaceFillingMode_16by9"))
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.surfaceFillingMode = SurfaceFillingMode.SixteenByNine
+        })
+        .margin({
+          bottom: 4,
+          left: 4,
+          right: 4
+        })
       }
     }
     .menuItemDivider({
@@ -868,93 +932,162 @@ export struct AVVideoPlayer {
   speedMenus() {
     Menu() {
       MenuItemGroup() {
-        MenuItem({
-          content: "0.50x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        MenuItem() {
+          Row() {
+            Text("0.50x")
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_50_X)
         })
-          .onClick(() => {
-            this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_50_X)
-          })
-          .margin({
-            top: 4,
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: "0.75x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        .margin({
+          left: 4,
+          right: 4,
+          top: 4
         })
-          .onClick(() => {
-            this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_75_X)
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: "1.00x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        MenuItem() {
+          Row() {
+            Text("0.75x")
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_75_X)
         })
-          .onClick(() => {
-            this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_00_X)
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: "1.25x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        .margin({
+          left: 4,
+          right: 4
         })
-          .onClick(() => {
-            this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_25_X)
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: "1.50x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        MenuItem() {
+          Row() {
+            Text("1.00x")
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_00_X)
         })
-          .onClick(() => {
-            this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_50_X)
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: "1.75x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        .margin({
+          left: 4,
+          right: 4
         })
-          .onClick(() => {
-            this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_75_X)
-          })
-          .margin({
-            left: 4,
-            right: 4
-          })
-        MenuItem({
-          content: "2.00x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ?
-            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        MenuItem() {
+          Row() {
+            Text("1.25x")
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_25_X)
         })
-          .onClick(() => {
-            this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_2_00_X)
-          })
-          .margin({
-            bottom: 4,
-            left: 4,
-            right: 4
-          })
-
+        .margin({
+          left: 4,
+          right: 4
+        })
+        MenuItem() {
+          Row() {
+            Text("1.50x")
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_50_X)
+        })
+        .margin({
+          left: 4,
+          right: 4
+        })
+        MenuItem() {
+          Row() {
+            Text("1.75")
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_75_X)
+        })
+        .margin({
+          left: 4,
+          right: 4
+        })
+        MenuItem() {
+          Row() {
+            Text("2.00x")
+              .fontWeight(FontWeight.Medium)
+              .margin(12)
+            Blank()
+              .width("76vp")
+            SymbolGlyph($r("sys.symbol.checkmark"))
+              .fontColor([$r("app.color.icon_primary")])
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ? Visibility.Visible : Visibility.Hidden)
+              .margin(12)
+              .fontSize(24)
+          }
+          .alignItems(VerticalAlign.Center)
+        }
+        .onClick(() => {
+          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_2_00_X)
+        })
+        .margin({
+          left: 4,
+          right: 4,
+          bottom: 4
+        })
       }
     }
     .menuItemDivider({
