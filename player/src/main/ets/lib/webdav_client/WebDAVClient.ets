@@ -1,7 +1,8 @@
-import { http } from "@kit.NetworkKit"
-import { BusinessError } from "@kit.BasicServicesKit"
-import { JSON } from "@kit.ArkTS"
-import { StrUtil } from "@pura/harmony-utils"
+import { http } from '@kit.NetworkKit'
+import { BusinessError } from '@kit.BasicServicesKit'
+import { JSON } from '@kit.ArkTS'
+import { StrUtil } from '@pura/harmony-utils'
+import { rcp } from '@kit.RemoteCommunicationKit'
 
 export interface WebDAVFile {
 
@@ -40,9 +41,7 @@ interface AuthenticateMethod {
 }
 
 class BasicAuthenticateMethod implements AuthenticateMethod {
-
   type: AuthenticateMethodType = AuthenticateMethodType.Basic
-
   private token: string
 
   constructor(username: string, password: string) {
@@ -61,10 +60,8 @@ export interface Unauthorized {}
 type JsonValue = string | number | boolean | Record<string, object>
 
 class WebDAVClientImpl implements WebDAVClient {
-
   private serverUri: string
   private options: LoginOptions
-
   private authenticateResult: boolean | undefined = undefined
   private authenticateMethod: AuthenticateMethod | undefined = undefined
 
@@ -84,25 +81,39 @@ class WebDAVClientImpl implements WebDAVClient {
         }
         let requestUri = `${this.serverUri}${path}`
         this.authenticateMethod.use(requestUri)
-          .then((token) => {
-            let request = http.createHttp()
-            request.request(requestUri, {
-              method: http.RequestMethod.HEAD,
-              header: {
-                'accept': 'text/plain,application/xml',
-                'authorization': token,
-                'depth': 1
-              }
-            })
-              .then((listResponse: http.HttpResponse) => {
-                console.error(`list directory response: ${typeof listResponse.result}`)
+          .then(async (token) => {
+            let session = rcp.createSession()
+            let headers: rcp.RequestHeaders = {
+              'authorization': token,
+              'depth': '1'
+            }
+            let request = new rcp.Request(
+              requestUri,
+              'PROPFIND',
+              headers,
+              ''
+            )
+            session.fetch(request)
+              .then((response) => {
+                if (response.statusCode == 207) {
+                  let result = StrUtil.bufferToStr(response.body)
+
+                  resultReturner([])
+                } else {
+                  resultReturner([])
+                }
               })
               .catch((error: BusinessError) => {
-                console.error(`error occurs when listing directory: ${JSON.stringify(error)}`)
+                console.error(`error occurs when list directory: ${JSON.stringify(error)}, ${error.message}`)
                 resultReturner([])
               })
           })
+          .catch((error: Error) => {
+            console.error(`error occurs when use authentication: ${JSON.stringify(error)}, ${error.message}`)
+            resultReturner([])
+          })
       } else {
+        console.error(`error occurs when list directory: not authorized`)
         resultReturner([])
       }
     })
@@ -180,7 +191,6 @@ class WebDAVClientImpl implements WebDAVClient {
         })
     })
   }
-
 }
 
 export function createClient(serverUri: string, options: LoginOptions): WebDAVClient {

@@ -1,0 +1,6 @@
+{
+  "name": "libark_interop_loader.so",
+  "types": "./libark_interop_loader.d.ts",
+  "version": "1.0.0",
+  "description": ""
+}

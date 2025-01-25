@@ -3,7 +3,6 @@ import { createClient } from '../lib/webdav_client/WebDAVClient'
 // 用于测试，上传之后为空代码文件
 export function runTest() {
   try {
-
     let client = createClient("", {
       username: '',
       password: ''
@@ -12,6 +11,9 @@ export function runTest() {
       .then((result) => {
         if (result) {
           client.listDirectory("/")
+            .then(() => {
+
+            })
         }
       })
   } catch (err) {
