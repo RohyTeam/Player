@@ -283,6 +283,12 @@ export struct AVVideoPlayer {
             this.initAvPlayer()
           })
       }
+      .rotate({
+        y: 1,
+        centerX: "50%",
+        centerY: "50%",
+        angle: this.mirrorClip ? '180deg' : '0deg'
+      })
       .backgroundColor(Color.Black)
       .alignContent(Alignment.Center)
       .width("100%")
@@ -295,6 +301,8 @@ export struct AVVideoPlayer {
 
   @State
   private repeatPlay: boolean = false
+  @State
+  private mirrorClip: boolean = false
 
   /**
    * 播放器控制器的上方显示内容
@@ -323,7 +331,7 @@ export struct AVVideoPlayer {
       Text(this.title)
         .maxLines(1)
         .textOverflow({
-          overflow: TextOverflow.Ellipsis
+          overflow: TextOverflow.MARQUEE
         })
         .margin({
           left: 4,
@@ -331,11 +339,13 @@ export struct AVVideoPlayer {
         })
         .layoutWeight(2)
         .fontColor($r("app.color.font_primary"))
-      Blank()
-        .layoutWeight(1)
       TopBar_RightAlignedCircleSwitch({
         icon: $r("sys.symbol.repeat"),
         switchValue: $repeatPlay,
+      })
+      TopBar_RightAlignedCircleSwitch({
+        icon: $r("sys.symbol.trapezoid_and_line_vertical"),
+        switchValue: $mirrorClip,
       })
       Button({
         type: ButtonType.Circle
