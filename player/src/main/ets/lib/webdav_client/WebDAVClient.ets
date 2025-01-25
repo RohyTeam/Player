@@ -148,7 +148,7 @@ class WebDAVClientImpl implements WebDAVClient {
               let authenticateMethod: string = headers['www-authenticate'] as string
               console.error(`authenticate method is ${authenticateMethod}`)
               if (authenticateMethod.startsWith('Digest')) {
-
+                // TODO: digest support
               } else if (authenticateMethod.startsWith("Basic")) {
                 this.authenticateMethod = new BasicAuthenticateMethod(this.options.username, this.options.password)
               }

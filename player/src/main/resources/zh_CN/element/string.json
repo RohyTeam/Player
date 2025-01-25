@@ -183,6 +183,14 @@
     {
       "name": "adjusting_volume",
       "value": "音量：%d%"
+    },
+    {
+      "name": "file_deleted",
+      "value": "文件已被删除"
+    },
+    {
+      "name": "file_deleted_desc",
+      "value": "该设备上的文件已被删除，其也会从视频库中删除。"
     }
   ]
 }

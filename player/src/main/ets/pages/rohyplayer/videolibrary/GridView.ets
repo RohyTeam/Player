@@ -10,6 +10,7 @@ import { LengthMetrics } from '@kit.ArkUI'
 import { DialogHelper } from '@pura/harmony-dialog'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
 import { openVideo } from '../../../util/PlayerUtil'
+import { showAlert } from '../../../util/AlertUtil'
 
 @Component
 export struct GridView {
@@ -132,6 +133,10 @@ export struct GridView {
                 avMetadataExtractor.release()
               })
           })
+          .catch(() => {
+            video.status = FileStatus.Disappear
+            this.deleter.action(video)
+          })
       })
     }
   }
@@ -153,6 +158,10 @@ export struct GridView {
                 this.covers[video.hash] = pixelMap
                 avImageGenerator.release()
               })
+          })
+          .catch(() => {
+            video.status = FileStatus.Disappear
+            this.deleter.action(video)
           })
       })
     }
@@ -219,7 +228,16 @@ struct VideoRow {
           .alignItems(HorizontalAlign.Start)
         }
         .onClick(() => {
-          openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
+          fileIo.open(this.video.uri)
+            .then(() => {
+              openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
+            })
+            .catch(() => {
+              this.video.status = FileStatus.Disappear
+              this.deleter.action(this.video)
+              showAlert(this.getUIContext(), $r("app.string.file_deleted"),
+                $r("app.string.file_deleted_desc"))
+            })
         })
         .bindContextMenu(this.contextMenu, ResponseType.LongPress)
         .type(ButtonType.Normal)

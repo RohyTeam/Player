@@ -9,6 +9,7 @@ import { DateUtil, FileUtil } from '@pura/harmony-utils'
 import { convertNumberToDurationString } from '../../../util/TimeUtil'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { openVideo } from '../../../util/PlayerUtil'
+import { showAlert } from '../../../util/AlertUtil'
 
 @Component
 export struct ListView {
@@ -35,6 +36,7 @@ export struct ListView {
             ListItem() {
               VideoRow({
                 covers: this.covers,
+                deleter: this.deleter,
                 metadatas: this.metadatas,
                 video: video,
               })
@@ -221,6 +223,10 @@ export struct ListView {
                 avMetadataExtractor.release()
               })
           })
+          .catch(() => {
+            video.status = FileStatus.Disappear
+            this.deleter.action(video)
+          })
       })
     }
   }
@@ -243,6 +249,10 @@ export struct ListView {
                 avImageGenerator.release()
               })
           })
+          .catch(() => {
+            video.status = FileStatus.Disappear
+            this.deleter.action(video)
+          })
       })
     }
   }
@@ -252,6 +262,8 @@ export struct ListView {
 struct VideoRow {
   @ObjectLink
   video: VideoEntityV2
+  @Prop
+  deleter: VideoDeleter
   @Link
   covers: Record<string, PixelMap>
   @Link
@@ -302,7 +314,16 @@ struct VideoRow {
           }
         }
         .onClick(() => {
-          openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
+          fileIo.open(this.video.uri)
+            .then(() => {
+              openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
+            })
+            .catch(() => {
+              this.video.status = FileStatus.Disappear
+              this.deleter.action(this.video)
+              showAlert(this.getUIContext(), $r("app.string.file_deleted"),
+                $r("app.string.file_deleted_desc"))
+            })
         })
         .type(ButtonType.Normal)
         .margin(4)

@@ -199,6 +199,14 @@
     {
       "name": "adjusting_volume",
       "value": "Volume: %d%"
+    },
+    {
+      "name": "file_deleted",
+      "value": "File deleted"
+    },
+    {
+      "name": "file_deleted_desc",
+      "value": "This file has been deleted from the device, it will be removed from video library too."
     }
   ]
 }
