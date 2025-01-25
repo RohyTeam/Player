@@ -333,6 +333,7 @@ struct VideoRow {
               value: $r("app.string.delete"),
               fontColor: $r("app.color.warning"),
               action: () => {
+                this.video.status = FileStatus.Disappear
                 this.deleter.action(this.video)
               }
             },

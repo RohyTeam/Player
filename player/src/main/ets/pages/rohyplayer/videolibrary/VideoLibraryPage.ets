@@ -335,6 +335,7 @@ export struct VideoLibraryPage {
                   action: (video) => {
                     VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
                       .then(() => {
+                        video.status = FileStatus.Disappear
                         let index = this.videos.indexOf(video)
                         let hashIndex = this.hashes.indexOf(video.hash)
                         this.videos.splice(index, 1)
@@ -358,6 +359,7 @@ export struct VideoLibraryPage {
                   action: (video) => {
                     VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
                       .then(() => {
+                        video.status = FileStatus.Disappear
                         let index = this.videos.indexOf(video)
                         let hashIndex = this.hashes.indexOf(video.hash)
                         this.videos.splice(index, 1)

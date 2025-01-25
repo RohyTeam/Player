@@ -99,6 +99,7 @@ export struct ListView {
                       value: $r("app.string.delete"),
                       fontColor: $r("app.color.warning"),
                       action: () => {
+                        video.status = FileStatus.Disappear
                         this.deleter.action(video)
                       }
                     },
@@ -195,6 +196,7 @@ export struct ListView {
             value: $r("app.string.delete"),
             fontColor: $r("app.color.warning"),
             action: () => {
+              item.status = FileStatus.Disappear
               this.deleter.action(item)
             }
           },
