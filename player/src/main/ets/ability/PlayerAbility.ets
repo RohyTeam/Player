@@ -6,6 +6,7 @@ import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { DatabaseManager } from '../database/DatabaseManager';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { requestPermissionsFromUser } from '../util/PermissionUtils';
+import { runTest } from '../util/TestUtil';
 
 export default class PlayerAbility extends UIAbility {
 
@@ -57,6 +58,9 @@ export default class PlayerAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     AppUtil.init(this.context)
     AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
+
+
+    // runTest()
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {

@@ -175,6 +175,14 @@
     {
       "name": "color_mode",
       "value": "颜色模式"
+    },
+    {
+      "name": "adjusting_brightness",
+      "value": "亮度：%d%"
+    },
+    {
+      "name": "adjusting_volume",
+      "value": "音量：%d%"
     }
   ]
 }

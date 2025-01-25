@@ -15,13 +15,17 @@ import { preferences } from "@kit.ArkData";
  */
 export default class VideoAbility extends UIAbility {
 
-  private windowObj?: window.Window;
+  private static windowObj?: window.Window;
+
+  public static getWindow(): window.Window {
+    return VideoAbility.windowObj!
+  }
 
   private calculateWindowSize() {
-    if (this.windowObj === undefined) {
+    if (VideoAbility.windowObj === undefined) {
       return;
     }
-    let mainWindow: window.WindowProperties = this.windowObj.getWindowProperties();
+    let mainWindow: window.WindowProperties = VideoAbility.windowObj.getWindowProperties();
     let windowWidth: number = mainWindow.windowRect.width;
     let windowHeight: number = mainWindow.windowRect.height;
     let windowWidthVp = windowWidth / display.getDefaultDisplaySync().densityPixels;
@@ -122,8 +126,8 @@ export default class VideoAbility extends UIAbility {
 
   onWindowStageRestore(windowStage: window.WindowStage): void {
     windowStage.getMainWindow().then((data: window.Window) => {
-      this.windowObj = data;
-      this.windowObj.on('windowSizeChange', (windowSize: window.Size) => {
+      VideoAbility.windowObj = data;
+      VideoAbility.windowObj.on('windowSizeChange', (windowSize: window.Size) => {
         this.calculateWindowSize()
       })
       data.setWindowKeepScreenOn(true);
@@ -159,8 +163,8 @@ export default class VideoAbility extends UIAbility {
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
     windowStage.getMainWindow().then((data: window.Window) => {
-      this.windowObj = data;
-      this.windowObj.on('windowSizeChange', (windowSize: window.Size) => {
+      VideoAbility.windowObj = data;
+      VideoAbility.windowObj.on('windowSizeChange', (windowSize: window.Size) => {
         this.calculateWindowSize()
       })
       data.setWindowKeepScreenOn(true);

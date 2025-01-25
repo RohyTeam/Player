@@ -191,6 +191,14 @@
     {
       "name": "color_mode",
       "value": "Color Mode"
+    },
+    {
+      "name": "adjusting_brightness",
+      "value": "Brightness: %d%"
+    },
+    {
+      "name": "adjusting_volume",
+      "value": "Volume: %d%"
     }
   ]
 }

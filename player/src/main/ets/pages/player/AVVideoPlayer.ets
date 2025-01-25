@@ -1,26 +1,25 @@
-import { BusinessError } from "@kit.BasicServicesKit";
-import { media } from "@kit.MediaKit";
-import { fileIo, hash, picker } from "@kit.CoreFileKit";
-import { convertNumberToDurationString } from "../../util/TimeUtil";
-import { common } from "@kit.AbilityKit";
-import { curves, LengthMetrics, SymbolGlyphModifier } from "@kit.ArkUI";
-import { StringArray } from "../../entity/Arrays";
-import { SubtitleLibraryDatabase } from "../../database/SubtitleLibraryDatabase";
-import { FileUtil } from "@pura/harmony-utils";
-import { showAlert } from "../../util/AlertUtil";
-import { SubtitleEntity, Subtitles } from "../../entity/SubtitleEntity";
-import { AudioEntity, Audios } from "../../entity/AudioEntity";
-import { JSON } from "@kit.ArkTS";
-import { compile } from "../../lib/ass_compiler";
-import { AssSubtitleView } from "../subtitle/AssSubtitleView";
-import { connectDevice, disconnectDevice } from "../../util/ContinueUtil";
+import { BusinessError } from '@kit.BasicServicesKit';
+import { media } from '@kit.MediaKit';
+import { fileIo, hash, picker } from '@kit.CoreFileKit';
+import { convertNumberToDurationString } from '../../util/TimeUtil';
+import { common } from '@kit.AbilityKit';
+import { curves, display, LengthMetrics, SymbolGlyphModifier, window } from '@kit.ArkUI';
+import { StringArray } from '../../entity/Arrays';
+import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
+import { FileUtil } from '@pura/harmony-utils';
+import { showAlert } from '../../util/AlertUtil';
+import { SubtitleEntity, Subtitles } from '../../entity/SubtitleEntity';
+import { AudioEntity, Audios } from '../../entity/AudioEntity';
+import { JSON } from '@kit.ArkTS';
+import { compile } from '../../lib/ass_compiler';
+import { AssSubtitleView } from '../subtitle/AssSubtitleView';
+import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
+import VideoAbility from '../../ability/VideoAbility';
 
 @Observed
 export class VideoState {
-
   @Track
   paused: boolean = false
-
 }
 
 enum SurfaceFillingMode {
@@ -31,7 +30,6 @@ enum SurfaceFillingMode {
 
 @Component
 export struct AVVideoPlayer {
-
   @Prop
   @Require
   title: string
@@ -41,13 +39,10 @@ export struct AVVideoPlayer {
   @Prop
   @Require
   videoHolder: string
-
   @Link
   backTrigger: boolean
-
   @State
   private avPlayer: media.AVPlayer | undefined = undefined
-
   private xComponentController = new XComponentController()
   private videoPlayerGestureModifier = new VideoPlayerGestureModifier(
     () => {
@@ -75,50 +70,68 @@ export struct AVVideoPlayer {
         this.avPlayer.setSpeed(this.currentSpeed)
         this.speedingUp = false
       }
+    },
+    () => {
+      this.adjustingBrightness = true
+    },
+    () => {
+      this.adjustingBrightness = false
+    },
+    () => {
+      this.adjustingVolume = true
+    },
+    () => {
+      this.adjustingVolume = false
+    },
+    (value: number) => {
+      this.surfaceBrightness = Math.max(0, Math.min(100, this.surfaceBrightness + value))
+      VideoAbility.getWindow().setWindowBrightness(this.surfaceBrightness / 100)
+    },
+    (value: number) => {
+      this.surfaceBrightness = Math.max(0, Math.min(100, this.surfaceBrightness - value))
+      VideoAbility.getWindow().setWindowBrightness(this.surfaceBrightness / 100)
+    },
+    (value: number) => {
+      this.surfaceVolume = Math.max(0, Math.min(100, this.surfaceVolume + value))
+      this.avPlayer?.setVolume(this.surfaceVolume / 100)
+    },
+    (value: number) => {
+      this.surfaceVolume = Math.max(0, Math.min(100, this.surfaceVolume - value))
+      this.avPlayer?.setVolume(this.surfaceVolume / 100)
     }
   )
-
   @State
   private parameterStartTime: number = -1
   @State
   private parameterStartPaused: boolean | undefined = undefined
-
   @State
   private showControls: boolean = false
-
   @State
   private videoState: VideoState = new VideoState()
-
   @State
   private currentPosition: number = 0
   @State
   private max: number = 1
-
   @State
   private currentSpeed: media.PlaybackSpeed = media.PlaybackSpeed.SPEED_FORWARD_1_00_X
-
   @State
   private surfaceFillingMode: SurfaceFillingMode = SurfaceFillingMode.Fit
-
   @State
   private speedingUp: boolean = false
   @State
   private movingPosition: number = 0
   @State
   private movingProgressBar: boolean = false
-
   @State
   private videoMetadata: media.AVMetadata | undefined = undefined
   @State
   private surfaceWidth: number = 0
   @State
   private surfaceHeight: number = 0
-
   @StorageProp("screenHeight")
   private screenHeight: number = 1
   @StorageProp("screenWidth")
   private screenWidth: number = 1
-
   @State
   private selectedSubtitle: number | undefined = undefined
   @State
@@ -129,6 +142,10 @@ export struct AVVideoPlayer {
   private availableAudios: Audios = []
   @State
   private subtitleHashes: StringArray = []
+  @State
+  private adjustingBrightness: boolean = false
+  @State
+  private adjustingVolume: boolean = false
 
   build() {
     Stack() {
@@ -146,6 +163,7 @@ export struct AVVideoPlayer {
             TransitionEffect.move(TransitionEdge.TOP)
           )
         )
+
         this.surfaceOverlay()
         Column() {
           this.progressBar()
@@ -188,13 +206,28 @@ export struct AVVideoPlayer {
           .width("100%")
           .height("100%")
         }
-      }
-      .alignContent(Alignment.Center)
-      .gestureModifier(this.videoPlayerGestureModifier)
-      .width("100%")
-      .height("100%")
-      .zIndex(99) // 由于字幕也有分层，把 zIndex 设置高一点防止被字幕遮挡
-      Stack() {
+        if (this.adjustingBrightness) {
+          Stack() {
+            Text($r("app.string.adjusting_brightness", this.surfaceBrightness))
+              .fontSize(32)
+              .fontColor("#ffffffff")
+          }
+          .backgroundColor("#88000000")
+          .alignContent(Alignment.Center)
+          .width("100%")
+          .height("100%")
+        }
+        if (this.adjustingVolume) {
+          Stack() {
+            Text($r("app.string.adjusting_volume", this.surfaceVolume))
+              .fontSize(32)
+              .fontColor("#ffffffff")
+          }
+          .backgroundColor("#88000000")
+          .alignContent(Alignment.Center)
+          .width("100%")
+          .height("100%")
+        }
         if (this.movingProgressBar) {
           Stack() {
             Text(`${convertNumberToDurationString(this.movingPosition)}/${convertNumberToDurationString(this.max)}`)
@@ -244,6 +277,7 @@ export struct AVVideoPlayer {
           .height(this.calculateHeightPercent(this.surfaceFillingMode))
           .width(this.calculateWidthPercent(this.surfaceFillingMode))
           .onAppear(() => {
+            VideoAbility.getWindow().setWindowBrightness(0.5)
             this.parameterStartTime = AppStorage.get("videoPosition") || -1
             this.parameterStartPaused = AppStorage.get("videoPaused") || undefined
             this.initAvPlayer()
@@ -253,11 +287,14 @@ export struct AVVideoPlayer {
       .alignContent(Alignment.Center)
       .width("100%")
       .height("100%")
-      .zIndex(-100)  // 由于字幕也有分层，把 zIndex 设置小一点防止遮挡字幕
+      .zIndex(-100) // 由于字幕也有分层，把 zIndex 设置小一点防止遮挡字幕
     }
     .width("100%")
     .height("100%")
   }
+
+  @State
+  private repeatPlay: boolean = false
 
   /**
    * 播放器控制器的上方显示内容
@@ -289,15 +326,37 @@ export struct AVVideoPlayer {
           right: 4
         })
         .fontColor($r("app.color.font_primary"))
+      Blank()
+        .layoutWeight(1)
+      TopBar_RightAlignedCircleSwitch({
+        icon: $r("sys.symbol.repeat"),
+        switchValue: $repeatPlay,
+      })
+      Button({
+        type: ButtonType.Circle
+      }) {
+        SymbolGlyph($r("sys.symbol.slider_horizontal_2"))
+          .fontSize(24)
+          .fontColor([$r("app.color.icon_primary")])
+      }
+      .align(Alignment.Center)
+      .margin({
+        left: 12
+      })
+      .width(40)
+      .height(40)
+      .bindMenu(this.slidersMenus)
+      .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
       left: 16,
       right: 16,
-      top: 12
+      top: 12,
+      bottom: 12
     })
     .backgroundColor($r("app.color.comp_background_focus"))
     .alignItems(VerticalAlign.Center)
-    .height("15%")
+    //.height("15%")
     .width("100%")
     .borderRadius({
       bottomLeft: 16,
@@ -315,6 +374,7 @@ export struct AVVideoPlayer {
 
       }
       .layoutWeight(1)
+
       Row() {
 
       }
@@ -449,6 +509,7 @@ export struct AVVideoPlayer {
       .height(40)
       .bindMenu(this.surfaceFillingModeMenus)
       .backgroundColor($r("app.color.comp_background_tertiary"))
+
       Button({
         type: ButtonType.Circle
       }) {
@@ -464,6 +525,7 @@ export struct AVVideoPlayer {
       .height(40)
       .bindMenu(this.speedMenus)
       .backgroundColor($r("app.color.comp_background_tertiary"))
+
       Button({
         type: ButtonType.Circle
       }) {
@@ -479,6 +541,7 @@ export struct AVVideoPlayer {
       .height(40)
       .bindMenu(this.audioMenus)
       .backgroundColor($r("app.color.comp_background_tertiary"))
+
       Button({
         type: ButtonType.Circle
       }) {
@@ -502,7 +565,7 @@ export struct AVVideoPlayer {
     })
     .backgroundColor($r("app.color.comp_background_focus"))
     .alignItems(VerticalAlign.Center)
-    .height("15%")
+    //.height("15%")
     .width("100%")
   }
 
@@ -554,13 +617,72 @@ export struct AVVideoPlayer {
     .backgroundColor($r("app.color.comp_background_tertiary"))
   }
 
+  @State
+  private surfaceBrightness: number = 50
+  @State
+  private surfaceVolume: number = 100
+
+  @Builder
+  slidersMenus() {
+    Column() {
+      Row() {
+        SymbolGlyph($r("sys.symbol.sun_max"))
+          .fontSize(24)
+          .fontColor([$r("app.color.icon_primary")])
+          .margin({
+            left: 12
+          })
+        Slider({
+          min: 0,
+          max: 100,
+          step: 1,
+          style: SliderStyle.InSet,
+          value: this.surfaceBrightness,
+        })
+          .onChange((value: number) => {
+            this.surfaceBrightness = value
+            VideoAbility.getWindow().setWindowBrightness(value / 100)
+          })
+          .width("192vp")
+          .margin({
+            right: 8
+          })
+      }
+
+      Row() {
+        SymbolGlyph($r("sys.symbol.speaker_wave_3"))
+          .fontSize(24)
+          .fontColor([$r("app.color.icon_primary")])
+          .margin({
+            left: 12
+          })
+        Slider({
+          min: 0,
+          max: 100,
+          step: 1,
+          style: SliderStyle.InSet,
+          value: this.surfaceVolume,
+        })
+          .onChange((value: number) => {
+            this.surfaceVolume = value
+            this.avPlayer?.setVolume(value / 100)
+          })
+          .width("192vp")
+          .margin({
+            right: 8
+          })
+      }
+    }
+  }
+
   @Builder
   subtitleMenus() {
     Menu() {
       MenuItemGroup() {
         MenuItem({
           content: $r("app.string.no_subtitle"),
-          symbolEndIcon: this.selectedSubtitle == undefined ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.selectedSubtitle == undefined ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) :
+            undefined
         })
           .onClick(() => {
             this.selectedSubtitle = undefined
@@ -574,7 +696,8 @@ export struct AVVideoPlayer {
         ForEach(this.availableSubtitles, (subtitle: SubtitleEntity, index: number) => {
           MenuItem({
             content: `${subtitle.name} (${subtitle.language})`,
-            symbolEndIcon: this.selectedSubtitle == subtitle.index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+            symbolEndIcon: this.selectedSubtitle == subtitle.index ?
+              new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
           })
             .onClick(() => {
               this.selectedSubtitle = index
@@ -598,7 +721,7 @@ export struct AVVideoPlayer {
           content: $r("app.string.import")
         })
           .onClick(() => {
-            this.showSubtitlePicker()/*
+            this.showSubtitlePicker() /*
             promptAction.showToast({
               message: "由于字幕导入有问题，为了使用正常，暂时先屏蔽此功能"
             })*/
@@ -630,7 +753,8 @@ export struct AVVideoPlayer {
         ForEach(this.availableAudios, (audio: AudioEntity, index: number) => {
           MenuItem({
             content: `${audio.name} (${audio.language})`,
-            symbolEndIcon: this.selectedAudio == audio.index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+            symbolEndIcon: this.selectedAudio == audio.index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) :
+              undefined
           })
             .onClick(() => {
               if (this.selectedSubtitle != undefined) {
@@ -677,7 +801,8 @@ export struct AVVideoPlayer {
       MenuItemGroup() {
         MenuItem({
           content: $r("app.string.surfaceFillingMode_fit"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.Fit ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.Fit ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.surfaceFillingMode = SurfaceFillingMode.Fit
@@ -689,7 +814,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: $r("app.string.surfaceFillingMode_stretch"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.Stretch ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.Stretch ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.surfaceFillingMode = SurfaceFillingMode.Stretch
@@ -700,7 +826,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: $r("app.string.surfaceFillingMode_4by3"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.FourByThree ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.surfaceFillingMode = SurfaceFillingMode.FourByThree
@@ -711,7 +838,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: $r("app.string.surfaceFillingMode_16by9"),
-          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.surfaceFillingMode = SurfaceFillingMode.SixteenByNine
@@ -737,7 +865,8 @@ export struct AVVideoPlayer {
       MenuItemGroup() {
         MenuItem({
           content: "0.50x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_50_X)
@@ -749,7 +878,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: "0.75x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_75_X)
@@ -760,7 +890,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: "1.00x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_00_X)
@@ -771,7 +902,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: "1.25x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_25_X)
@@ -782,7 +914,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: "1.50x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_50_X)
@@ -793,7 +926,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: "1.75x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_75_X)
@@ -804,7 +938,8 @@ export struct AVVideoPlayer {
           })
         MenuItem({
           content: "2.00x",
-          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+          symbolEndIcon: this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ?
+            new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
         })
           .onClick(() => {
             this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_2_00_X)
@@ -899,7 +1034,8 @@ export struct AVVideoPlayer {
             }
 
             if (duplicated) {
-              showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"))
+              showAlert(this.getUIContext(), $r("app.string.duplicated_imports"),
+                $r("app.string.duplicated_imports_desc"))
             }
           })
       }).catch((err: BusinessError) => {
@@ -1018,7 +1154,8 @@ export struct AVVideoPlayer {
       } else if ((this.surfaceHeight / this.surfaceWidth) > (this.screenHeight / this.screenWidth)) {
         return "100%"
       } else {
-        console.error(`height percent: ${`${((this.surfaceHeight / this.surfaceWidth * this.screenWidth) / this.screenHeight) * 100}%`}`)
+        console.error(`height percent: ${`${((this.surfaceHeight / this.surfaceWidth * this.screenWidth) /
+        this.screenHeight) * 100}%`}`)
         return `${((this.surfaceHeight / this.surfaceWidth * this.screenWidth) / this.screenHeight) * 100}%`
       }
     }
@@ -1080,8 +1217,15 @@ export struct AVVideoPlayer {
             this.videoState.paused = true
             AppStorage.setOrCreate("videoPaused", true)
           } else if (state == "completed") {
-            this.videoState.paused = true
-            avPlayer.pause()
+            if (this.repeatPlay) {
+              this.currentPosition = 0
+              avPlayer.seek(0, media.SeekMode.SEEK_CLOSEST)
+              avPlayer.play()
+              this.videoState.paused = false
+            } else {
+              this.videoState.paused = true
+              avPlayer.pause()
+            }
             AppStorage.setOrCreate("videoPaused", true)
           } else if (state == "playing") {
             console.error("playing")
@@ -1220,7 +1364,6 @@ export struct AVVideoPlayer {
         }
       })
   }
-
 }
 
 class VideoPlayerGestureModifier implements GestureModifier {
@@ -1229,20 +1372,102 @@ class VideoPlayerGestureModifier implements GestureModifier {
   private showControls: () => void
   private startSpeedUp: () => void
   private endSpeedUp: () => void
+  private brightnessAdjustStart: () => void
+  private brightnessAdjustEnd: () => void
+  private volumeAdjustStart: () => void
+  private volumeAdjustEnd: () => void
+  private brightnessUp: (value: number) => void
+  private brightnessDown: (value: number) => void
+  private volumeUp: (value: number) => void
+  private volumeDown: (value: number) => void
+
+  private brightnessOrVolume: boolean = true
 
   constructor(
     togglePause: () => void,
     showControls: () => void,
     startSpeedUp: () => void,
     endSpeedUp: () => void,
+    brightnessAdjustStart: () => void,
+    brightnessAdjustEnd: () => void,
+    volumeAdjustStart: () => void,
+    volumeAdjustEnd: () => void,
+    brightnessUp: (value: number) => void,
+    brightnessDown: (value: number) => void,
+    volumeUp: (value: number) => void,
+    volumeDown: (value: number) => void,
   ) {
     this.togglePause = togglePause
     this.showControls = showControls
     this.startSpeedUp = startSpeedUp
     this.endSpeedUp = endSpeedUp
+    this.brightnessAdjustStart = brightnessAdjustStart
+    this.brightnessAdjustEnd = brightnessAdjustEnd
+    this.volumeAdjustStart = volumeAdjustStart
+    this.volumeAdjustEnd = volumeAdjustEnd
+    this.brightnessUp = brightnessUp
+    this.brightnessDown = brightnessDown
+    this.volumeUp = volumeUp
+    this.volumeDown = volumeDown
   }
 
+  private delta: number = 0
+
   applyGesture(event: UIGestureEvent): void {
+    event.addGesture(
+      new PanGestureHandler({ fingers: 1, direction: PanDirection.Vertical })
+        .onActionStart((event: GestureEvent) => {
+          if (event.fingerList.length == 0) {
+            return
+          }
+          this.delta = 0
+          let mainWindow: window.WindowProperties = VideoAbility.getWindow().getWindowProperties();
+          let windowWidth: number = mainWindow.windowRect.width;
+          let windowWidthVp = windowWidth / display.getDefaultDisplaySync().densityPixels;
+          let fingerInfo = event.fingerList[0]
+          if (fingerInfo.globalX > windowWidthVp / 2) {
+            this.brightnessOrVolume = false
+            this.volumeAdjustStart()
+          } else {
+            this.brightnessOrVolume = true
+            this.brightnessAdjustStart()
+          }
+        })
+        .onActionUpdate((event: GestureEvent) => {
+          if (event.fingerList.length == 0) {
+            return
+          }
+          let realOffset = event.offsetY - this.delta
+          this.delta = event.offsetY
+          console.error('starting swipe gesture judgement')
+          let mainWindow: window.WindowProperties = VideoAbility.getWindow().getWindowProperties();
+          let windowWidth: number = mainWindow.windowRect.width;
+          let windowHeight: number = mainWindow.windowRect.height;
+          let windowWidthVp = windowWidth / display.getDefaultDisplaySync().densityPixels;
+          let windowHeightVp = windowHeight / display.getDefaultDisplaySync().densityPixels;
+          let delta = windowHeightVp / 100
+          console.error(`fingerInfo.globalX: windowHeightVp: ${windowWidthVp}, event offset: ${event.offsetY}`)
+          if (!this.brightnessOrVolume) {
+            // 右侧控制声音
+            if (realOffset > 0) {
+              this.volumeDown(Math.abs(realOffset) / delta)
+            } else if (realOffset < 0) {
+              this.volumeUp(Math.abs(realOffset) / delta)
+            }
+          } else {
+            // 左侧控制亮度
+            if (realOffset > 0) {
+              this.brightnessDown(Math.abs(realOffset) / delta)
+            } else if (realOffset < 0) {
+              this.brightnessUp(Math.abs(realOffset) / delta)
+            }
+          }
+        })
+        .onActionEnd((event: GestureEvent) => {
+          this.brightnessAdjustEnd()
+          this.volumeAdjustEnd()
+        })
+    )
     event.addGesture(
       new TapGestureHandler({ count: 2, fingers: 1 })
         .onAction((event: GestureEvent) => {
@@ -1255,9 +1480,8 @@ class VideoPlayerGestureModifier implements GestureModifier {
           this.showControls()
         })
     )
-
     event.addGesture(
-      new LongPressGestureHandler({ fingers: 1})
+      new LongPressGestureHandler({ fingers: 1 })
         .onAction((event: GestureEvent) => {
           this.startSpeedUp()
         })
@@ -1269,5 +1493,34 @@ class VideoPlayerGestureModifier implements GestureModifier {
         })
     )
   }
+}
 
+@Component
+export struct TopBar_RightAlignedCircleSwitch {
+  @Prop
+  @Require
+  icon: Resource
+  @Link
+  switchValue: boolean
+
+  build() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph(this.icon)
+        .fontSize(24)
+        .fontColor([this.switchValue ? $r("app.color.icon_on_primary") : $r("app.color.icon_primary")])
+        .symbolEffect(new BounceSymbolEffect(EffectScope.WHOLE, EffectDirection.DOWN), true)
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .onClick(() => {
+      this.switchValue = !this.switchValue
+    })
+    .backgroundColor(this.switchValue ? $r("app.color.brand") : $r("app.color.comp_background_tertiary"))
+  }
 }
