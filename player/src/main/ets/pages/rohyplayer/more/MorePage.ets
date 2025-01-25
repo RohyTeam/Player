@@ -1,6 +1,5 @@
 @Component
 export struct MorePage {
-
   build() {
     Navigation() {
       Text($r("app.string.coming_soon"))
@@ -11,5 +10,4 @@ export struct MorePage {
     .height("100%")
     .width("100%")
   }
-
 }

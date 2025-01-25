@@ -1,11 +1,12 @@
-import { SegmentButton, SegmentButtonOptions } from "@ohos.arkui.advanced.SegmentButton"
-import { SegmentButtonItemTuple, SegmentButtonTextItem } from "@kit.ArkUI"
+import { SegmentButton, SegmentButtonOptions } from '@ohos.arkui.advanced.SegmentButton'
+import { SegmentButtonItemTuple, SegmentButtonTextItem } from '@kit.ArkUI'
 
 export interface ClickEvent {
 
   action: () => void
 
 }
+
 export interface SwitchEvent {
 
   action: (value: boolean) => void
@@ -26,12 +27,10 @@ export struct SettingsPage {
     .height("100%")
     .width("100%")
   }
-
 }
 
 @Component
 export struct SettingsGroup {
-
   @BuilderParam
   content: () => void
 
@@ -49,12 +48,10 @@ export struct SettingsGroup {
     }
     .width("100%")
   }
-
 }
 
 @Component
 export struct SettingsRow {
-
   @Prop
   @Require
   settingsTitle: ResourceStr
@@ -88,12 +85,10 @@ export struct SettingsRow {
     .height("48vp")
     .width("100%")
   }
-
 }
 
 @Component
 export struct SettingsSwitch {
-
   @Prop
   @Require
   settingsTitle: ResourceStr
@@ -136,7 +131,6 @@ export struct SettingsSwitch {
     .height("48vp")
     .width("100%")
   }
-
 }
 
 export interface SelectChoice {
@@ -148,7 +142,6 @@ export interface SelectChoice {
 
 @Component
 export struct SettingsSelection {
-
   @Prop
   @Require
   settingsTitle: ResourceStr
@@ -157,12 +150,11 @@ export struct SettingsSelection {
   choices: SelectChoice[]
   @State
   selectedButtons: number[] = [0]
-
   @State
   segmentOptions: SegmentButtonOptions | undefined = undefined
 
   aboutToAppear(): void {
-    let buttonItems: SegmentButtonTextItem[]  = []
+    let buttonItems: SegmentButtonTextItem[] = []
     for (let choice of this.choices) {
       let buttonItem: SegmentButtonTextItem = {
         text: choice.title
@@ -210,12 +202,10 @@ export struct SettingsSelection {
     .height("48vp")
     .width("100%")
   }
-
 }
 
 @Component
 export struct SettingsDivider {
-
   build() {
     Divider()
       .margin({
@@ -223,5 +213,4 @@ export struct SettingsDivider {
         right: 12
       })
   }
-
 }

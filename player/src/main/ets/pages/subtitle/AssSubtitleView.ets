@@ -1,10 +1,9 @@
-import { CompiledASS, CompiledASSStyle, Dialogue, DialogueFragment, DialogueSlice } from "../../lib/ass_compiler"
-import { abgrColorStr2argbColor } from "../../util/StringUtil"
-import { LengthMetricsUnit } from "@kit.ArkUI"
+import { CompiledASS, CompiledASSStyle, Dialogue, DialogueSlice } from '../../lib/ass_compiler'
+import { abgrColorStr2argbColor } from '../../util/StringUtil'
+import { LengthMetricsUnit } from '@kit.ArkUI'
 
 @Component
 export struct AssSubtitleView {
-
   @Prop
   subtitle: CompiledASS
   @Prop
@@ -13,7 +12,6 @@ export struct AssSubtitleView {
   actualHeight: number
   @Link
   currentTime: number
-
   @State
   dialogueStyles: Record<string, CompiledASSStyle> = {}
 
@@ -47,8 +45,10 @@ export struct AssSubtitleView {
                 surfaceWidth: this.actualWidth,
                 surfaceHeight: this.actualHeight,
                 pos: dialogue.move != undefined ? {
-                  x: dialogue.move.x1 + ((dialogue.move.x2 - dialogue.move.x1) * ((this.currentTime - (dialogue.start * 1000)) / (dialogue.end * 1000 - dialogue.start * 1000))),
-                  y: dialogue.move.y1 + ((dialogue.move.y2 - dialogue.move.y1) * ((this.currentTime - (dialogue.start * 1000)) / (dialogue.end * 1000 - dialogue.start * 1000))),
+                  x: dialogue.move.x1 + ((dialogue.move.x2 - dialogue.move.x1) *
+                    ((this.currentTime - (dialogue.start * 1000)) / (dialogue.end * 1000 - dialogue.start * 1000))),
+                  y: dialogue.move.y1 + ((dialogue.move.y2 - dialogue.move.y1) *
+                    ((this.currentTime - (dialogue.start * 1000)) / (dialogue.end * 1000 - dialogue.start * 1000))),
                 } : (
                   dialogue.pos != undefined ? dialogue.pos : undefined
                 ),
@@ -67,7 +67,6 @@ export struct AssSubtitleView {
     .height("100%")
     .width("100%")
   }
-
 }
 
 interface Position {
@@ -77,19 +76,16 @@ interface Position {
 
 @Component
 struct AdvancedSubtitle {
-
   @Prop
   @Require
   surfaceWidth: number
   @Prop
   @Require
   surfaceHeight: number
-
   @Prop
   @Require
   @Watch("onPosUpdate")
   pos: Position | undefined
-
   @Prop
   @Require
   assFile: CompiledASS
@@ -102,7 +98,6 @@ struct AdvancedSubtitle {
   @Prop
   @Require
   style: CompiledASSStyle | undefined
-
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings, LengthMetricsUnit.PX)
 
@@ -126,7 +121,8 @@ struct AdvancedSubtitle {
     // 清空画布
     this.context.reset()
     // 获取基础字体样式，在没有特殊标签情况下使用
-    let baseStyle = `${this.style?.style.Italic == -1 ? "italic" : "normal"} ${this.style?.style.Bold == -1 ? "bold" : "normal"} ${this.style?.style.Fontsize || 60}px`
+    let baseStyle = `${this.style?.style.Italic == -1 ? "italic" : "normal"} ${this.style?.style.Bold == -1 ? "bold" :
+      "normal"} ${this.style?.style.Fontsize || 60}px`
 
     // 用于计算字幕大小，以确定左下角的位置
     let totalWidth = 0
@@ -137,7 +133,9 @@ struct AdvancedSubtitle {
       this.context.font = baseStyle
       // 如果这个碎片文本的标签中有字体大小的修改，实际上这个 fs 改的是行高，但是 Canvas 没法修改，只能修改字体大小
       if (fragment.tag.fs != undefined) {
-        this.context.font = `${this.style?.style.Italic == -1 ? "italic" : "normal"} ${this.style?.style.Bold == -1 ? "bold" : "normal"} ${fragment.tag.fs}px`
+        this.context.font =
+          `${this.style?.style.Italic == -1 ? "italic" : "normal"} ${this.style?.style.Bold == -1 ? "bold" :
+            "normal"} ${fragment.tag.fs}px`
       }
       // 计算在画布上的大小
       let textMetrics = this.context.measureText(fragment.text)
@@ -238,11 +236,15 @@ struct AdvancedSubtitle {
 
     // 遍历每一个文本碎片，开始渲染
     for (let fragment of this.slice.fragments) {
-      console.error(`displaying subtitle content (${fragment.text}) at ${x + previousWidth}, ${y} with color ${abgrColorStr2argbColor(this.style?.style.PrimaryColour.substring(2) || "00ffffff")}`)
+      console.error(`displaying subtitle content (${fragment.text}) at ${x +
+        previousWidth}, ${y} with color ${abgrColorStr2argbColor(this.style?.style.PrimaryColour.substring(2) ||
+        "00ffffff")}`)
       this.context.font = baseStyle
       // 如果文本碎片的标签修改了文字大小，修改上下文的字体
       if (fragment.tag.fs) {
-        this.context.font = `${this.style?.style.Italic == -1 ? "italic" : "normal"} ${this.style?.style.Bold == -1 ? "bold" : "normal"} ${fragment.tag.fs}px`
+        this.context.font =
+          `${this.style?.style.Italic == -1 ? "italic" : "normal"} ${this.style?.style.Bold == -1 ? "bold" :
+            "normal"} ${fragment.tag.fs}px`
       }
       // 确保边框是否应该显示
       if (fragment.tag.xbord || 1 > 0 && fragment.tag.ybord || 1 > 0) {
@@ -251,7 +253,8 @@ struct AdvancedSubtitle {
           if (fragment.tag.c3 != undefined) {
             this.context.strokeStyle = `#${fragment.tag.c3}`
           } else {
-            this.context.strokeStyle = abgrColorStr2argbColor(this.style?.style.OutlineColour.substring(2) || "00ffffff")
+            this.context.strokeStyle =
+              abgrColorStr2argbColor(this.style?.style.OutlineColour.substring(2) || "00ffffff")
           }
           this.context.lineWidth = this.style.style.Outline + 1
           this.context.strokeText(fragment.text, x + previousWidth, y)
@@ -269,5 +272,4 @@ struct AdvancedSubtitle {
       previousWidth += this.context.measureText(fragment.text).width
     }
   }
-
 }

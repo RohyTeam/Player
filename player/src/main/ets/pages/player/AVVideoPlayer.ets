@@ -1367,7 +1367,6 @@ export struct AVVideoPlayer {
 }
 
 class VideoPlayerGestureModifier implements GestureModifier {
-
   private togglePause: () => void
   private showControls: () => void
   private startSpeedUp: () => void
@@ -1380,7 +1379,6 @@ class VideoPlayerGestureModifier implements GestureModifier {
   private brightnessDown: (value: number) => void
   private volumeUp: (value: number) => void
   private volumeDown: (value: number) => void
-
   private brightnessOrVolume: boolean = true
 
   constructor(

@@ -1,4 +1,4 @@
-import { CompiledASS } from "../lib/ass_compiler";
+import { CompiledASS } from '../lib/ass_compiler';
 
 export interface SubtitleEntity {
 
@@ -10,4 +10,5 @@ export interface SubtitleEntity {
 }
 
 @Observed
-export class Subtitles extends Array<SubtitleEntity> {}
+export class Subtitles extends Array<SubtitleEntity> {
+}

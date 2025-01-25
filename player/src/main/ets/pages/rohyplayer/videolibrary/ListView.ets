@@ -9,8 +9,6 @@ import { DateUtil, FileUtil } from '@pura/harmony-utils'
 import { convertNumberToDurationString } from '../../../util/TimeUtil'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { openVideo } from '../../../util/PlayerUtil'
-import { BusinessError } from '@kit.BasicServicesKit'
-import { JSON } from '@kit.ArkTS'
 
 @Component
 export struct ListView {
@@ -25,7 +23,6 @@ export struct ListView {
   @Link
   metadatas: Record<string, media.AVMetadata>
   private scroller = new ListScroller()
-
   @StorageLink('currentWidthBreakpoint')
   currentWidthBreakpoint: string = BreakpointConstants.BREAKPOINT_LG;
 
@@ -33,7 +30,8 @@ export struct ListView {
     Column() {
       List({ space: 8, scroller: this.scroller }) {
         ForEach(this.videos, (video: VideoEntityV2) => {
-          if (this.searching.length == 0 || video.title.indexOf(this.searching) >= 0 && video.status != FileStatus.Disappear) {
+          if (this.searching.length == 0 ||
+            video.title.indexOf(this.searching) >= 0 && video.status != FileStatus.Disappear) {
             ListItem() {
               VideoRow({
                 covers: this.covers,
@@ -120,7 +118,8 @@ export struct ListView {
         })
       }
       .edgeEffect(EdgeEffect.Spring)
-      .expandSafeArea([SafeAreaType.SYSTEM], this.currentWidthBreakpoint === BreakpointConstants.BREAKPOINT_LG ? [SafeAreaEdge.BOTTOM] : [])
+      .expandSafeArea([SafeAreaType.SYSTEM],
+        this.currentWidthBreakpoint === BreakpointConstants.BREAKPOINT_LG ? [SafeAreaEdge.BOTTOM] : [])
       .borderRadius(12)
       .width("100%")
       .layoutWeight(1)
@@ -247,19 +246,16 @@ export struct ListView {
       })
     }
   }
-
 }
 
 @Component
 struct VideoRow {
-
   @ObjectLink
   video: VideoEntityV2
   @Link
   covers: Record<string, PixelMap>
   @Link
   metadatas: Record<string, media.AVMetadata>
-
   @StorageLink('currentWidthBreakpoint')
   currentWidthBreakpoint: string = BreakpointConstants.BREAKPOINT_LG;
 
@@ -288,7 +284,8 @@ struct VideoRow {
               Blank()
                 .layoutWeight(1)
               if (this.metadatas[this.video.hash] != undefined) {
-                Text($r("app.string.duration", `${convertNumberToDurationString(parseInt(this.metadatas[this.video.hash].duration))}`))
+                Text($r("app.string.duration",
+                  `${convertNumberToDurationString(parseInt(this.metadatas[this.video.hash].duration))}`))
                   .fontSize(10)
                   .fontColor($r("app.color.font_secondary"))
               }
@@ -335,5 +332,4 @@ struct VideoRow {
       .backgroundColor($r("app.color.rohy_card"))
     }
   }
-
 }

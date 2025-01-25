@@ -1,20 +1,18 @@
-import { AbilityConstant, UIAbility, Want } from "@kit.AbilityKit";
-import { display, window } from "@kit.ArkUI";
-import hilog from "@ohos.hilog";
-import { BusinessError, deviceInfo } from "@kit.BasicServicesKit";
-import { EventData } from "../pages/VideoIndex";
-import { connectDevice, copyFileToContinueDir, disconnectDevice } from "../util/ContinueUtil";
-import { distributedDeviceManager } from "@kit.DistributedServiceKit";
-import { JSON } from "@kit.ArkTS";
-import { AppUtil, PreferencesUtil } from "@pura/harmony-utils";
-import { checkPermissionGrant } from "../util/PermissionUtils";
-import { preferences } from "@kit.ArkData";
+import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { display, window } from '@kit.ArkUI';
+import hilog from '@ohos.hilog';
+import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
+import { EventData } from '../pages/VideoIndex';
+import { copyFileToContinueDir } from '../util/ContinueUtil';
+import { distributedDeviceManager } from '@kit.DistributedServiceKit';
+import { JSON } from '@kit.ArkTS';
+import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
+import { checkPermissionGrant } from '../util/PermissionUtils';
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
  */
 export default class VideoAbility extends UIAbility {
-
   private static windowObj?: window.Window;
 
   public static getWindow(): window.Window {
@@ -197,7 +195,6 @@ export default class VideoAbility extends UIAbility {
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
     });
   }
-
 }
 
 function tryGetPreference(key: string): boolean {

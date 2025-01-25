@@ -1,5 +1,6 @@
 export function abgrColorStr2argbColor(colorStr: string): string {
-  return `#${reverseHexColor(colorStr.substring(0, 2))}${colorStr.substring(6, 8)}${colorStr.substring(4, 6)}${colorStr.substring(2, 4)}`.toLowerCase()
+  return `#${reverseHexColor(colorStr.substring(0, 2))}${colorStr.substring(6, 8)}${colorStr.substring(4,
+    6)}${colorStr.substring(2, 4)}`.toLowerCase()
 }
 
 export function abgrColorStr2rgbColor(colorStr: string): string {
@@ -41,7 +42,7 @@ export function reverseHexColor(content: string): string {
       result += "3"
     } else if (char == "D") {
       result += "2"
-    } else if (char =="E") {
+    } else if (char == "E") {
       result += "1"
     } else if (char == "F") {
       result += "0"

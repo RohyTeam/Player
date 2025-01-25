@@ -1,4 +1,4 @@
-import { fileIo, hash } from "@kit.CoreFileKit";
+import { fileIo, hash } from '@kit.CoreFileKit';
 
 /**
  * FIXME: 注意，这个函数只是 hash 库不能用于对图库中文件进行哈希的解决方案，甚至会出现同一个文件哈希值不一样的情况，有待优化

@@ -1,15 +1,10 @@
-import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
-import { CommonConstants } from '../common/constants/CommonConstants';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { DatabaseManager } from '../database/DatabaseManager';
-import { BusinessError } from '@kit.BasicServicesKit';
-import { requestPermissionsFromUser } from '../util/PermissionUtils';
-import { runTest } from '../util/TestUtil';
 
 export default class PlayerAbility extends UIAbility {
-
   private windowObj?: window.Window;
 
   private updateHeightBp(): void {
@@ -86,5 +81,4 @@ export default class PlayerAbility extends UIAbility {
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
     });
   }
-
 }

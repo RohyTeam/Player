@@ -1,14 +1,12 @@
-import { common } from "@kit.AbilityKit";
-import { relationalStore } from "@kit.ArkData";
-import hilog from "@ohos.hilog";
-import { fileShare, hash } from "@kit.CoreFileKit";
-import { FileUtil, SHA } from "@pura/harmony-utils";
-import { VideoEntity } from "../entity/VideoEntity";
-import { BusinessError } from "@kit.BasicServicesKit";
-import { JSON } from "@kit.ArkTS";
+import { common } from '@kit.AbilityKit';
+import { relationalStore } from '@kit.ArkData';
+import hilog from '@ohos.hilog';
+import { fileShare, hash } from '@kit.CoreFileKit';
+import { FileUtil } from '@pura/harmony-utils';
+import { VideoEntity } from '../entity/VideoEntity';
+import { BusinessError } from '@kit.BasicServicesKit';
 
 export class VideoLibraryDatabase {
-
   private static SQL_CREATE_TABLE = 'CREATE TABLE IF NOT EXISTS VideoLibrary (' +
     'LOCATION TEXT,' +
     'TITLE TEXT,' +
@@ -16,7 +14,6 @@ export class VideoLibraryDatabase {
     'FILE_HASH TEXT,' +
     'FILE_SOURCE TEXT' +
     ');';
-
   private static databaseConfig: relationalStore.StoreConfig = {
     name: 'videoLibrary.db',
     securityLevel: relationalStore.SecurityLevel.S2,
@@ -56,7 +53,7 @@ export class VideoLibraryDatabase {
             uri: uri,
             operationMode: 0b1
           }
-          ])
+        ])
           .then(() => {
             let path = FileUtil.getFilePath(uri)
 
@@ -89,7 +86,8 @@ export class VideoLibraryDatabase {
     })
   }
 
-  public static addFromPhotos(context: common.Context, uri: string, displayName: string, photoHash: string): Promise<VideoEntity> {
+  public static addFromPhotos(context: common.Context, uri: string, displayName: string,
+    photoHash: string): Promise<VideoEntity> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -195,5 +193,4 @@ export class VideoLibraryDatabase {
       })
     })
   }
-
 }

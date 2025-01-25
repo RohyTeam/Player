@@ -1,4 +1,4 @@
-import { common, Want } from "@kit.AbilityKit";
+import { common, Want } from '@kit.AbilityKit';
 
 export function openVideo(context: common.UIAbilityContext, uri: string, title: string, hash: string) {
   let want: Want = {

@@ -14,9 +14,14 @@ import { media } from '@kit.MediaKit'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { dataSharePredicates } from '@kit.ArkData'
 import { hashByFd } from '../../../util/HashUtil'
-import { SettingsDivider, SettingsGroup, SettingsPage, SettingsRow,
+import {
+  SettingsDivider,
+  SettingsGroup,
+  SettingsPage,
+  SettingsRow,
   SettingsSelection,
-  SettingsSwitch } from '../../components/SettingsPage'
+  SettingsSwitch
+} from '../../components/SettingsPage'
 import { checkPermissionGrant, requestPermissionsFromUser } from '../../../util/PermissionUtils'
 import { abilityAccessCtrl, common } from '@kit.AbilityKit'
 
@@ -388,9 +393,10 @@ export struct VideoLibraryPage {
     .height("100%")
     .width("100%")
   }
+
   @Builder
   pickerSelectionTitle() {
-    Row(){
+    Row() {
       Text($r("app.string.choose_picker"))
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
@@ -618,6 +624,7 @@ export struct VideoLibraryPage {
             selectedButtons: [this.colorModes.indexOf(this.colorMode)]
           })
         }
+
         SettingsGroup() {
           SettingsSwitch({
             settingsTitle: $r("app.string.settings_continuation"),
@@ -629,7 +636,8 @@ export struct VideoLibraryPage {
                   PreferencesUtil.putSync("continuation", false)
                   this.settings$continuation = false
                 } else {
-                  requestPermissionsFromUser(getContext(this) as common.UIAbilityContext, "ohos.permission.DISTRIBUTED_DATASYNC")
+                  requestPermissionsFromUser(getContext(this) as common.UIAbilityContext,
+                    "ohos.permission.DISTRIBUTED_DATASYNC")
                     .then((value: boolean) => {
                       if (value) {
                         PreferencesUtil.putSync("continuation", true)
@@ -644,6 +652,7 @@ export struct VideoLibraryPage {
             }
           })
         }
+
         SettingsGroup() {
           SettingsRow({
             settingsTitle: $r("app.string.questions"),
@@ -823,5 +832,4 @@ export struct VideoLibraryPage {
         }
       })
   }
-
 }

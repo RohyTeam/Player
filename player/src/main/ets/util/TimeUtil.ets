@@ -1,4 +1,4 @@
-import { divideAndFloor } from "./MathUtil"
+import { divideAndFloor } from './MathUtil'
 
 export function convertNumberToDurationString(num: number): string {
   let left = num
@@ -10,6 +10,7 @@ export function convertNumberToDurationString(num: number): string {
   if (hours == 0) {
     return `${minutes.toFixed(0).padStart(2, '0')}:${seconds.toFixed(0).padStart(2, '0')}`
   } else {
-    return `${hours.toFixed(0).padStart(2, '0')}:${minutes.toFixed(0).padStart(2, '0')}:${seconds.toFixed(0).padStart(2, '0')}`
+    return `${hours.toFixed(0).padStart(2, '0')}:${minutes.toFixed(0).padStart(2, '0')}:${seconds.toFixed(0)
+      .padStart(2, '0')}`
   }
 }

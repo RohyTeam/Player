@@ -2,8 +2,6 @@ import { BreakpointConstants } from '../../common/constants/BreakpointConstants'
 import { deviceInfo } from '@kit.BasicServicesKit';
 import { CommonConstants } from '../../common/constants/CommonConstants';
 import { VideoLibraryPage } from './videolibrary/VideoLibraryPage';
-import { AudioLibraryPage } from './audiolibrary/AudioLibraryPage';
-import { PlaylistPage } from './playlist/PlaylistPage';
 import { MorePage } from './more/MorePage';
 
 export class FooterTab {
@@ -22,17 +20,14 @@ export class FooterTab {
   getIcon(): Resource {
     return this.icon;
   }
-
 }
 
 @Component
 export struct RohyPlayerHome {
-
   @State
   currentBottomIndex: number = 0;
   @StorageLink('currentWidthBreakpoint')
   currentWidthBreakpoint: string = BreakpointConstants.BREAKPOINT_LG;
-
   private tabs: FooterTab[] = [
     new FooterTab(
       $r('app.string.home_tab_video'),
@@ -68,9 +63,9 @@ export struct RohyPlayerHome {
     }
     .padding({
       bottom: this.currentWidthBreakpoint !== BreakpointConstants.BREAKPOINT_LG && deviceInfo.deviceType !==
-    CommonConstants.DEVICE_TYPES[0] ? $r('app.float.bottom_navigation') : 0,
+      CommonConstants.DEVICE_TYPES[0] ? $r('app.float.bottom_navigation') : 0,
       top: this.currentWidthBreakpoint !== BreakpointConstants.BREAKPOINT_LG && deviceInfo.deviceType !==
-    CommonConstants.DEVICE_TYPES[0] ? $r('app.float.top_navigation') : 0,
+      CommonConstants.DEVICE_TYPES[0] ? $r('app.float.top_navigation') : 0,
     }
     )
     .height(

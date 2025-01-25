@@ -1,4 +1,4 @@
-import { createClient } from "../lib/webdav_client/WebDAVClient"
+import { createClient } from '../lib/webdav_client/WebDAVClient'
 
 // 用于测试，上传之后为空代码文件
 export function runTest() {

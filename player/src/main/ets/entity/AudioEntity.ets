@@ -7,4 +7,5 @@ export interface AudioEntity {
 }
 
 @Observed
-export class Audios extends Array<AudioEntity> {}
+export class Audios extends Array<AudioEntity> {
+}

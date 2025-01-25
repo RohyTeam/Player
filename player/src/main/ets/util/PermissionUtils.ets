@@ -7,7 +7,8 @@ export async function checkPermissionGrant(permission: Permissions): Promise<abi
 
   let tokenId: number = 0;
   try {
-    let bundleInfo: bundleManager.BundleInfo = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION);
+    let bundleInfo: bundleManager.BundleInfo =
+      await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION);
     let appInfo: bundleManager.ApplicationInfo = bundleInfo.appInfo;
     tokenId = appInfo.accessTokenId;
   } catch (error) {
@@ -25,7 +26,8 @@ export async function checkPermissionGrant(permission: Permissions): Promise<abi
   return grantStatus;
 }
 
-export function requestPermissionsFromUser(context: common.UIAbilityContext, permissions: Permissions): Promise<boolean> {
+export function requestPermissionsFromUser(context: common.UIAbilityContext,
+  permissions: Permissions): Promise<boolean> {
   return new Promise((resultReturner) => {
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
     atManager.requestPermissionsFromUser(context, [permissions]).then((data) => {

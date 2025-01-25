@@ -1,7 +1,6 @@
-import { AbilityStage, Want } from "@kit.AbilityKit"
+import { AbilityStage, Want } from '@kit.AbilityKit'
 
 export default class RohyPlayerAbilityStage extends AbilityStage {
-
   onAcceptWant(want: Want) {
     if (want && want.abilityName == "VideoAbility") {
       if (want.parameters) {
@@ -12,5 +11,4 @@ export default class RohyPlayerAbilityStage extends AbilityStage {
     }
     return ''
   }
-
 }

@@ -1,4 +1,3 @@
-
 export interface VideoEntity {
 
   uri: string,
@@ -9,9 +8,7 @@ export interface VideoEntity {
 
 }
 
-interface VideoMetadata {
-
-}
+interface VideoMetadata {}
 
 export enum FileStatus {
 
@@ -22,18 +19,16 @@ export enum FileStatus {
 }
 
 export class FileSources {
-
   public static readonly LOCAL_FILE = "local_file"
   public static readonly PHOTOS = "photos"
-
 }
 
 @Observed
-export class VideoEntityV2Array extends Array<VideoEntityV2> {}
+export class VideoEntityV2Array extends Array<VideoEntityV2> {
+}
 
 @Observed
 export class VideoEntityV2 {
-
   uri: string
   title: string
   hash: string
@@ -64,5 +59,4 @@ export class VideoEntityV2 {
       entity.fileSource
     )
   }
-
 }

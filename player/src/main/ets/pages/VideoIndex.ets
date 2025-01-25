@@ -10,19 +10,14 @@ export class EventData {
 @Entry
 @Component
 struct VideoIndex {
-
   @State
   private title: string = ''
-
   @State
   private url: string | undefined = undefined
-
   @State
   private videoHolder: string | undefined = undefined
-
   @State
   private backTrigger: boolean = false
-
   @StorageLink('appColorMode')
   colorMode: string = "system";
 
@@ -34,7 +29,8 @@ struct VideoIndex {
     if (want.parameters!['originalDevice'] != undefined) {
       console.error("find continue video")
       if (want.parameters!.originalDevice as string != deviceInfo.ODID) {
-        console.error(`is remote file, url is: ${FileUtil.getUriFromPath(`${getContext(this).distributedFilesDir}/${want.parameters!.hash}.vid`)}`)
+        console.error(`is remote file, url is: ${FileUtil.getUriFromPath(`${getContext(this)
+          .distributedFilesDir}/${want.parameters!.hash}.vid`)}`)
         this.url = `dfs:${getContext(this).distributedFilesDir}/${want.parameters!.hash}.vid`
         this.videoHolder = want.parameters!.videoHolder as string
       } else {
@@ -48,7 +44,8 @@ struct VideoIndex {
 
   build() {
     WithTheme({
-      colorMode: this.colorMode == "system" ? ThemeColorMode.SYSTEM: this.colorMode == "dark" ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
+      colorMode: this.colorMode == "system" ? ThemeColorMode.SYSTEM :
+        this.colorMode == "dark" ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
     }) {
       Stack() {
         AVVideoPlayer({
@@ -69,5 +66,4 @@ struct VideoIndex {
       .then(() => {
       })
   }
-
 }

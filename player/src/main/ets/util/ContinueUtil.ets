@@ -4,9 +4,9 @@
 import { common } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { fileIo } from '@kit.CoreFileKit';
-import { FileUtil } from '@pura/harmony-utils';
 
-export function copyFileToContinueDir(context: common.UIAbilityContext, fileUri: string, hashValue: string): Promise<void> {
+export function copyFileToContinueDir(context: common.UIAbilityContext, fileUri: string,
+  hashValue: string): Promise<void> {
   return new Promise((resultReturner) => {
     console.error('building temp uri')
     let tempFileUri = `${context.distributedFilesDir}/${hashValue}.vid`

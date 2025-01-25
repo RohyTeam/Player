@@ -3,13 +3,13 @@ import { RohyPlayerHome } from './rohyplayer/HomeScreen';
 @Entry
 @Component
 struct Index {
-
   @StorageLink('appColorMode')
   colorMode: string = "system";
 
   build() {
     WithTheme({
-      colorMode: this.colorMode == "system" ? ThemeColorMode.SYSTEM: this.colorMode == "dark" ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
+      colorMode: this.colorMode == "system" ? ThemeColorMode.SYSTEM :
+        this.colorMode == "dark" ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
     }) {
       RelativeContainer() {
         Navigation() {
@@ -28,5 +28,4 @@ struct Index {
       .width('100%')
     }
   }
-
 }

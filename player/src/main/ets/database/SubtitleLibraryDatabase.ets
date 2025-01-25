@@ -1,20 +1,17 @@
-import { common } from "@kit.AbilityKit";
-import { relationalStore } from "@kit.ArkData";
-import hilog from "@ohos.hilog";
-import { fileShare, hash } from "@kit.CoreFileKit";
-import { FileUtil, SHA } from "@pura/harmony-utils";
-import { VideoEntity } from "../entity/VideoEntity";
-import { BusinessError } from "@kit.BasicServicesKit";
-import { JSON } from "@kit.ArkTS";
+import { common } from '@kit.AbilityKit';
+import { relationalStore } from '@kit.ArkData';
+import hilog from '@ohos.hilog';
+import { fileShare, hash } from '@kit.CoreFileKit';
+import { FileUtil } from '@pura/harmony-utils';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { JSON } from '@kit.ArkTS';
 
 export class SubtitleLibraryDatabase {
-
   private static SQL_CREATE_TABLE = 'CREATE TABLE IF NOT EXISTS SubtitleLibrary (' +
     'FILE_HASH TEXT,' +
     'SUBTITLE_HASH TEXT,' +
     'PATH TEXT' +
     ');';
-
   private static databaseConfig: relationalStore.StoreConfig = {
     name: 'subtitleLibrary.db',
     securityLevel: relationalStore.SecurityLevel.S2,
@@ -27,9 +24,9 @@ export class SubtitleLibraryDatabase {
         hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
         return;
       }
-/*
-      store.executeSync("DROP TABLE SubtitleLibrary;")
-      store.executeSql(SubtitleLibraryDatabase.SQL_CREATE_TABLE)*/
+      /*
+            store.executeSync("DROP TABLE SubtitleLibrary;")
+            store.executeSql(SubtitleLibraryDatabase.SQL_CREATE_TABLE)*/
 
       if (store.version === 0) {
         store.executeSql(SubtitleLibraryDatabase.SQL_CREATE_TABLE)
@@ -53,7 +50,7 @@ export class SubtitleLibraryDatabase {
             uri: uri,
             operationMode: 0b1
           }
-          ])
+        ])
           .then(() => {
             hash.hash(FileUtil.getFilePath(uri), "sha256")
               .then((subtitleHash) => {
@@ -68,9 +65,9 @@ export class SubtitleLibraryDatabase {
                   resultReturner([uri, subtitleHash])
                 })
               })
-              })
           })
       })
+    })
   }
 
   public static get(context: common.Context, fileHash: string): Promise<Array<string>> {
@@ -139,5 +136,4 @@ export class SubtitleLibraryDatabase {
       })
     })
   }
-
 }
