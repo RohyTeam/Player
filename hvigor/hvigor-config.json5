@@ -1,6 +1,7 @@
 {
-  "modelVersion": "5.0.1",
+  "modelVersion": "5.0.2",
   "dependencies": {
+    "@ohos/cangjie-build-support": "file:cangjie-build-support-3.1.119.tgz"
   },
   "execution": {
     // "analyze": "normal",                     /* Define the build analyze mode. Value: [ "normal" | "advanced" | false ]. Default: "normal" */
