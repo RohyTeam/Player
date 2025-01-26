@@ -19,6 +19,8 @@ struct VideoIndex {
   @State
   private videoHolder: string | undefined = undefined
   @State
+  private isContinuation: boolean = false
+  @State
   private backTrigger: boolean = false
   @StorageLink('appColorMode')
   colorMode: string = "system";
@@ -29,6 +31,7 @@ struct VideoIndex {
     getContext(this).eventHub.emit('getAbilityData', eventData)
     let want = eventData.launchWant!
     if (want.parameters!['originalDevice'] != undefined) {
+      this.isContinuation = true
       console.error("find continue video")
       if (want.parameters!.originalDevice as string != deviceInfo.ODID) {
         console.error(`is remote file, url is: ${FileUtil.getUriFromPath(`${getContext(this)
@@ -56,6 +59,7 @@ struct VideoIndex {
           url: this.url,
           hash: this.hash,
           videoHolder: this.videoHolder,
+          isContinuation: this.isContinuation,
           backTrigger: this.backTrigger,
         })
       }
