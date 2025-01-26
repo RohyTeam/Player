@@ -1,4 +1,4 @@
-import { BusinessError } from '@kit.BasicServicesKit';
+import { batteryInfo, BusinessError } from '@kit.BasicServicesKit';
 import { media } from '@kit.MediaKit';
 import { fileIo, hash, picker } from '@kit.CoreFileKit';
 import { convertNumberToDurationString } from '../../util/TimeUtil';
@@ -15,6 +15,7 @@ import { compile } from '../../lib/ass_compiler';
 import { AssSubtitleView } from '../subtitle/AssSubtitleView';
 import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
+import { BatterySymbol } from '../system/BatterySymbol';
 
 @Observed
 export class VideoState {
@@ -44,6 +45,8 @@ export struct AVVideoPlayer {
   videoHolder: string
   @Link
   backTrigger: boolean
+  @Link
+  isContinuation: boolean
   @State
   private avPlayer: media.AVPlayer | undefined = undefined
   private xComponentController = new XComponentController()
@@ -150,6 +153,8 @@ export struct AVVideoPlayer {
   @State
   private adjustingVolume: boolean = false
   @StorageLink('autoShutdown')
+  settings$statusBar: boolean = false;
+  @StorageLink('autoShutdown')
   @Watch("autoShutdownSwitchWatcher")
   autoShutdown: boolean = false;
   @StorageLink(`videoAbility_shouldDie`)
@@ -205,6 +210,9 @@ export struct AVVideoPlayer {
     Stack() {
       Column() {
         Column() {
+          if (this.settings$statusBar) {
+            this.statusBar()
+          }
           this.topBar()
         }
         .visibility(this.showControls ? Visibility.Visible : Visibility.Hidden)
@@ -332,8 +340,10 @@ export struct AVVideoPlayer {
           .width(this.calculateWidthPercent(this.surfaceFillingMode))
           .onAppear(() => {
             VideoAbility.getWindow().setWindowBrightness(0.5)
-            this.parameterStartTime = AppStorage.get("videoPosition") || -1
-            this.parameterStartPaused = AppStorage.get("videoPaused") || undefined
+            if (this.isContinuation) {
+              this.parameterStartTime = AppStorage.get("videoPosition") || -1
+              this.parameterStartPaused = AppStorage.get("videoPaused") || undefined
+            }
             this.initAvPlayer()
           })
       }
@@ -392,6 +402,16 @@ export struct AVVideoPlayer {
   private repeatPlay: boolean = false
   @State
   private mirrorClip: boolean = false
+
+  @Builder
+  private statusBar() {
+    Row() {
+      BatterySymbol()
+    }
+    .backgroundColor($r("app.color.comp_background_focus"))
+    .alignItems(VerticalAlign.Center)
+    .width("100%")
+  }
 
   /**
    * 播放器控制器的上方显示内容

@@ -207,6 +207,14 @@
     {
       "name": "settings_debug_page",
       "value": "调试页"
+    },
+    {
+      "name": "settings_status_bar_desc",
+      "value": "开启此选项后，在视频播放器中，点击屏幕显示顶栏时，会同时显示状态栏。"
+    },
+    {
+      "name": "settings_status_bar",
+      "value": "状态栏"
     }
   ]
 }

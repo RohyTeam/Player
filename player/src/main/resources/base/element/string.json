@@ -223,6 +223,14 @@
     {
       "name": "settings_debug_page",
       "value": "Debug page"
+    },
+    {
+      "name": "settings_status_bar",
+      "value": "Status bar"
+    },
+    {
+      "name": "settings_status_bar_desc",
+      "value": "Turn on this, when in video player, if the top bar is shown, the status bar will also been shown"
     }
   ]
 }

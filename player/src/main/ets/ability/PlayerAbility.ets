@@ -55,6 +55,7 @@ export default class PlayerAbility extends UIAbility {
     AppUtil.init(this.context)
     AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
+    AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))
 
     // runTest()
   }

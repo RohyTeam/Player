@@ -91,6 +91,7 @@ export default class VideoAbility extends UIAbility {
     }
     AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
+    AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))
     let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
     AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
     /**
@@ -158,11 +159,6 @@ export default class VideoAbility extends UIAbility {
       }
 
       let windowClass: window.Window = windowStage.getMainWindowSync()
-      windowClass.setWindowLayoutFullScreen(true).then(() => {
-        console.info('Succeeded in setting the window layout to full-screen mode.');
-      }).catch((err: BusinessError) => {
-        console.error(`Failed to set the window layout to full-screen mode. Code is ${err.code}, message is ${err.message}`);
-      });
 
       windowClass.setSpecificSystemBarEnabled('status', false).then(() => {
         console.info('Succeeded in setting the status bar to be invisible.');
@@ -203,11 +199,6 @@ export default class VideoAbility extends UIAbility {
       }
 
       let windowClass: window.Window = windowStage.getMainWindowSync()
-      windowClass.setWindowLayoutFullScreen(true).then(() => {
-        console.info('Succeeded in setting the window layout to full-screen mode.');
-      }).catch((err: BusinessError) => {
-        console.error(`Failed to set the window layout to full-screen mode. Code is ${err.code}, message is ${err.message}`);
-      });
 
       windowClass.setSpecificSystemBarEnabled('status', false).then(() => {
         console.info('Succeeded in setting the status bar to be invisible.');

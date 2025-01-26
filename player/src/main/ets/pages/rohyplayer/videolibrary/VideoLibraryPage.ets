@@ -616,6 +616,8 @@ export struct VideoLibraryPage {
   colorMode: string = "system";
   @StorageLink('autoShutdown')
   autoShutdown: boolean = false;
+  @StorageLink('statusBar')
+  statusBar: boolean = false;
 
   @Builder
   settings() {
@@ -716,6 +718,23 @@ export struct VideoLibraryPage {
               }
             }
           })
+          /*SettingsDivider()
+          SettingsSwitch({
+            settingsTitle: $r("app.string.settings_status_bar"),
+            settingsTips: $r("app.string.settings_status_bar_desc"),
+            switchValue: this.statusBar,
+            switchEvent: {
+              action: (value: boolean) => {
+                if (this.statusBar) {
+                  AppStorage.setOrCreate("statusBar", false)
+                  PreferencesUtil.putSync("statusBar", false)
+                } else {
+                  AppStorage.setOrCreate("statusBar", true)
+                  PreferencesUtil.putSync("statusBar", true)
+                }
+              }
+            }
+          })*/
         }
 
         SettingsGroup() {

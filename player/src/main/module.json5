@@ -47,10 +47,17 @@
         "continuable": true,
         "exported": true,
         "removeMissionAfterTerminate": true,
-        "backgroundModes": ["audioPlayback", "taskKeeping", "dataTransfer"],
+        "backgroundModes": [
+          "audioPlayback",
+          "taskKeeping",
+          "dataTransfer"
+        ],
         "skills": [
           {
-            "actions": ["ohos.want.action.sendData", "ohos.want.action.viewData"],
+            "actions": [
+              "ohos.want.action.sendData",
+              "ohos.want.action.viewData"
+            ],
             "uris": [
               {
                 "scheme": "file",
@@ -93,7 +100,9 @@
         name: "ohos.permission.DISTRIBUTED_DATASYNC",
         reason: "$string:reason_distributed_datasync",
         usedScene: {
-          abilities: ["VideoAbility"],
+          abilities: [
+            "VideoAbility"
+          ],
           when: "always",
         }
       },
@@ -101,7 +110,9 @@
         name: "ohos.permission.KEEP_BACKGROUND_RUNNING",
         reason: "$string:reason_keep_background_running",
         usedScene: {
-          abilities: ["VideoAbility"],
+          abilities: [
+            "VideoAbility"
+          ],
           when: "always",
         },
       },
