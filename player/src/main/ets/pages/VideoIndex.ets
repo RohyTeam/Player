@@ -15,6 +15,8 @@ struct VideoIndex {
   @State
   private url: string | undefined = undefined
   @State
+  private hash: string | undefined = undefined
+  @State
   private videoHolder: string | undefined = undefined
   @State
   private backTrigger: boolean = false
@@ -40,6 +42,7 @@ struct VideoIndex {
       this.url = want.parameters!.url as string
     }
     this.title = want.parameters!.title as string
+    this.hash = want.parameters!.hash as string
   }
 
   build() {
@@ -51,6 +54,7 @@ struct VideoIndex {
         AVVideoPlayer({
           title: this.title,
           url: this.url,
+          hash: this.hash,
           videoHolder: this.videoHolder,
           backTrigger: this.backTrigger,
         })

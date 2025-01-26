@@ -3,7 +3,7 @@ import { media } from '@kit.MediaKit';
 import { fileIo, hash, picker } from '@kit.CoreFileKit';
 import { convertNumberToDurationString } from '../../util/TimeUtil';
 import { common } from '@kit.AbilityKit';
-import { curves, display, LengthMetrics, SymbolGlyphModifier, window } from '@kit.ArkUI';
+import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
 import { FileUtil } from '@pura/harmony-utils';
@@ -36,6 +36,9 @@ export struct AVVideoPlayer {
   @Prop
   @Require
   url: string
+  @Prop
+  @Require
+  hash: string
   @Prop
   @Require
   videoHolder: string
@@ -147,9 +150,56 @@ export struct AVVideoPlayer {
   @State
   private adjustingVolume: boolean = false
   @StorageLink('autoShutdown')
+  @Watch("autoShutdownSwitchWatcher")
   autoShutdown: boolean = false;
-  @StorageLink('videoAbility_shouldDie')
-  videoAbility_shouldDie: boolean = false;
+  @StorageLink(`videoAbility_shouldDie`)
+  @Watch("shouldDieWatcher")
+  videoAbility_shouldDie: StringArray = [];
+
+  @State
+  private shouldReallyDie: boolean = false
+
+  shouldDieWatcher(changedPropertyName: string) {
+    this.shouldReallyDie = this.videoAbility_shouldDie.indexOf(this.hash) >= 0
+  }
+
+  autoShutdownSwitchWatcher(changedPropertyName: string) {
+    if (this.autoShutdown) {
+      if (!VideoAbility.getWindow().isFocused()) {
+        if (!this.backTrigger) {
+          this.backTrigger = true
+          this.avPlayer?.pause()
+          this.avPlayer?.release()
+            .then(() => {
+              if (this.url.startsWith("dfs:")) {
+                disconnectDevice(this.videoHolder)
+                  .then(() => {
+                    VideoAbility.getContext().terminateSelf()
+                      .then(() => {
+                        let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                        let index = shouldDies.indexOf(this.hash)
+                        if (index >= 0) {
+                          shouldDies.slice(index, 1)
+                          AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                        }
+                      })
+                  })
+              } else {
+                VideoAbility.getContext().terminateSelf()
+                  .then(() => {
+                    let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                    let index = shouldDies.indexOf(this.hash)
+                    if (index >= 0) {
+                      shouldDies.slice(index, 1)
+                      AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                    }
+                  })
+              }
+            })
+        }
+      }
+    }
+  }
 
   build() {
     Stack() {
@@ -298,7 +348,7 @@ export struct AVVideoPlayer {
       .width("100%")
       .height("100%")
       .zIndex(-100) // 由于字幕也有分层，把 zIndex 设置小一点防止遮挡字幕
-      if (this.videoAbility_shouldDie && this.autoShutdown) {
+      if (this.shouldReallyDie) {
         Stack() { // 自动关闭设置专用
         }
         .onAppear(() => {
@@ -308,13 +358,25 @@ export struct AVVideoPlayer {
             if (this.url.startsWith("dfs:")) {
               disconnectDevice(this.videoHolder)
                 .then(() => {
-                  (getContext(this) as common.UIAbilityContext).terminateSelf()
+                  VideoAbility.getContext().terminateSelf()
                     .then(() => {
+                      let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                      let index = shouldDies.indexOf(this.hash)
+                      if (index >= 0) {
+                        shouldDies.slice(index, 1)
+                        AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                      }
                     })
                 })
             } else {
-              (getContext(this) as common.UIAbilityContext).terminateSelf()
+              VideoAbility.getContext().terminateSelf()
                 .then(() => {
+                  let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                  let index = shouldDies.indexOf(this.hash)
+                  if (index >= 0) {
+                    shouldDies.slice(index, 1)
+                    AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                  }
                 })
             }
           }
@@ -344,13 +406,25 @@ export struct AVVideoPlayer {
           if (this.url.startsWith("dfs:")) {
             disconnectDevice(this.videoHolder)
               .then(() => {
-                (getContext(this) as common.UIAbilityContext).terminateSelf()
+                VideoAbility.getContext().terminateSelf()
                   .then(() => {
+                    let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                    let index = shouldDies.indexOf(this.hash)
+                    if (index >= 0) {
+                      shouldDies.slice(index, 1)
+                      AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                    }
                   })
               })
           } else {
-            (getContext(this) as common.UIAbilityContext).terminateSelf()
+            VideoAbility.getContext().terminateSelf()
               .then(() => {
+                let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                let index = shouldDies.indexOf(this.hash)
+                if (index >= 0) {
+                  shouldDies.slice(index, 1)
+                  AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                }
               })
           }
         }
@@ -1140,19 +1214,32 @@ export struct AVVideoPlayer {
 
   aboutToDisappear(): void {
     if (!this.backTrigger) {
+      this.backTrigger = true
       this.avPlayer?.pause()
       this.avPlayer?.release()
         .then(() => {
           if (this.url.startsWith("dfs:")) {
             disconnectDevice(this.videoHolder)
               .then(() => {
-                (getContext(this) as common.UIAbilityContext).terminateSelf()
+                VideoAbility.getContext().terminateSelf()
                   .then(() => {
+                    let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                    let index = shouldDies.indexOf(this.hash)
+                    if (index >= 0) {
+                      shouldDies.slice(index, 1)
+                      AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                    }
                   })
               })
           } else {
-            (getContext(this) as common.UIAbilityContext).terminateSelf()
+            VideoAbility.getContext().terminateSelf()
               .then(() => {
+                let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                let index = shouldDies.indexOf(this.hash)
+                if (index >= 0) {
+                  shouldDies.slice(index, 1)
+                  AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                }
               })
           }
         })

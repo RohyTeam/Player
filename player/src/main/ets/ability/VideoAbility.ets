@@ -1,4 +1,4 @@
-import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, common, UIAbility, Want } from '@kit.AbilityKit';
 import { display, window } from '@kit.ArkUI';
 import hilog from '@ohos.hilog';
 import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
@@ -8,12 +8,19 @@ import { distributedDeviceManager } from '@kit.DistributedServiceKit';
 import { JSON } from '@kit.ArkTS';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { checkPermissionGrant } from '../util/PermissionUtils';
+import { StringArray } from '../entity/Arrays';
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
  */
 export default class VideoAbility extends UIAbility {
   private static windowObj?: window.Window;
+  private static receivedWant?: Want
+  private static context?: common.UIAbilityContext
+
+  public static getContext(): common.UIAbilityContext {
+    return VideoAbility.context!
+  }
 
   public static getWindow(): window.Window {
     return VideoAbility.windowObj!
@@ -77,13 +84,15 @@ export default class VideoAbility extends UIAbility {
    * 处理 want
    */
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    VideoAbility.context = this.context
     if (!appUtilInited()) {
       // 这种情况一般是流转导致的，但是从文件预览打开也会导致这个情况
       AppUtil.init(this.context)
     }
     AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
-    AppStorage.setOrCreate("videoAbility_shouldDie", false)
+    let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+    AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
     /**
      * 此处用于解决在 ability 中打开页面无法传参的问题
      */
@@ -106,6 +115,7 @@ export default class VideoAbility extends UIAbility {
         }
       })
     } else if (want.parameters) { // 如果是打开软件后通过 picker 打开视频
+      VideoAbility.receivedWant = want
       AppStorage.setOrCreate("comesFromApp", true)
       // 如果用户没有授权分布式文件权限或者关闭了接续，关闭接续功能
       if (!checkPermissionGrant("ohos.permission.DISTRIBUTED_DATASYNC") || !tryGetPreference("continuation")) {
@@ -132,8 +142,10 @@ export default class VideoAbility extends UIAbility {
       })
       VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
         console.error(`current window event type: ${windowEventType}`)
-        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE) {
-          AppStorage.setOrCreate("videoAbility_shouldDie", true)
+        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE || windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
+          let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+          shouldDies.push(VideoAbility.receivedWant?.parameters!.hash as string)
+          AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
         }
       })
       data.setWindowKeepScreenOn(true);
@@ -175,8 +187,10 @@ export default class VideoAbility extends UIAbility {
       })
       VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
         console.error(`current window event type: ${windowEventType}`)
-        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE) {
-          AppStorage.setOrCreate("videoAbility_shouldDie", true)
+        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE || windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
+          let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+          shouldDies.push(VideoAbility.receivedWant?.parameters!.hash as string)
+          AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
         }
       })
       data.setWindowKeepScreenOn(true);
