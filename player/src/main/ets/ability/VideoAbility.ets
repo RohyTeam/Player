@@ -142,7 +142,7 @@ export default class VideoAbility extends UIAbility {
       })
       VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
         console.error(`current window event type: ${windowEventType}`)
-        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE || windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
+        if (windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
           let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
           shouldDies.push(VideoAbility.receivedWant?.parameters!.hash as string)
           AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -187,7 +187,7 @@ export default class VideoAbility extends UIAbility {
       })
       VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
         console.error(`current window event type: ${windowEventType}`)
-        if (windowEventType == window.WindowEventType.WINDOW_INACTIVE || windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
+        if (windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
           let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
           shouldDies.push(VideoAbility.receivedWant?.parameters!.hash as string)
           AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)

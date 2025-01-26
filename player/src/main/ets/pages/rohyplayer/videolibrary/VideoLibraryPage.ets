@@ -57,6 +57,9 @@ export struct VideoLibraryPage {
   @State
   searching: string = ""
 
+  @Consume('pageController')
+  pageController: NavPathStack
+
   @Builder
   browseMenus() {
     Menu() {
@@ -745,6 +748,17 @@ export struct VideoLibraryPage {
                 promptAction.showToast({
                   'message': $r("app.string.coming_soon")
                 })
+              }
+            }
+          })
+        }
+        SettingsGroup() {
+          SettingsRow({
+            settingsTitle: $r("app.string.settings_debug_page"),
+            clickEvent: {
+              action: () => {
+                this.pageController.pushPath({ name: "debugPage" })
+                this.showSettings = false
               }
             }
           })

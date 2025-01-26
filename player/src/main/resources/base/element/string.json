@@ -219,6 +219,10 @@
     {
       "name": "settings_auto_shutdown_tips",
       "value": "Turn on this, once you leave the player window, the window will automatically be shut down."
+    },
+    {
+      "name": "settings_debug_page",
+      "value": "Debug page"
     }
   ]
 }
