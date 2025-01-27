@@ -618,6 +618,8 @@ export struct VideoLibraryPage {
   autoShutdown: boolean = false;
   @StorageLink('statusBar')
   statusBar: boolean = false;
+  @StorageLink('statusBarBatteryPercent')
+  statusBarBatteryPercent: boolean = false;
 
   @Builder
   settings() {
@@ -718,7 +720,9 @@ export struct VideoLibraryPage {
               }
             }
           })
-          /*SettingsDivider()
+        }
+
+        SettingsGroup() {
           SettingsSwitch({
             settingsTitle: $r("app.string.settings_status_bar"),
             settingsTips: $r("app.string.settings_status_bar_desc"),
@@ -734,7 +738,29 @@ export struct VideoLibraryPage {
                 }
               }
             }
-          })*/
+          })
+          if (this.statusBar) {
+            Column() {
+              SettingsDivider()
+              SettingsSwitch({
+                settingsTitle: $r("app.string.settings_status_bar_battery_percent"),
+                settingsTips: $r("app.string.settings_status_bar_battery_percent_tips"),
+                switchValue: this.statusBarBatteryPercent,
+                switchEvent: {
+                  action: (value: boolean) => {
+                    if (this.statusBarBatteryPercent) {
+                      AppStorage.setOrCreate("statusBarBatteryPercent", false)
+                      PreferencesUtil.putSync("statusBarBatteryPercent", false)
+                    } else {
+                      AppStorage.setOrCreate("statusBarBatteryPercent", true)
+                      PreferencesUtil.putSync("statusBarBatteryPercent", true)
+                    }
+                  }
+                }
+              })
+            }
+            .visibility(this.statusBar ? Visibility.Visible : Visibility.Hidden)
+          }
         }
 
         SettingsGroup() {

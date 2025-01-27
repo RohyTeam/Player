@@ -161,7 +161,13 @@ export struct SettingsSwitch {
               right: 12
             })
             .onChange((value) => {
-              this.switchEvent.action(value)
+              animateTo({
+                duration: 200,
+                curve: Curve.Linear,
+                playMode: PlayMode.Normal
+              }, () => {
+                this.switchEvent.action(value)
+              })
             })
         }
         .alignItems(VerticalAlign.Center)

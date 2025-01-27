@@ -215,6 +215,14 @@
     {
       "name": "settings_status_bar",
       "value": "状态栏"
+    },
+    {
+      "name": "settings_status_bar_battery_percent",
+      "value": "显示电量百分比"
+    },
+    {
+      "name": "settings_status_bar_battery_percent_tips",
+      "value": "开启此选项后，在视频播放器中的电量状态栏中，电池右侧将会显示电量的百分比。"
     }
   ]
 }

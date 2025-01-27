@@ -15,7 +15,9 @@ import { compile } from '../../lib/ass_compiler';
 import { AssSubtitleView } from '../subtitle/AssSubtitleView';
 import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
-import { BatterySymbol } from '../system/BatterySymbol';
+import { BatteryInfo } from '../statusbar/info/BatteryInfo';
+import { TimeInfo } from '../statusbar/info/TimeInfo';
+import { StatusBar } from '../statusbar/StatusBar';
 
 @Observed
 export class VideoState {
@@ -215,6 +217,11 @@ export struct AVVideoPlayer {
           }
           this.topBar()
         }
+        .borderRadius({
+          bottomLeft: 16,
+          bottomRight: 16
+        })
+        .backgroundColor($r("app.color.comp_background_focus"))
         .visibility(this.showControls ? Visibility.Visible : Visibility.Hidden)
         .animation({
           curve: curves.springMotion()
@@ -403,11 +410,21 @@ export struct AVVideoPlayer {
   @State
   private mirrorClip: boolean = false
 
+  @StorageLink('statusBarBatteryPercent')
+  statusBarBatteryPercent: boolean = false;
+
   @Builder
   private statusBar() {
     Row() {
-      BatterySymbol()
+      StatusBar({
+        statusBarBatteryPercent: this.statusBarBatteryPercent
+      })
     }
+    .padding({
+      left: 16,
+      right: 16,
+      top: 8
+    })
     .backgroundColor($r("app.color.comp_background_focus"))
     .alignItems(VerticalAlign.Center)
     .width("100%")
@@ -871,7 +888,7 @@ export struct AVVideoPlayer {
       MenuItemGroup() {
         MenuItem()
         MenuItem({
-          content: $r("app.string.import")
+          content: $r("app.string.import_video")
         })
           .onClick(() => {
             this.showSubtitlePicker()

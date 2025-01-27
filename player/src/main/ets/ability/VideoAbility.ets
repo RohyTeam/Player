@@ -92,6 +92,7 @@ export default class VideoAbility extends UIAbility {
     AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
     AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))
+    AppStorage.setOrCreate("statusBarBatteryPercent", PreferencesUtil.getBooleanSync("statusBarBatteryPercent", false))
     let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
     AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
     /**

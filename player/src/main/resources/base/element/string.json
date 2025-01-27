@@ -231,6 +231,14 @@
     {
       "name": "settings_status_bar_desc",
       "value": "Turn on this, when in video player, if the top bar is shown, the status bar will also been shown"
+    },
+    {
+      "name": "settings_status_bar_battery_percent",
+      "value": "Show battery percent"
+    },
+    {
+      "name": "settings_status_bar_battery_percent_tips",
+      "value": "Turn on this, there will be battery percent on the right of battery icon in video player status bar."
     }
   ]
 }
