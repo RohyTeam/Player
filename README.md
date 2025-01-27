@@ -2,9 +2,6 @@
 <h1 align="center">Rohy 播放器</h1>
 <p align="center">基于 ArkUI 原生开发的鸿蒙本地媒体播放器.</p>
 
-特别感谢由 [Zhenye Wei](https://github.com/weizhenye) 开发的 [ass-compiler](https://github.com/weizhenye/ass-compiler). 本项目中 ASS 格式字幕的解析完全基于此库. \
-特别批评华为，AVPlayer 的功能不完全，文档中显示支持字幕，但是即使是文档中实例的 srt 字幕我也无法正常导入，因此字幕渲染完全由我本人进行开发.
-
 ## 目标
 可以在 Issues 中提交您的建议！
 - [ ] 完全的字幕功能支持
@@ -21,3 +18,24 @@
 - [ ] 接续功能对大视频文件支持不确
 - [ ] 应用接续时无法继承进度、音轨选项、字幕等控制器选项
 - [ ] ...
+
+## 导入此项目
+1. 从华为的 [下载官网](https://developer.huawei.com/consumer/cn/download/) 分别下载 DevEco Studio 和 仓颉支持插件（该插件需要申请才能获得，[申请地址](https://developer.huawei.com/consumer/cn/activityDetail/cangjie-beta/)）
+2. 使用 git 工具将此项目的代码拉取至本地：`git clone https://github.com/RohyTeam/Player.git`
+3. 使用 DevEco Studio 打开此项目
+
+## 编译
+如果你想自行编译本项目，可以根据如下步骤进行操作：
+1. 先完成 [导入此项目](#导入此项目) 中的所有步骤
+2. 点击菜单栏 File->Project Structure，在弹出的窗口中选择左侧 Project 栏，再从上方打开 Signing Configs 栏
+3. 在打开的栏中找到 Automatically generate signature 选项，勾选后点击 OK，会自动打开浏览器让你登录你的华为账号
+4. 登录之后，点击菜单栏 Build->Build Hap(s)/APP(s)->Build Hap(s) 后 DevEco Studio 便会开始编译
+5. 编译后在 `./player/build/default/outputs/` 文件夹下就能找到签名与未签名的包
+
+## 安装
+首先，在开始安装前，请确保你的设备已经开启开发者模式并开启 USB 调试功能  
+- 如果你有能完成 [编译](#编译) 的条件，你可以直接将设备通过数据线连接至电脑，在 DevEco 中选择你的设备并点击运行，软件会自动编译并安装到你的设备上  
+- 如果你没有编译条件，你可以直接在 [Releases](https://github.com/RohyTeam/Player/releases) 中下载编译好的安装包，使用第三方工具 [AutoInstaller](https://github.com/likuai2010/auto-installer) 进行安装
+
+## 鸣谢
+- [Zhenye Wei](https://github.com/weizhenye) - 他开发的 [ass-compiler](https://github.com/weizhenye/ass-compiler) 为本项目提供字幕功能做了支持.
