@@ -154,7 +154,7 @@ export struct AVVideoPlayer {
   private adjustingBrightness: boolean = false
   @State
   private adjustingVolume: boolean = false
-  @StorageLink('autoShutdown')
+  @StorageLink('statusBar')
   settings$statusBar: boolean = false;
   @StorageLink('autoShutdown')
   @Watch("autoShutdownSwitchWatcher")
