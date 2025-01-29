@@ -1,0 +1,12 @@
+prefix=/data/ohos/tpc_c_cplusplus/lycium/usr/brotli/armeabi-v7a
+exec_prefix=/data/ohos/tpc_c_cplusplus/lycium/usr/brotli/armeabi-v7a
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libbrotlidec
+URL: https://github.com/google/brotli
+Description: Brotli decoder library
+Version: 1.0.9
+Libs: -L${libdir} -R${libdir} -lbrotlidec
+Requires.private: libbrotlicommon >= 1.0.2
+Cflags: -I${includedir}

@@ -1,0 +1,12 @@
+prefix=/data/ohos/tpc_c_cplusplus/lycium/usr/harfbuzz/arm64-v8a
+exec_prefix=/data/ohos/tpc_c_cplusplus/lycium/usr/harfbuzz/arm64-v8a
+libdir=/data/ohos/tpc_c_cplusplus/lycium/usr/harfbuzz/arm64-v8a/lib
+includedir=/data/ohos/tpc_c_cplusplus/lycium/usr/harfbuzz/arm64-v8a/include
+
+Name: harfbuzz cairo integration
+Description: HarfBuzz cairo integration
+Version: 7.1.0
+
+Requires: harfbuzz = 7.1.0
+Libs: -L${libdir} -lharfbuzz-cairo
+Cflags: -I${includedir}/harfbuzz

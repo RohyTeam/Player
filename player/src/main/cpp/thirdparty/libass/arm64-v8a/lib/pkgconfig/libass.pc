@@ -1,0 +1,13 @@
+prefix=/data/ohos/tpc_c_cplusplus/lycium/usr/libass/arm64-v8a
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libass
+Description: LibASS is an SSA/ASS subtitles rendering library
+Version: 0.17.1
+Requires: 
+Requires.private: fontconfig >= 2.10.92, harfbuzz >= 1.2.3, fribidi >= 0.19.1, freetype2 >= 9.17.3
+Libs: -L${libdir} -lass 
+Libs.private: 
+Cflags: -I${includedir}

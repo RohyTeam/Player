@@ -1,0 +1,14 @@
+# fribidi.pc.  Generated from fribidi.pc.in by configure.
+
+prefix=/data/ohos/tpc_c_cplusplus/lycium/usr/fribidi/arm64-v8a
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: GNU FriBidi
+Description: Unicode Bidirectional Algorithm Library
+Version: 1.0.12
+Libs: -L${libdir} -lfribidi
+Cflags: -I${includedir}/fribidi
+CFLAGS.private: -DFRIBIDI_LIB_STATIC
+#Cflags: -I${includedir}/fribidi -DFRIBIDI_LIB_STATIC
