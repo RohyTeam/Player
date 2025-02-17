@@ -6,6 +6,5 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "libark_interop_loader.so": "file:./src/main/cangjie/loader"
   }
 }

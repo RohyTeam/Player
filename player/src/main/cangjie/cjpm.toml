@@ -23,7 +23,7 @@
   compile-option = ""
   description = "CangjieUI Application"
   link-option = ""
-  name = "rohy_player_cangjie_bridge"
+  name = "rohy_player"
   output-type = "dynamic"
   src-dir = "."
   target-dir = ""
