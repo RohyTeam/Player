@@ -1,0 +1,24 @@
+{
+  "types": "",
+  "keywords": [
+    "OpenHarmony",
+    "HarmonyOS",
+    "ijkplayer",
+    "视频播放器"
+  ],
+  "author": "ohos_tpc",
+  "description": "ijkplayer是OpenHarmony环境下可用的一款基于FFmpeg的视频播放器。",
+  "main": "index.ets",
+  "type": "module",
+  "repository": "https://gitee.com/openharmony-sig/ijkplayer",
+  "version": "2.0.6-rc.6",
+  "dependencies": {},
+  "tags": [
+    "Media"
+  ],
+  "license": "LGPLv2.1 or later",
+  "devDependencies": {
+    "libijkplayer_audio_napi.so": "file:./src/main/cpp/types/ijkplayer_audio_napi"
+  },
+  "name": "@ohos/ijkplayer"
+}

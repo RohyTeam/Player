@@ -6,6 +6,7 @@
   "author": "",
   "license": "",
   "dependencies": {
+    "@ohos/ijkplayer": "file:../ijkplayer",
     "libark_interop_loader.so": "file:./src/main/cangjie/loader"
   }
 }
