@@ -2,6 +2,7 @@ import { common, Want } from '@kit.AbilityKit';
 import { AVVideoPlayer } from './player/AVVideoPlayer';
 import { deviceInfo } from '@kit.BasicServicesKit';
 import { FileUtil } from '@pura/harmony-utils';
+import { IjkVideoPlayer } from './player/IjkVideoPlayer';
 
 export class EventData {
   launchWant: Want | undefined = undefined

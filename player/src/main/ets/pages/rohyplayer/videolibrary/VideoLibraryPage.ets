@@ -571,10 +571,6 @@ export struct VideoLibraryPage {
     .width("100%")
   }
 
-  @State
-  settings$continuation: boolean = false
-  colorModes: string[] = ["system", "light", "dark"];
-
   @Builder
   settingsTitle() {
     Row() {
@@ -621,6 +617,13 @@ export struct VideoLibraryPage {
   @StorageLink('statusBarBatteryPercent')
   statusBarBatteryPercent: boolean = false;
 
+  @State
+  settings$continuation: boolean = false
+
+  colorModes: string[] = ["system", "light", "dark"];
+  @State
+  preferFFmpeg: boolean = false;
+
   @Builder
   settings() {
     Column() {
@@ -636,39 +639,21 @@ export struct VideoLibraryPage {
               {
                 title: $r("app.string.color_mode_system"),
                 onSwitch: () => {
-                  animateTo({
-                    duration: 300,
-                    curve: Curve.Linear,
-                    playMode: PlayMode.Normal
-                  }, () => {
-                    AppStorage.setOrCreate("appColorMode", "system")
-                  })
+                  AppStorage.setOrCreate("appColorMode", "system")
                   PreferencesUtil.putSync("colorMode", "system")
                 }
               },
               {
                 title: $r("app.string.color_mode_light"),
                 onSwitch: () => {
-                  animateTo({
-                    duration: 300,
-                    curve: Curve.Linear,
-                    playMode: PlayMode.Normal
-                  }, () => {
-                    AppStorage.setOrCreate("appColorMode", "light")
-                  })
+                  AppStorage.setOrCreate("appColorMode", "light")
                   PreferencesUtil.putSync("colorMode", "light")
                 }
               },
               {
                 title: $r("app.string.color_mode_dark"),
                 onSwitch: () => {
-                  animateTo({
-                    duration: 300,
-                    curve: Curve.Linear,
-                    playMode: PlayMode.Normal
-                  }, () => {
-                    AppStorage.setOrCreate("appColorMode", "dark")
-                  })
+                  AppStorage.setOrCreate("appColorMode", "dark")
                   PreferencesUtil.putSync("colorMode", "dark")
                 }
               }
@@ -760,6 +745,45 @@ export struct VideoLibraryPage {
               })
             }
             .visibility(this.statusBar ? Visibility.Visible : Visibility.Hidden)
+          }
+        }
+
+        SettingsGroup() {
+          SettingsSelection({
+            settingsTitle: $r("app.string.settings_prefered_player"),
+            settingsTips: $r("app.string.settings_prefered_player_tips"),
+            blankSize: 3,
+            choices: [
+              {
+                title: "IJK",
+                onSwitch: () => {
+                  this.preferFFmpeg = true
+                }
+              },
+              {
+                title: "AV",
+                onSwitch: () => {
+                  this.preferFFmpeg = false
+                }
+              }
+            ],
+            selectedButtons: [this.preferFFmpeg ? 0 : 1]
+          })
+          if (this.preferFFmpeg) {
+            Column() {
+              SettingsDivider()
+              SettingsSwitch({
+                settingsTitle: $r("app.string.settings_hardware_decode"),
+                settingsTips: $r("app.string.settings_hardware_decode_tips"),
+                switchValue: false,
+                switchEvent: {
+                  action: (value: boolean) => {
+
+                  }
+                }
+              })
+            }
+            .visibility(this.preferFFmpeg ? Visibility.Visible : Visibility.Hidden)
           }
         }
 

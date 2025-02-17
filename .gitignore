@@ -14,3 +14,4 @@
 **/*.cj.macrocall
 **/ability_mainability_entry.cj
 **/module_**_entry.cj
+/log.txt

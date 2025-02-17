@@ -239,6 +239,22 @@
     {
       "name": "settings_status_bar_battery_percent_tips",
       "value": "Turn on this, there will be battery percent on the right of battery icon in video player status bar."
+    },
+    {
+      "name": "settings_prefered_player",
+      "value": "Player"
+    },
+    {
+      "name": "settings_prefered_player_tips",
+      "value": "Set the prefered player.\nIJK: It supports more decoders, but it cost more cpu and gpu to decode. It may lag when playing video.\nAV: It supports less decoders, but it cost less cpu and gpu. Playing videos with this player has no lag."
+    },
+    {
+      "name": "settings_hardware_decode",
+      "value": "Hardware Decode"
+    },
+    {
+      "name": "settings_hardware_decode_tips",
+      "value": "Enable this option allows you to use your gpu to render video. But it may lead to abnormal video pictures, and this option will only available on IJK player."
     }
   ]
 }
