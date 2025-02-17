@@ -93,7 +93,7 @@ export struct SettingsSwitch {
   @Require
   settingsTitle: ResourceStr
   @Prop
-  settingsTips: ResourceStr
+  settingsTips: ResourceStr | undefined = undefined
   @Prop
   @Require
   switchEvent: SwitchEvent
@@ -196,12 +196,31 @@ export struct SettingsSelection {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  settingsTips: ResourceStr | undefined = undefined
+  @Prop
+  blankSize: number = 2
+  @Prop
   @Require
   choices: SelectChoice[]
   @State
   selectedButtons: number[] = [0]
   @State
   segmentOptions: SegmentButtonOptions | undefined = undefined
+
+  @State
+  showPopup: boolean = false
+
+  @Builder
+  popupText() {
+    Column() {
+      Text(this.settingsTips)
+        .fontColor($r("app.color.font_primary"))
+        .padding(16)
+    }
+    .constraintSize({
+      maxWidth: "50%"
+    })
+  }
 
   aboutToAppear(): void {
     let buttonItems: SegmentButtonTextItem[] = []
@@ -227,13 +246,46 @@ export struct SettingsSelection {
               left: 12
             })
             .fontColor($r("app.color.font_primary"))
+          if (this.settingsTips != undefined) {
+            SymbolGlyph($r('sys.symbol.questionmark_circle'))
+              .fontSize(20)
+              .fontColor([$r('app.color.icon_primary')])
+              .onClick(() => {
+                this.showPopup = true
+              })
+              .margin({
+                left: 4
+              })
+              .bindPopup(
+                this.showPopup,
+                {
+                  builder: this.popupText,
+                  placement: Placement.Bottom,
+                  enableArrow: true,
+                  showInSubWindow: false,
+                  popupColor: $r("app.color.rohy_settings_card"),
+                  backgroundBlurStyle: BlurStyle.NONE,
+                  onStateChange: (state) => {
+                    if (!state.isVisible) {
+                      this.showPopup = false
+                    }
+                  }
+                }
+              )
+          }
           Blank()
-            .layoutWeight(2)
+            .layoutWeight(this.blankSize)
           SegmentButton({
             options: this.segmentOptions,
             selectedIndexes: $selectedButtons,
             onItemClicked: (index) => {
-              this.choices[index].onSwitch()
+              animateTo({
+                duration: 200,
+                curve: Curve.Linear,
+                playMode: PlayMode.Normal
+              }, () => {
+                this.choices[index].onSwitch()
+              })
             }
           })
             .layoutWeight(3)

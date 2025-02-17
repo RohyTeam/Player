@@ -1,8 +1,7 @@
-import { batteryInfo, BusinessError } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { media } from '@kit.MediaKit';
 import { fileIo, hash, picker } from '@kit.CoreFileKit';
 import { convertNumberToDurationString } from '../../util/TimeUtil';
-import { common } from '@kit.AbilityKit';
 import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
@@ -15,11 +14,8 @@ import { compile } from '../../lib/ass_compiler';
 import { AssSubtitleView } from '../subtitle/AssSubtitleView';
 import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
-import { BatteryInfo } from '../statusbar/info/BatteryInfo';
-import { TimeInfo } from '../statusbar/info/TimeInfo';
 import { StatusBar } from '../statusbar/StatusBar';
 import { IjkMediaPlayer } from '@ohos/ijkplayer';
-import { On } from '@ohos.UiTest';
 
 @Observed
 export class VideoState {
@@ -62,17 +58,17 @@ export struct IjkVideoPlayer {
   isContinuation: boolean
   private ijkPlayer: IjkMediaPlayer | undefined = undefined
   @State
-  private avPlayer: media.AVPlayer | undefined = undefined
+  private progressUpdaterTimer: number = 0
   private xComponentController = new XComponentController()
   private videoPlayerGestureModifier = new VideoPlayerGestureModifier(
     () => {
-      if (this.avPlayer) {
-        if (this.avPlayer.state == "paused") {
-          this.avPlayer.play()
-          this.videoState.paused = false
-        } else {
-          this.avPlayer.pause()
+      if (this.ijkPlayer) {
+        if (this.ijkPlayer.isPlaying()) {
+          this.ijkPlayer.pause()
           this.videoState.paused = true
+        } else {
+          this.ijkPlayer.start()
+          this.videoState.paused = false
         }
       }
     },
@@ -80,14 +76,14 @@ export struct IjkVideoPlayer {
       this.showControls = !this.showControls
     },
     () => {
-      if (this.avPlayer) {
-        this.avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_3_00_X)
+      if (this.ijkPlayer) {
+        this.updateSpeed(3, false)
         this.speedingUp = true
       }
     },
     () => {
-      if (this.avPlayer) {
-        this.avPlayer.setSpeed(this.currentSpeed)
+      if (this.ijkPlayer) {
+        this.updateSpeed(this.currentSpeed)
         this.speedingUp = false
       }
     },
@@ -113,11 +109,13 @@ export struct IjkVideoPlayer {
     },
     (value: number) => {
       this.surfaceVolume = Math.max(0, Math.min(100, this.surfaceVolume + value))
-      this.avPlayer?.setVolume(this.surfaceVolume / 100)
+      let volume = `${this.surfaceVolume / 100}f`
+      this.ijkPlayer?.setVolume(volume, volume)
     },
     (value: number) => {
       this.surfaceVolume = Math.max(0, Math.min(100, this.surfaceVolume - value))
-      this.avPlayer?.setVolume(this.surfaceVolume / 100)
+      let volume = `${this.surfaceVolume / 100}f`
+      this.ijkPlayer?.setVolume(volume, volume)
     }
   )
   @State
@@ -133,7 +131,7 @@ export struct IjkVideoPlayer {
   @State
   private max: number = 1
   @State
-  private currentSpeed: media.PlaybackSpeed = media.PlaybackSpeed.SPEED_FORWARD_1_00_X
+  private currentSpeed: number = 1
   @State
   private surfaceFillingMode: SurfaceFillingMode = SurfaceFillingMode.Fit
   @State
@@ -142,8 +140,6 @@ export struct IjkVideoPlayer {
   private movingPosition: number = 0
   @State
   private movingProgressBar: boolean = false
-  @State
-  private videoMetadata: media.AVMetadata | undefined = undefined
   @State
   private surfaceWidth: number = 0
   @State
@@ -190,23 +186,11 @@ export struct IjkVideoPlayer {
           this.ijkPlayer?.pause()
           this.ijkPlayer?.stop()
           this.ijkPlayer?.release()
-          this.avPlayer?.pause()
-          this.avPlayer?.release()
-            .then(() => {
-              if (this.url.startsWith("dfs:")) {
-                disconnectDevice(this.videoHolder)
-                  .then(() => {
-                    VideoAbility.getContext().terminateSelf()
-                      .then(() => {
-                        let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                        let index = shouldDies.indexOf(this.hash)
-                        if (index >= 0) {
-                          shouldDies.slice(index, 1)
-                          AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
-                        }
-                      })
-                  })
-              } else {
+          this.stopProgressTask()
+
+          if (this.url.startsWith("dfs:")) {
+            disconnectDevice(this.videoHolder)
+              .then(() => {
                 VideoAbility.getContext().terminateSelf()
                   .then(() => {
                     let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
@@ -216,11 +200,31 @@ export struct IjkVideoPlayer {
                       AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
                     }
                   })
-              }
-            })
+              })
+          } else {
+            VideoAbility.getContext().terminateSelf()
+              .then(() => {
+                let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                let index = shouldDies.indexOf(this.hash)
+                if (index >= 0) {
+                  shouldDies.slice(index, 1)
+                  AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                }
+              })
+          }
         }
       }
     }
+  }
+
+  private startProgressTask() {
+    this.progressUpdaterTimer = setInterval(() => {
+      this.currentPosition = this.ijkPlayer?.getCurrentPosition() || 0
+    }, 200);
+  }
+
+  private stopProgressTask() {
+    clearInterval(this.progressUpdaterTimer);
   }
 
   build() {
@@ -587,7 +591,7 @@ export struct IjkVideoPlayer {
           } else if (mode == SliderChangeMode.End || mode == SliderChangeMode.Click) {
             this.movingProgressBar = false
             this.currentPosition = value
-            this.avPlayer?.seek(value, media.SeekMode.SEEK_CLOSEST)
+            this.ijkPlayer?.seekTo(`${value}`)
           }
         })
         .layoutWeight(1)
@@ -616,7 +620,7 @@ export struct IjkVideoPlayer {
       this.leftAlignedCircleButton(
         $r("sys.symbol.gobackward_10"),
         () => {
-          this.avPlayer?.seek(Math.max(0, this.currentPosition - 10 * 1000), media.SeekMode.SEEK_CLOSEST)
+          this.ijkPlayer?.seekTo(`${Math.max(0, this.currentPosition - 10 * 1000)}`)
         }
       )
       Button({
@@ -639,17 +643,17 @@ export struct IjkVideoPlayer {
       .width(40)
       .height(40)
       .onClick(() => {
-        if (this.avPlayer) {
-          if (this.avPlayer.state == "paused") {
-            this.avPlayer.play()
+        if (this.ijkPlayer) {
+          if (!this.ijkPlayer.isPlaying()) {
+            this.ijkPlayer.start()
             this.videoState.paused = false
-          } else if (this.avPlayer.state == "completed") {
+          } else if (this.currentPosition == this.max) {
             this.currentPosition = 0
-            this.avPlayer.seek(0, media.SeekMode.SEEK_CLOSEST)
-            this.avPlayer.play()
+            this.ijkPlayer.seekTo('0')
+            this.ijkPlayer.start()
             this.videoState.paused = false
-          } else if (this.avPlayer.state == "playing") {
-            this.avPlayer.pause()
+          } else if (this.ijkPlayer.isPlaying()) {
+            this.ijkPlayer.pause()
             this.videoState.paused = true
           }
         }
@@ -659,7 +663,7 @@ export struct IjkVideoPlayer {
       this.leftAlignedCircleButton(
         $r("sys.symbol.goforward_10"),
         () => {
-          this.avPlayer?.seek(Math.min(this.max, this.currentPosition + 10 * 1000), media.SeekMode.SEEK_CLOSEST)
+          this.ijkPlayer?.seekTo(`${Math.min(this.max, this.currentPosition + 10 * 1000)}`)
         }
       )
 
@@ -837,7 +841,8 @@ export struct IjkVideoPlayer {
         })
           .onChange((value: number) => {
             this.surfaceVolume = value
-            this.avPlayer?.setVolume(value / 100)
+            let volume = `${value / 100}f`
+            this.ijkPlayer?.setVolume(volume, volume)
           })
           .width("192vp")
           .margin({
@@ -937,7 +942,6 @@ export struct IjkVideoPlayer {
     Menu() {
       MenuItemGroup() {
         ForEach(this.availableAudios, (audio: AudioEntity, index: number) => {
-
           MenuItem() {
             Row() {
               Text(`${audio.name} (${audio.language})`)
@@ -955,10 +959,10 @@ export struct IjkVideoPlayer {
           }
           .onClick(() => {
             if (this.selectedSubtitle != undefined) {
-              this.avPlayer?.deselectTrack(this.selectedAudio)
+              this.ijkPlayer?.deselectTrack(`${this.selectedAudio}`)
               this.selectedAudio = undefined
             }
-            this.avPlayer?.selectTrack(audio.index)
+            this.ijkPlayer?.selectTrack(`${audio.index}`)
             this.selectedAudio = audio.index
           })
           .margin(
@@ -1108,14 +1112,14 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == 0.5 ? Visibility.Visible : Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
           .alignItems(VerticalAlign.Center)
         }
         .onClick(() => {
-          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_50_X)
+          this.updateSpeed(0.5)
         })
         .margin({
           left: 4,
@@ -1131,14 +1135,14 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == 0.75 ? Visibility.Visible : Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
           .alignItems(VerticalAlign.Center)
         }
         .onClick(() => {
-          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_75_X)
+          this.updateSpeed(0.75)
         })
         .margin({
           left: 4,
@@ -1153,14 +1157,14 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == 1 ? Visibility.Visible : Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
           .alignItems(VerticalAlign.Center)
         }
         .onClick(() => {
-          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_00_X)
+          this.updateSpeed(1)
         })
         .margin({
           left: 4,
@@ -1175,14 +1179,14 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == 1.25 ? Visibility.Visible : Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
           .alignItems(VerticalAlign.Center)
         }
         .onClick(() => {
-          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_25_X)
+          this.updateSpeed(1.25)
         })
         .margin({
           left: 4,
@@ -1197,14 +1201,14 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == 1.5 ? Visibility.Visible : Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
           .alignItems(VerticalAlign.Center)
         }
         .onClick(() => {
-          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_50_X)
+          this.updateSpeed(1.5)
         })
         .margin({
           left: 4,
@@ -1212,21 +1216,21 @@ export struct IjkVideoPlayer {
         })
         MenuItem() {
           Row() {
-            Text("1.75")
+            Text("1.75x")
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == 1.75 ? Visibility.Visible : Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
           .alignItems(VerticalAlign.Center)
         }
         .onClick(() => {
-          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_75_X)
+          this.updateSpeed(1.75)
         })
         .margin({
           left: 4,
@@ -1241,14 +1245,14 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == 2 ? Visibility.Visible : Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
           .alignItems(VerticalAlign.Center)
         }
         .onClick(() => {
-          this.updateSpeed(media.PlaybackSpeed.SPEED_FORWARD_2_00_X)
+          this.updateSpeed(2)
         })
         .margin({
           left: 4,
@@ -1274,23 +1278,11 @@ export struct IjkVideoPlayer {
       this.ijkPlayer?.pause()
       this.ijkPlayer?.stop()
       this.ijkPlayer?.release()
-      this.avPlayer?.pause()
-      this.avPlayer?.release()
-        .then(() => {
-          if (this.url.startsWith("dfs:")) {
-            disconnectDevice(this.videoHolder)
-              .then(() => {
-                VideoAbility.getContext().terminateSelf()
-                  .then(() => {
-                    let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                    let index = shouldDies.indexOf(this.hash)
-                    if (index >= 0) {
-                      shouldDies.slice(index, 1)
-                      AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
-                    }
-                  })
-              })
-          } else {
+      this.stopProgressTask()
+
+      if (this.url.startsWith("dfs:")) {
+        disconnectDevice(this.videoHolder)
+          .then(() => {
             VideoAbility.getContext().terminateSelf()
               .then(() => {
                 let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
@@ -1300,20 +1292,32 @@ export struct IjkVideoPlayer {
                   AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
                 }
               })
-          }
-        })
+          })
+      } else {
+        VideoAbility.getContext().terminateSelf()
+          .then(() => {
+            let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+            let index = shouldDies.indexOf(this.hash)
+            if (index >= 0) {
+              shouldDies.slice(index, 1)
+              AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+            }
+          })
+      }
     } else {
       this.ijkPlayer?.pause()
       this.ijkPlayer?.stop()
       this.ijkPlayer?.release()
-      this.avPlayer?.pause()
-      this.avPlayer?.release()
+      this.stopProgressTask()
     }
   }
 
-  private updateSpeed(speed: media.PlaybackSpeed) {
-    this.currentSpeed = speed
-    this.avPlayer?.setSpeed(speed)
+  private updateSpeed(speed: number, changeCurrent: boolean = true) {
+    if (changeCurrent) {
+      this.currentSpeed = speed
+    }
+    console.error(`updating speed to ${speed}f`)
+    this.ijkPlayer?.setSpeed(`${speed}f`)
   }
 
   private showSubtitlePicker() {
@@ -1364,22 +1368,6 @@ export struct IjkVideoPlayer {
           })
       }).catch((err: BusinessError) => {
       console.error(`Invoke documentViewPicker.select failed, code is ${err.code}, message is ${err.message}`);
-    })
-  }
-
-  private findMetadata(uri: string): Promise<media.AVMetadata> {
-    return new Promise((resultReturner) => {
-      media.createAVMetadataExtractor().then((avMetadataExtractor: media.AVMetadataExtractor) => {
-        fileIo.open(uri)
-          .then((file) => {
-            avMetadataExtractor.fdSrc = { fd: file.fd }
-            avMetadataExtractor.fetchMetadata()
-              .then((metadata) => {
-                avMetadataExtractor.release()
-                resultReturner(metadata)
-              })
-          })
-      })
     })
   }
 
@@ -1502,32 +1490,18 @@ export struct IjkVideoPlayer {
       connectDevice(this.videoHolder)
         .then(() => {
           console.error("connected to another device file system")
-          this.findMetadata(finderUrl)
-            .then((videoMetadata) => {
-              this.videoMetadata = videoMetadata
-              this.surfaceWidth = parseInt(this.videoMetadata.videoWidth!)
-              this.surfaceHeight = parseInt(this.videoMetadata.videoHeight!)
-              console.error(`surface width is: ${this.surfaceWidth}, height is: ${this.surfaceHeight}`)
-              this.createIjkPlayer(context, id)
-                .then(() => {
-
-                })
+          this.createIjkPlayer(context, id)
+            .then(() => {
+              this.startProgressTask()
             })
         })
         .catch((error: BusinessError) => {
           console.error(`error when connect file system: ${JSON.stringify(error)}`)
         })
     } else {
-      this.findMetadata(finderUrl)
-        .then((videoMetadata) => {
-          this.videoMetadata = videoMetadata
-          this.surfaceWidth = parseInt(this.videoMetadata.videoWidth!)
-          this.surfaceHeight = parseInt(this.videoMetadata.videoHeight!)
-          console.error(`surface width is: ${this.surfaceWidth}, height is: ${this.surfaceHeight}`)
-          this.createIjkPlayer(context, id)
-            .then(() => {
-
-            })
+      this.createIjkPlayer(context, id)
+        .then(() => {
+          this.startProgressTask()
         })
     }
   }
@@ -1537,7 +1511,6 @@ export struct IjkVideoPlayer {
     this.ijkPlayer = ijkPlayer
 
     ijkPlayer.setContext(context, id)
-    ijkPlayer.setDebug(true)
     ijkPlayer.native_setup();
 
     if (this.url.startsWith("file://media")) {
@@ -1596,16 +1569,34 @@ export struct IjkVideoPlayer {
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "addrinfo_timeout", "10000000");
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_timeout", "10000000");
 
+    ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", "1");
+
     ijkPlayer.setOnSeekCompleteListener({
       onSeekComplete: () => {
+        let time = ijkPlayer.getCurrentPosition()
+        this.currentPosition = time
+        if (!this.movingProgressBar) {
+          this.movingPosition = time
+        }
+        AppStorage.setOrCreate("videoPosition", time)
+      }
+    })
 
+    ijkPlayer.setOnVideoSizeChangedListener({
+      onVideoSizeChanged: (width: number, height: number) => {
+        this.surfaceWidth = width
+        this.surfaceHeight = height
       }
     })
 
     ijkPlayer.setOnPreparedListener({
       onPrepared: () => {
         let mediaInfoType = ijkPlayer.getMediaInfo() as MediaInfoType
-        console.error(`what u want is: ${mediaInfoType.meta}`)
+        console.error(`what u want (video decoder) is: ${mediaInfoType.videoDecoder}`)
+        console.error(`what u want (audio decoder) is: ${mediaInfoType.audioDecoder}`)
+        console.error(`what u want (meta) is: ${mediaInfoType.meta}`)
+
+        this.max = ijkPlayer.getDuration()
 
         if (this.parameterStartTime != -1) {
           ijkPlayer.seekTo(`${this.parameterStartTime}`)
@@ -1637,6 +1628,24 @@ export struct IjkVideoPlayer {
       }
     })
 
+    ijkPlayer.setOnBufferingUpdateListener({
+      onBufferingUpdate: (percent: number) => {
+        console.error(`buffer percent: ${percent}`)
+      }
+    })
+
+    ijkPlayer.setOnTimedTextListener({
+      onTimedText: (text: string) => {
+        console.error(`timed string is: ${text}`)
+      }
+    })
+
+    ijkPlayer.setOnInfoListener({
+      onInfo: (what: number, extra: number) => {
+        console.error(`Oninfo, what: ${what}; extra: ${extra}`)
+      }
+    })
+
     ijkPlayer.setMessageListener();
     ijkPlayer.prepareAsync();
     ijkPlayer.start();
@@ -1645,24 +1654,6 @@ export struct IjkVideoPlayer {
   private createAvPlayer() {
     media.createAVPlayer()
       .then((avPlayer: media.AVPlayer) => {
-        this.avPlayer = avPlayer
-        avPlayer.on("timeUpdate", (time: number) => {
-          this.currentPosition = time
-          if (!this.movingProgressBar) {
-            this.movingPosition = time
-          }
-          AppStorage.setOrCreate("videoPosition", time)
-        })
-        avPlayer.on('seekDone', (seekDoneTime: number) => {
-          this.currentPosition = seekDoneTime
-          if (!this.movingProgressBar) {
-            this.movingPosition = seekDoneTime
-          }
-          AppStorage.setOrCreate("videoPosition", seekDoneTime)
-        });
-        avPlayer.on("durationUpdate", (duration: number) => {
-          this.max = duration
-        })
         avPlayer.on("stateChange", (state: string, reason: media.StateChangeReason) => {
           if (state == "paused") {
             console.error("paused")

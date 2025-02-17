@@ -4,3 +4,4 @@
 /.cxx
 package-lock.json
 /src/main/cpp/third_party/
+/oh_modules/

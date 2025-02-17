@@ -223,6 +223,22 @@
     {
       "name": "settings_status_bar_battery_percent_tips",
       "value": "开启此选项后，在视频播放器中的电量状态栏中，电池右侧将会显示电量的百分比。"
+    },
+    {
+      "name": "settings_prefered_player",
+      "value": "播放器"
+    },
+    {
+      "name": "settings_prefered_player_tips",
+      "value": "设置优先使用的播放器。\nIJK：支持更多的解码器，支持字幕，但是有更高的占用，播放时可能会有卡顿。\nAV：支持更少的解码器，但是占用较低，可以流畅播放视频。"
+    },
+    {
+      "name": "settings_hardware_decode",
+      "value": "硬件解码"
+    },
+    {
+      "name": "settings_hardware_decode_tips",
+      "value": "开启此选项后，将会使用 GPU 进行视频解码渲染。但是开启此选项后画面可能会出现错误，并且此选项仅支持 IJK 播放器。"
     }
   ]
 }
