@@ -25,6 +25,8 @@ struct VideoIndex {
   private backTrigger: boolean = false
   @StorageLink('appColorMode')
   colorMode: string = "system";
+  @StorageLink('preferFFmpeg')
+  preferFFmpeg: boolean = false;
 
   aboutToAppear(): void {
     console.error("trying to play video")
@@ -55,14 +57,25 @@ struct VideoIndex {
         this.colorMode == "dark" ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
     }) {
       Stack() {
-        AVVideoPlayer({
-          title: this.title,
-          url: this.url,
-          hash: this.hash,
-          videoHolder: this.videoHolder,
-          isContinuation: this.isContinuation,
-          backTrigger: this.backTrigger,
-        })
+        if (this.preferFFmpeg) {
+          IjkVideoPlayer({
+            title: this.title,
+            url: this.url,
+            hash: this.hash,
+            videoHolder: this.videoHolder,
+            isContinuation: this.isContinuation,
+            backTrigger: this.backTrigger,
+          })
+        } else {
+          AVVideoPlayer({
+            title: this.title,
+            url: this.url,
+            hash: this.hash,
+            videoHolder: this.videoHolder,
+            isContinuation: this.isContinuation,
+            backTrigger: this.backTrigger,
+          })
+        }
       }
       .width("100%")
       .height("100%")

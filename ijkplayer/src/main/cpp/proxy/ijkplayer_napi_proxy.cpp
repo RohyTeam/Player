@@ -523,6 +523,7 @@ const char *getFromMediaMetaByKey(IjkMediaMeta *meta, char *key) {
     return value;
 }
 
+// TODO: maybe useless anymore
 static void IjkMediaPlayerFillHashMap(const char *type, HashMap map, IjkMediaMeta *streamRawMeta)
 {
     map->put(map, IJKM_KEY_CODEC_NAME,
@@ -560,6 +561,63 @@ static void IjkMediaPlayerFillHashMap(const char *type, HashMap map, IjkMediaMet
     }
 }
 
+static void IjkMediaPlayerObjectMap(const char *type, size_t index, HashMap parent, IjkMediaMeta *streamRawMeta) {
+    HashMap map = hashmap_create();
+    
+    map->put(map, IJKM_KEY_TYPE, getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_TYPE));
+    map->put(map, IJKM_KEY_LANGUAGE, getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_LANGUAGE));
+    map->put(map, IJKM_KEY_CODEC_NAME,
+             getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CODEC_NAME));
+    map->put(map, IJKM_KEY_CODEC_NAME,
+             getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CODEC_NAME));
+    map->put(map, IJKM_KEY_CODEC_PROFILE,
+             getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CODEC_PROFILE));
+    map->put(map, IJKM_KEY_CODEC_LEVEL,
+             getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CODEC_LEVEL));
+    map->put(map, IJKM_KEY_CODEC_LONG_NAME,
+             getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CODEC_LONG_NAME));
+    map->put(map, IJKM_KEY_CODEC_PIXEL_FORMAT,
+             getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CODEC_PIXEL_FORMAT));
+    map->put(map, IJKM_KEY_BITRATE, getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_BITRATE));
+    map->put(map, IJKM_KEY_CODEC_PROFILE_ID,
+             getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CODEC_PROFILE_ID));
+    if (strcmp(type, IJKM_VAL_TYPE__VIDEO) == 0) {
+        map->put(map, IJKM_KEY_WIDTH, getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_WIDTH));
+        map->put(map, IJKM_KEY_HEIGHT,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_HEIGHT));
+        map->put(map, IJKM_KEY_FPS_NUM,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_FPS_NUM));
+        map->put(map, IJKM_KEY_TBR_NUM,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_TBR_NUM));
+        map->put(map, IJKM_KEY_TBR_DEN,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_TBR_DEN));
+        map->put(map, IJKM_KEY_SAR_NUM,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_SAR_NUM));
+        map->put(map, IJKM_KEY_SAR_DEN,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_SAR_DEN));
+    } else if (strcmp(type, IJKM_VAL_TYPE__AUDIO) == 0) {
+        map->put(map, IJKM_KEY_SAMPLE_RATE,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_SAMPLE_RATE));
+        map->put(map, IJKM_KEY_CHANNEL_LAYOUT,
+                 getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_CHANNEL_LAYOUT));
+    }
+    
+    HashMapIterator iterator = hashmap_iterator(map);
+    std::string result = "";
+    while (hashmap_hasNext(iterator)) {
+        iterator = hashmap_next(iterator);
+        result.append("key:");
+        result.append((STRING)iterator->entry->key);
+        result.append(",");
+        result.append("value:");
+        result.append((STRING)iterator->entry->value);
+        result.append("|");
+    }
+    hashmap_delete(map);
+    
+    parent->put(parent, std::to_string(index).c_str(), result.c_str());
+}
+
 HashMap IJKPlayerNapiProxy::IjkMediaPlayer_getMediaMeta() {
     IjkMediaPlayer *mp = IJKPlayerNapiProxy::get_media_player(id_);
     HashMap map = hashmap_create();
@@ -577,12 +635,9 @@ HashMap IJKPlayerNapiProxy::IjkMediaPlayer_getMediaMeta() {
     for (size_t i = 0; i < count; ++i) {
         IjkMediaMeta *streamRawMeta = ijkmeta_get_child_l(meta, i);
         if (streamRawMeta) {
-            map->put(map, IJKM_KEY_TYPE, getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_TYPE));
-            map->put(map, IJKM_KEY_TYPE, getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_TYPE));
-            map->put(map, IJKM_KEY_LANGUAGE, getFromMediaMetaByKey(streamRawMeta, IJKM_KEY_LANGUAGE));
             const char *type = ijkmeta_get_string_l(streamRawMeta, IJKM_KEY_TYPE);
             if (type != nullptr) {
-                IjkMediaPlayerFillHashMap(type, map, streamRawMeta);
+                IjkMediaPlayerObjectMap(type, i, map, streamRawMeta);
             }
         }
     }

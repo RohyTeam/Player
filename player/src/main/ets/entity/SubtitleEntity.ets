@@ -5,6 +5,7 @@ export interface SubtitleEntity {
   index: number,
   name: string,
   language: string,
+  path: string,
   compiledASS: CompiledASS
 
 }

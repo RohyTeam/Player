@@ -643,12 +643,10 @@ napi_value IJKPlayerNapi::getMediaMeta(napi_env env, napi_callback_info info) {
         iterator = hashmap_next(iterator);
         LOGI("napi-->getMediaMeta { key: %s, value: %s, hashcode: %d }\n",
              (STRING)iterator->entry->key, (STRING)iterator->entry->value, iterator->hashCode);
-        result.append("key:");
         result.append((STRING)iterator->entry->key);
-        result.append(",");
-        result.append("value:");
+        result.append("{");
         result.append((STRING)iterator->entry->value);
-        result.append(";");
+        result.append("};");
     }
     hashmap_delete(map);
     napi_value napi_result;

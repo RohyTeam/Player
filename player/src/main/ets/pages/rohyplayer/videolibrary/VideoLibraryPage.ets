@@ -621,8 +621,10 @@ export struct VideoLibraryPage {
   settings$continuation: boolean = false
 
   colorModes: string[] = ["system", "light", "dark"];
-  @State
+  @StorageLink('preferFFmpeg')
   preferFFmpeg: boolean = false;
+  @StorageLink('hardwareDecode')
+  hardwareDecode: boolean = false;
 
   @Builder
   settings() {
@@ -758,12 +760,16 @@ export struct VideoLibraryPage {
                 title: "IJK",
                 onSwitch: () => {
                   this.preferFFmpeg = true
+                  AppStorage.setOrCreate("preferFFmpeg", true)
+                  PreferencesUtil.putSync("preferFFmpeg", true)
                 }
               },
               {
                 title: "AV",
                 onSwitch: () => {
                   this.preferFFmpeg = false
+                  AppStorage.setOrCreate("preferFFmpeg", false)
+                  PreferencesUtil.putSync("preferFFmpeg", false)
                 }
               }
             ],
@@ -775,10 +781,12 @@ export struct VideoLibraryPage {
               SettingsSwitch({
                 settingsTitle: $r("app.string.settings_hardware_decode"),
                 settingsTips: $r("app.string.settings_hardware_decode_tips"),
-                switchValue: false,
+                switchValue: this.hardwareDecode,
                 switchEvent: {
                   action: (value: boolean) => {
-
+                    this.hardwareDecode = value
+                    AppStorage.setOrCreate("hardwareDecode", value)
+                    PreferencesUtil.putSync("hardwareDecode", value)
                   }
                 }
               })
