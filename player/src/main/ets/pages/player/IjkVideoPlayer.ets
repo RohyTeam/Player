@@ -865,7 +865,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.selectedSubtitle == undefined ? Visibility.Visible : Visibility.Hidden)
@@ -889,7 +889,7 @@ export struct IjkVideoPlayer {
                 .fontWeight(FontWeight.Medium)
                 .margin(12)
               Blank()
-                .width("76vp")
+                .layoutWeight(1)
               SymbolGlyph($r("sys.symbol.checkmark"))
                 .fontColor([$r("app.color.icon_primary")])
                 .visibility(this.selectedSubtitle == subtitle.index ? Visibility.Visible : Visibility.Hidden)
@@ -927,6 +927,7 @@ export struct IjkVideoPlayer {
           })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
@@ -951,7 +952,7 @@ export struct IjkVideoPlayer {
                 .fontWeight(FontWeight.Medium)
                 .margin(12)
               Blank()
-                .width("76vp")
+                .layoutWeight(1)
               SymbolGlyph($r("sys.symbol.checkmark"))
                 .fontColor([$r("app.color.icon_primary")])
                 .visibility(this.selectedAudio == index ? Visibility.Visible : Visibility.Hidden)
@@ -999,6 +1000,7 @@ export struct IjkVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),

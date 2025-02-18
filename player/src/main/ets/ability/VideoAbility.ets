@@ -91,7 +91,6 @@ export default class VideoAbility extends UIAbility {
       AppUtil.init(this.context)
     }
 
-
     this.context.resourceManager.getRawFileContent('HarmonyOS_Sans_SC_Regular.ttf')
       .then((data) => {
         fileIo.open(`${getContext(this).filesDir}/fallback.ttf`, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)

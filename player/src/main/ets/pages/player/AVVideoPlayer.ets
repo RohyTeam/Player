@@ -702,7 +702,6 @@ export struct AVVideoPlayer {
       .height(40)
       .bindMenu(this.audioMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
-/*
       Button({
         type: ButtonType.Circle
       }) {
@@ -717,7 +716,7 @@ export struct AVVideoPlayer {
       .width(40)
       .height(40)
       .bindMenu(this.subtitleMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))*/
+      .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
       left: 16,
@@ -846,7 +845,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.selectedSubtitle == undefined ? Visibility.Visible : Visibility.Hidden)
@@ -870,7 +869,7 @@ export struct AVVideoPlayer {
                 .fontWeight(FontWeight.Medium)
                 .margin(12)
               Blank()
-                .width("76vp")
+                .layoutWeight(1)
               SymbolGlyph($r("sys.symbol.checkmark"))
                 .fontColor([$r("app.color.icon_primary")])
                 .visibility(this.selectedSubtitle == subtitle.index ? Visibility.Visible : Visibility.Hidden)
@@ -908,6 +907,7 @@ export struct AVVideoPlayer {
           })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
@@ -933,7 +933,7 @@ export struct AVVideoPlayer {
                 .fontWeight(FontWeight.Medium)
                 .margin(12)
               Blank()
-                .width("76vp")
+                .layoutWeight(1)
               SymbolGlyph($r("sys.symbol.checkmark"))
                 .fontColor([$r("app.color.icon_primary")])
                 .visibility(this.selectedAudio == audio.index ? Visibility.Visible : Visibility.Hidden)
@@ -974,6 +974,7 @@ export struct AVVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),

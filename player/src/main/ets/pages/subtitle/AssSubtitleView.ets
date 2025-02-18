@@ -2,7 +2,7 @@ import { CompiledASS, CompiledASSStyle, Dialogue, DialogueFragment, DialogueSlic
 import { abgrColorStr2argbColor, bgrColorStr2rgbColor } from '../../util/StringUtil'
 import { LengthMetricsUnit, matrix4 } from '@kit.ArkUI'
 import { fileIo } from '@kit.CoreFileKit';
-import SubtitleManager from 'libplayer.so';
+import { SubtitleRenderer } from 'libplayer.so';
 import { image } from '@kit.ImageKit';
 import List from '@ohos.util.List';
 
@@ -39,30 +39,49 @@ export struct NativeAssSubtitleView {
   @Link
   controller: SubtitleController
 
+  private subtitleRenderer: SubtitleRenderer | undefined = undefined
+
   @State
   buffers: Buffers = new Buffers()
 
   aboutToAppear(): void {
-    fileIo.open(this.path)
-      .then((file) => {
-        console.error("SHIT: init")
-        const arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size);
-        fileIo.readSync(file.fd, arrayBuffer)
-        console.error("SHIT: read all bytes")
-        SubtitleManager.Subtitle_Init(arrayBuffer)
-        this.controller.initPositioner((position: number) => {
-          console.error("SHIT: render")
-          this.buffers = SubtitleManager.Subtitle_Render(position, this.actualWidth, this.actualHeight)
-        })
-      })
   }
 
   aboutToDisappear(): void {
-    SubtitleManager.Subtitle_Release()
+    this.subtitleRenderer?.Subtitle_Release()
   }
 
   build() {
     Stack() {
+      XComponent({
+        id: "subtitle",
+        type: XComponentType.SURFACE,
+        libraryname: "player"
+      })
+        .onLoad((renderer) => {
+          this.subtitleRenderer = renderer as SubtitleRenderer
+
+          getContext(this).resourceManager.getRawFileContent('HarmonyOS_Sans_SC_Regular.ttf')
+            .then((data) => {
+              this.subtitleRenderer?.Subtitle_AddFont("HarmonyOS Sans SC", data.buffer)
+              fileIo.open(this.path)
+                .then((file) => {
+                  console.error("SHIT: init")
+                  const arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size);
+                  fileIo.readSync(file.fd, arrayBuffer)
+                  console.error("SHIT: read all bytes")
+                  this.subtitleRenderer?.Subtitle_Init(arrayBuffer)
+                  this.controller.initPositioner((position: number) => {
+                    console.error("SHIT: render")
+                    this.subtitleRenderer?.Subtitle_Render(position, this.actualWidth, this.actualHeight)
+                  })
+                })
+            })
+        })
+        .backgroundColor(Color.Transparent)
+        .width("100%")
+        .height("100%")
+      /*
       ForEach(this.buffers, (buffer: ArrayBuffer) => {
         Image(image.createImageSource(buffer).createPixelMapSync())
           .onAppear(() => {
@@ -70,7 +89,7 @@ export struct NativeAssSubtitleView {
           })
           .width("100%")
           .height("100%")
-      })
+      })*/
     }
     .width("100%")
     .height("100%")

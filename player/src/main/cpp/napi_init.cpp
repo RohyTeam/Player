@@ -4,12 +4,7 @@
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
-    napi_property_descriptor desc[] = {
-        { "Subtitle_Init", nullptr, SubtitleRenderer::Init, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "Subtitle_Render", nullptr, SubtitleRenderer::Render, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "Subtitle_Release", nullptr, SubtitleRenderer::Release, nullptr, nullptr, nullptr, napi_default, nullptr },
-    };
-    napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
+    SubtitleRenderer::GetInstance()->Export(env, exports);
     return exports;
 }
 EXTERN_C_END
