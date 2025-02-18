@@ -57,6 +57,8 @@ export default class PlayerAbility extends UIAbility {
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
     AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))
     AppStorage.setOrCreate("statusBarBatteryPercent", PreferencesUtil.getBooleanSync("statusBarBatteryPercent", false))
+    AppStorage.setOrCreate("preferFFmpeg", PreferencesUtil.getBooleanSync("preferFFmpeg", false))
+    AppStorage.setOrCreate("hardwareDecode", PreferencesUtil.getBooleanSync("hardwareDecode", false))
 
     // runTest()
   }

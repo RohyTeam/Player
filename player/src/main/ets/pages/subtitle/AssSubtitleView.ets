@@ -1,7 +1,82 @@
 import { CompiledASS, CompiledASSStyle, Dialogue, DialogueFragment, DialogueSlice } from '../../lib/ass_compiler'
 import { abgrColorStr2argbColor, bgrColorStr2rgbColor } from '../../util/StringUtil'
 import { LengthMetricsUnit, matrix4 } from '@kit.ArkUI'
-import { JSON } from '@kit.ArkTS'
+import { fileIo } from '@kit.CoreFileKit';
+import SubtitleManager from 'libplayer.so';
+import { image } from '@kit.ImageKit';
+import List from '@ohos.util.List';
+
+@Observed
+export class SubtitleController {
+
+  private positioner: (position: number) => void = () => {
+    console.error(`fallback positioner executed`)
+  }
+
+  initPositioner(newPositioner: (position: number) => void) {
+    console.error(`changing new positioner`)
+    this.positioner = newPositioner
+  }
+
+  seek(position: number) {
+    this.positioner(position)
+  }
+
+}
+
+@Observed
+class Buffers extends Array<ArrayBuffer> {}
+
+@Component
+export struct NativeAssSubtitleView {
+
+  @Prop
+  path: string
+  @Prop
+  actualWidth: number
+  @Prop
+  actualHeight: number
+  @Link
+  controller: SubtitleController
+
+  @State
+  buffers: Buffers = new Buffers()
+
+  aboutToAppear(): void {
+    fileIo.open(this.path)
+      .then((file) => {
+        console.error("SHIT: init")
+        const arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size);
+        fileIo.readSync(file.fd, arrayBuffer)
+        console.error("SHIT: read all bytes")
+        SubtitleManager.Subtitle_Init(arrayBuffer)
+        this.controller.initPositioner((position: number) => {
+          console.error("SHIT: render")
+          this.buffers = SubtitleManager.Subtitle_Render(position, this.actualWidth, this.actualHeight)
+        })
+      })
+  }
+
+  aboutToDisappear(): void {
+    SubtitleManager.Subtitle_Release()
+  }
+
+  build() {
+    Stack() {
+      ForEach(this.buffers, (buffer: ArrayBuffer) => {
+        Image(image.createImageSource(buffer).createPixelMapSync())
+          .onAppear(() => {
+            console.error("bitch: appearing image")
+          })
+          .width("100%")
+          .height("100%")
+      })
+    }
+    .width("100%")
+    .height("100%")
+  }
+
+}
 
 @Component
 export struct AssSubtitleView {

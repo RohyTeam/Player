@@ -1,11 +1,10 @@
 import { BusinessError } from '@kit.BasicServicesKit';
-import { media } from '@kit.MediaKit';
 import { fileIo, hash, picker } from '@kit.CoreFileKit';
 import { convertNumberToDurationString } from '../../util/TimeUtil';
 import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
-import { FileUtil } from '@pura/harmony-utils';
+import { FileUtil, RegexUtil } from '@pura/harmony-utils';
 import { showAlert } from '../../util/AlertUtil';
 import { SubtitleEntity, Subtitles } from '../../entity/SubtitleEntity';
 import { AudioEntity, Audios } from '../../entity/AudioEntity';
@@ -35,6 +34,8 @@ interface MediaInfoType {
   meta: string
 }
 
+const TRACKS_REGEX = "([0-9]+)\\{((?:key\\:[a-zA-Z0-9_]+,value:.+\\n?)+)\\}"
+const TRACK_META_REGEX = "key\\:([a-zA-Z0-9_]+),value:(.+)"
 /**
  * 由原本的 AVPlayer 转移为 ijkPlayer
  */
@@ -170,6 +171,8 @@ export struct IjkVideoPlayer {
   @StorageLink(`videoAbility_shouldDie`)
   @Watch("shouldDieWatcher")
   videoAbility_shouldDie: StringArray = [];
+  @StorageLink('hardwareDecode')
+  hardwareDecode: boolean = false;
 
   @State
   private shouldReallyDie: boolean = false
@@ -717,7 +720,7 @@ export struct IjkVideoPlayer {
       .height(40)
       .bindMenu(this.audioMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
-
+/*
       Button({
         type: ButtonType.Circle
       }) {
@@ -732,7 +735,7 @@ export struct IjkVideoPlayer {
       .width(40)
       .height(40)
       .bindMenu(this.subtitleMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))
+      .backgroundColor($r("app.color.comp_background_tertiary"))*/
     }
     .padding({
       left: 16,
@@ -951,19 +954,26 @@ export struct IjkVideoPlayer {
                 .width("76vp")
               SymbolGlyph($r("sys.symbol.checkmark"))
                 .fontColor([$r("app.color.icon_primary")])
-                .visibility(this.selectedAudio == audio.index ? Visibility.Visible : Visibility.Hidden)
+                .visibility(this.selectedAudio == index ? Visibility.Visible : Visibility.Hidden)
                 .margin(12)
                 .fontSize(24)
             }
             .alignItems(VerticalAlign.Center)
           }
           .onClick(() => {
+            if (this.selectedAudio == index) {
+              // ijk will crash if i dont do this
+              return
+            }
+            this.ijkPlayer?.pause()
             if (this.selectedSubtitle != undefined) {
-              this.ijkPlayer?.deselectTrack(`${this.selectedAudio}`)
+              this.ijkPlayer?.deselectTrack(`${this.availableAudios[this.selectedAudio!]!.index}`)
               this.selectedAudio = undefined
             }
             this.ijkPlayer?.selectTrack(`${audio.index}`)
-            this.selectedAudio = audio.index
+            this.selectedAudio = index
+            this.ijkPlayer?.seekTo(`${this.currentPosition}`)
+            this.ijkPlayer?.start()
           })
           .margin(
             index == 0 ? (
@@ -977,7 +987,7 @@ export struct IjkVideoPlayer {
                 left: 4,
                 right: 4
               }
-            ) : (index == this.availableSubtitles.length - 1 ? {
+            ) : (index == this.availableAudios.length - 1 ? {
               bottom: 4,
               left: 4,
               right: 4
@@ -1353,6 +1363,7 @@ export struct IjkVideoPlayer {
                               index: this.availableSubtitles.length,
                               name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
                               language: "Ukn",
+                              path: fileUrl,
                               compiledASS: compiledASS
                             })
                           })
@@ -1511,6 +1522,7 @@ export struct IjkVideoPlayer {
     this.ijkPlayer = ijkPlayer
 
     ijkPlayer.setContext(context, id)
+    // ijkPlayer.setDebug(true)
     ijkPlayer.native_setup();
 
     if (this.url.startsWith("file://media")) {
@@ -1537,6 +1549,7 @@ export struct IjkVideoPlayer {
                       index: this.availableSubtitles.length,
                       name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
                       language: "Ukn",
+                      path: subtitleUrl,
                       compiledASS: compiledASS
                     })
                   })
@@ -1559,8 +1572,10 @@ export struct IjkVideoPlayer {
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "max_cached_duration", "5000")
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "infbuf", "1")
 
-    // ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-all-videos", "1");
-    // ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-hevc", "1");
+    if (this.hardwareDecode) {
+      ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-all-videos", "1");
+      ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-hevc", "1");
+    }
 
     // timeout
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "timeout", "10000000");
@@ -1570,6 +1585,7 @@ export struct IjkVideoPlayer {
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_timeout", "10000000");
 
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", "1");
+    ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "subtitle", "1");
 
     ijkPlayer.setOnSeekCompleteListener({
       onSeekComplete: () => {
@@ -1594,7 +1610,48 @@ export struct IjkVideoPlayer {
         let mediaInfoType = ijkPlayer.getMediaInfo() as MediaInfoType
         console.error(`what u want (video decoder) is: ${mediaInfoType.videoDecoder}`)
         console.error(`what u want (audio decoder) is: ${mediaInfoType.audioDecoder}`)
-        console.error(`what u want (meta) is: ${mediaInfoType.meta}`)
+        // ijkPlayer.selectTrack("3")
+
+        let meta = mediaInfoType.meta.replaceAll(";", "\n").replaceAll("|", "\n")
+        console.error(`what u want (meta) is: ${meta}`)
+
+        let metaRegex = RegExp(TRACKS_REGEX)
+        let metaKeyValuesRegex = RegExp(TRACK_META_REGEX)
+
+        let metaMatch: RegExpExecArray | null;
+        while ((metaMatch = metaRegex.exec(meta)) !== null) {
+          meta = meta.replace(metaMatch[0], "")
+          const index = metaMatch[1];
+          let metaKeyValues = metaMatch[2];
+
+          let data = new Map<string, string>()
+
+          let kvMatch: RegExpExecArray | null;
+          while ((kvMatch = metaKeyValuesRegex.exec(metaKeyValues)) !== null) {
+            metaKeyValues = metaKeyValues.replace(kvMatch[0], "")
+            data[kvMatch[1]] = kvMatch[2];
+          }
+
+          console.error(`meta info: ${JSON.stringify(data)}`)
+
+          if (data["type"] == "audio") {
+            this.availableAudios.push({
+              index: parseInt(index)!!,
+              language: data["language"] || "Ukn",
+              name: data["name"] || "Ukn",
+            })
+          }
+        }
+
+        for (let audio of this.availableAudios) {
+          if (this.selectedAudio == undefined) {
+            this.selectedAudio = this.availableAudios.indexOf(audio)
+          }
+          if (audio.index < this.availableAudios[this.selectedAudio].index) {
+            this.selectedAudio = this.availableAudios.indexOf(audio)
+          }
+          console.error(`audio track info: ${JSON.stringify(audio)}`)
+        }
 
         this.max = ijkPlayer.getDuration()
 
@@ -1651,152 +1708,6 @@ export struct IjkVideoPlayer {
     ijkPlayer.start();
   }
 
-  private createAvPlayer() {
-    media.createAVPlayer()
-      .then((avPlayer: media.AVPlayer) => {
-        avPlayer.on("stateChange", (state: string, reason: media.StateChangeReason) => {
-          if (state == "paused") {
-            console.error("paused")
-            this.videoState.paused = true
-            AppStorage.setOrCreate("videoPaused", true)
-          } else if (state == "completed") {
-          } else if (state == "playing") {
-            console.error("playing")
-            this.videoState.paused = false
-            AppStorage.setOrCreate("videoPaused", false)
-          } else if (state == "idle") {
-            console.error("idle")
-            this.videoState.paused = true
-            AppStorage.setOrCreate("videoPaused", true)
-            avPlayer.pause()
-          } else if (state == "initialized") {
-            console.error("initialized")
-            avPlayer.surfaceId = this.xComponentController.getXComponentSurfaceId()
-            avPlayer.prepare();
-          } else if (state == "prepared") {
-            console.error("prepared")
-            if (this.parameterStartTime != -1) {
-              avPlayer.seek(this.parameterStartTime, media.SeekMode.SEEK_CLOSEST)
-            }
-            if (this.parameterStartPaused != undefined && this.parameterStartPaused) {
-              this.videoState.paused = true
-              avPlayer.pause()
-              AppStorage.setOrCreate("videoPaused", false)
-            } else {
-              this.videoState.paused = false
-              avPlayer.play();
-              AppStorage.setOrCreate("videoPaused", true)
-            }
-            avPlayer.getTrackDescription()
-              .then((trackDescriptions) => {
-                this.subtitleHashes = []
-                let audioTracks: number[] = []
-                trackDescriptions.forEach((trackDescription) => {
-                  console.error(`track description: ${
-                  JSON.stringify(
-                    [
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_INDEX],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_TYPE],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_CODEC_MIME],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_DURATION],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_BITRATE],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_WIDTH],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_HEIGHT],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_FRAME_RATE],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_CHANNEL_COUNT],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_SAMPLE_RATE],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_AUD_SAMPLE_DEPTH],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_LANGUAGE],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_NAME],
-                      trackDescription[media.MediaDescriptionKey.MD_KEY_HDR_TYPE]
-                    ]
-                  )
-                  }`)
-                  let trackType = trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_TYPE]
-                  if (trackType == 0) {
-                    let index = parseInt(trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_INDEX] as string)
-                    let language = trackDescription[media.MediaDescriptionKey.MD_KEY_LANGUAGE]
-                    let name = trackDescription[media.MediaDescriptionKey.MD_KEY_TRACK_NAME]
-                    audioTracks.push(index)
-                    this.availableAudios.push({
-                      index: index,
-                      name: name ? name as string : "?",
-                      language: language ? language as string : "?"
-                    })
-                  }
-
-                })
-
-                avPlayer.getSelectedTracks().then((selectedTracks) => {
-                  for (let selectedTrack of selectedTracks) {
-                    if (audioTracks.indexOf(selectedTrack) >= 0) {
-                      this.selectedAudio = selectedTrack
-                      break
-                    }
-                  }
-                })
-              })
-          }
-        })
-
-        avPlayer.on('error', (err: BusinessError) => {
-          console.error(`Invoke avPlayer failed, code is ${err.code}, message is ${err.message}`);
-          avPlayer.reset();
-        });
-        if (this.url.startsWith("file://media")) {
-          console.error("opening file")
-          fileIo.open(this.url)
-            .then((file) => {
-              console.error("playing video")
-              avPlayer.url = `fd://${file.fd}`
-            })
-        } else if (this.url.startsWith("file://")) {
-          console.error("hashing video")
-          hash.hash(FileUtil.getFilePath(this.url), "sha256")
-            .then((fileHash) => {
-              console.error("opening file")
-              fileIo.open(this.url)
-                .then((file) => {
-                  console.error("getting subtitles")
-                  SubtitleLibraryDatabase.get(getContext(this), fileHash)
-                    .then((subtitleUris) => {
-                      avPlayer.url = `fd://${file.fd}`
-                      subtitleUris.forEach(subtitleUrl => {
-                        fileIo.open(subtitleUrl)
-                          .then((subtitleFile) => {
-                            hash.hash(subtitleFile.path, "sha256")
-                              .then((subtitleHash) => {
-                                fileIo.readText(subtitleFile.path)
-                                  .then((readText) => {
-                                    let compiledASS = compile(readText, void 0)
-                                    let fileName = FileUtil.getFileName(subtitleUrl)
-                                    this.subtitleHashes.push(subtitleHash)
-                                    this.availableSubtitles.push({
-                                      index: this.availableSubtitles.length,
-                                      name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
-                                      language: "Ukn",
-                                      compiledASS: compiledASS
-                                    })
-                                  })
-                              })
-                          })
-                      })
-                    })
-                })
-            })
-        } else if (this.url.startsWith("dfs:")) {
-          console.error("opening file")
-          fileIo.open(this.url.substring(4))
-            .then((file) => {
-              console.error("playing video")
-              avPlayer.url = `fd://${file.fd}`
-            })
-            .catch((error: BusinessError) => {
-              console.error(`error occurs when accessing remote files: ${JSON.stringify(error)}`)
-            })
-        }
-      })
-  }
 }
 
 class VideoPlayerGestureModifier implements GestureModifier {

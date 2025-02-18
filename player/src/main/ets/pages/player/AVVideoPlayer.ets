@@ -12,7 +12,7 @@ import { SubtitleEntity, Subtitles } from '../../entity/SubtitleEntity';
 import { AudioEntity, Audios } from '../../entity/AudioEntity';
 import { JSON } from '@kit.ArkTS';
 import { compile } from '../../lib/ass_compiler';
-import { AssSubtitleView } from '../subtitle/AssSubtitleView';
+import { AssSubtitleView, NativeAssSubtitleView, SubtitleController } from '../subtitle/AssSubtitleView';
 import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
 import { BatteryInfo } from '../statusbar/info/BatteryInfo';
@@ -154,6 +154,8 @@ export struct AVVideoPlayer {
   private adjustingBrightness: boolean = false
   @State
   private adjustingVolume: boolean = false
+  @State
+  private subtitleController: SubtitleController = new SubtitleController()
   @StorageLink('statusBar')
   settings$statusBar: boolean = false;
   @StorageLink('autoShutdown')
@@ -318,7 +320,13 @@ export struct AVVideoPlayer {
       Stack() {
         Stack() {
           if (this.selectedSubtitle != undefined) {
-            AssSubtitleView({
+            NativeAssSubtitleView({
+              path: this.availableSubtitles[this.selectedSubtitle].path,
+              actualWidth: this.calculateWidth(this.surfaceFillingMode),
+              actualHeight: this.calculateHeight(this.surfaceFillingMode),
+              controller: this.subtitleController
+            })
+            /*AssSubtitleView({
               subtitle: this.availableSubtitles[this.selectedSubtitle].compiledASS,
               actualWidth: this.calculateWidth(this.surfaceFillingMode),
               actualHeight: this.calculateHeight(this.surfaceFillingMode),
@@ -326,7 +334,7 @@ export struct AVVideoPlayer {
             })
               .onAppear(() => {
                 console.error("showing subtitle!")
-              })
+              })*/
           }
         }
         .height(this.calculateHeightPercent(this.surfaceFillingMode))
@@ -694,7 +702,7 @@ export struct AVVideoPlayer {
       .height(40)
       .bindMenu(this.audioMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
-
+/*
       Button({
         type: ButtonType.Circle
       }) {
@@ -709,7 +717,7 @@ export struct AVVideoPlayer {
       .width(40)
       .height(40)
       .bindMenu(this.subtitleMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))
+      .backgroundColor($r("app.color.comp_background_tertiary"))*/
     }
     .padding({
       left: 16,
@@ -954,7 +962,7 @@ export struct AVVideoPlayer {
                 left: 4,
                 right: 4
               }
-            ) : (index == this.availableSubtitles.length - 1 ? {
+            ) : (index == this.availableAudios.length - 1 ? {
               bottom: 4,
               left: 4,
               right: 4
@@ -1324,6 +1332,7 @@ export struct AVVideoPlayer {
                               index: this.availableSubtitles.length,
                               name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
                               language: "Ukn",
+                              path: fileUrl,
                               compiledASS: compiledASS
                             })
                           })
@@ -1498,6 +1507,8 @@ export struct AVVideoPlayer {
           if (!this.movingProgressBar) {
             this.movingPosition = time
           }
+          console.error(`WTF? just updating: ${time}`)
+          this.subtitleController.seek(time)
           AppStorage.setOrCreate("videoPosition", time)
         })
         avPlayer.on('seekDone', (seekDoneTime: number) => {
@@ -1505,6 +1516,8 @@ export struct AVVideoPlayer {
           if (!this.movingProgressBar) {
             this.movingPosition = seekDoneTime
           }
+          console.error(`WTF? seeking: ${seekDoneTime}`)
+          this.subtitleController.seek(seekDoneTime)
           AppStorage.setOrCreate("videoPosition", seekDoneTime)
         });
         avPlayer.on("durationUpdate", (duration: number) => {
@@ -1641,6 +1654,7 @@ export struct AVVideoPlayer {
                                       index: this.availableSubtitles.length,
                                       name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
                                       language: "Ukn",
+                                      path: subtitleUrl,
                                       compiledASS: compiledASS
                                     })
                                   })
