@@ -1,8 +1,7 @@
-import { SystemBasicInfo } from "../../../sendable/SystemBasicInfo";
+import { SystemBasicInfo } from '../../../sendable/SystemBasicInfo';
 
 @ComponentV2
 export struct BlueToothBatteryInfo {
-
   @Param
   @Require
   systemBasicInfo: SystemBasicInfo
@@ -87,5 +86,4 @@ export struct BlueToothBatteryInfo {
         .fontColor([$r("app.color.icon_primary")])
     }
   }
-
 }

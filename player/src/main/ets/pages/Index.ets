@@ -6,7 +6,6 @@ import { RohyPlayerHome } from './rohyplayer/HomeScreen';
 struct Index {
   @StorageLink('appColorMode')
   colorMode: string = "system";
-
   @Provide('pageController')
   pageController: NavPathStack = new NavPathStack()
 
@@ -40,5 +39,4 @@ struct Index {
       DebugPage()
     }
   }
-
 }

@@ -3,7 +3,6 @@ import { SystemBasicInfo } from '../../../sendable/SystemBasicInfo'
 
 @ComponentV2
 export struct TimeInfo {
-
   @Param
   @Require
   systemBasicInfo: SystemBasicInfo
@@ -12,5 +11,4 @@ export struct TimeInfo {
     Text(`${DateUtil.getFormatDateStr(this.systemBasicInfo.time, 'HH:mm')}`)
       .fontColor($r('app.color.font_primary'))
   }
-
 }
