@@ -1,10 +1,10 @@
-import { BatteryInfo } from "./info/BatteryInfo"
-import { TimeInfo } from "./info/TimeInfo"
-import { taskpool } from "@kit.ArkTS"
-import { SystemBasicInfo } from "../../sendable/SystemBasicInfo"
-import { batteryInfo, systemDateTime } from "@kit.BasicServicesKit"
-import { UIUtils } from "@kit.ArkUI"
-import { BlueToothBatteryInfo } from "./info/BlueToothBatteryInfo"
+import { BatteryInfo } from './info/BatteryInfo'
+import { TimeInfo } from './info/TimeInfo'
+import { taskpool } from '@kit.ArkTS'
+import { SystemBasicInfo } from '../../sendable/SystemBasicInfo'
+import { batteryInfo, systemDateTime } from '@kit.BasicServicesKit'
+import { UIUtils } from '@kit.ArkUI'
+import { BlueToothBatteryInfo } from './info/BlueToothBatteryInfo'
 
 
 @Concurrent
@@ -15,13 +15,11 @@ function updateInfo(): SystemBasicInfo {
 
 @ComponentV2
 export struct StatusBar {
-
   @Param
   @Require
   statusBarBatteryPercent: boolean = false;
   @Local
   private systemBasicInfo: SystemBasicInfo = UIUtils.makeObserved(new SystemBasicInfo())
-
   private task: taskpool.Task = new taskpool.Task(updateInfo)
 
   updateSystemInfo() {
@@ -71,5 +69,4 @@ export struct StatusBar {
     .alignItems(VerticalAlign.Center)
     .width("100%")
   }
-
 }

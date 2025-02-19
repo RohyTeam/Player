@@ -1,8 +1,6 @@
-import { drawing } from "@kit.ArkGraphics2D"
 
 @Component
 export struct DebugPage {
-
   aboutToAppear(): void {
   }
 
@@ -18,6 +16,7 @@ export struct DebugPage {
             .fontWeight(FontWeight.Regular)
             .fontSize(16)
         }
+
         Stack() {
           Text("试")
             .fontWeight(FontWeight.Bold)
@@ -27,6 +26,7 @@ export struct DebugPage {
             .fontWeight(FontWeight.Regular)
             .fontSize(16)
         }
+
         Stack() {
           Text("文")
             .fontWeight(FontWeight.Bold)
@@ -36,6 +36,7 @@ export struct DebugPage {
             .fontWeight(FontWeight.Regular)
             .fontSize(16)
         }
+
         Stack() {
           Text("本")
             .fontWeight(FontWeight.Bold)
@@ -50,5 +51,4 @@ export struct DebugPage {
     .width("100%")
     .height("100%")
   }
-
 }

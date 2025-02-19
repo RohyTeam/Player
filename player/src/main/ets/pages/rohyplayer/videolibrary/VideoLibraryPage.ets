@@ -1,4 +1,4 @@
-import { LengthMetrics, promptAction, SymbolGlyphModifier } from '@kit.ArkUI'
+import { LengthMetrics, promptAction } from '@kit.ArkUI'
 import { fileIo, hash, picker } from '@kit.CoreFileKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
@@ -56,7 +56,6 @@ export struct VideoLibraryPage {
   private sortReversed: boolean = false
   @State
   searching: string = ""
-
   @Consume('pageController')
   pageController: NavPathStack
 
@@ -88,6 +87,7 @@ export struct VideoLibraryPage {
           right: 4,
           top: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.videolibrary_view_mode_list"))
@@ -111,6 +111,7 @@ export struct VideoLibraryPage {
           left: 4,
           right: 4
         })
+
         MenuItem()
           .margin({
             bottom: "8vp"
@@ -257,7 +258,8 @@ export struct VideoLibraryPage {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.browseMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.browseMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -616,10 +618,8 @@ export struct VideoLibraryPage {
   statusBar: boolean = false;
   @StorageLink('statusBarBatteryPercent')
   statusBarBatteryPercent: boolean = false;
-
   @State
   settings$continuation: boolean = false
-
   colorModes: string[] = ["system", "light", "dark"];
   @StorageLink('preferFFmpeg')
   preferFFmpeg: boolean = false;
@@ -829,6 +829,7 @@ export struct VideoLibraryPage {
             }
           })
         }
+
         SettingsGroup() {
           SettingsRow({
             settingsTitle: $r("app.string.settings_debug_page"),

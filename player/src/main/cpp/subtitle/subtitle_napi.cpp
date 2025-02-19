@@ -11,27 +11,82 @@
 #include <stdlib.h>
 #include "png_utils.h"
 
-uint8_t* ConvertAssImageToRGBA(const ASS_Image* img) {
-    const int width = img->w;
-    const int height = img->h;
-    const int src_stride = img->stride;
-    const int dst_stride = width * 4;
 
-    uint8_t* rgba_data = new uint8_t[height * dst_stride];
+struct PngMemoryBuffer {
+    std::vector<uint8_t> data;
+};
 
-    for (int y = 0; y < height; ++y) {
-        const uint8_t* src_row = img->bitmap + y * src_stride;
-        uint8_t* dst_row = rgba_data + y * dst_stride;
+void Subtitle_PngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length) {
+    PngMemoryBuffer* buffer = static_cast<PngMemoryBuffer*>(png_get_io_ptr(png_ptr));
+    buffer->data.insert(buffer->data.end(), data, data + length);
+}
 
-        for (int x = 0; x < width; ++x) {
-            dst_row[x * 4 + 0] = src_row[x * 4 + 2];
-            dst_row[x * 4 + 1] = src_row[x * 4 + 1];
-            dst_row[x * 4 + 2] = src_row[x * 4 + 0];
-            dst_row[x * 4 + 3] = src_row[x * 4 + 3];
-        }
+uint8_t* Subtitle_ConvertAssImageToPng(const ASS_Image* img, size_t& png_size) {
+    if (!img || !img->bitmap) return nullptr;
+
+    png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png) return nullptr;
+
+    png_infop info = png_create_info_struct(png);
+    if (!info) {
+        png_destroy_write_struct(&png, nullptr);
+        return nullptr;
     }
 
-    return rgba_data;
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_write_struct(&png, &info);
+        return nullptr;
+    }
+
+    PngMemoryBuffer buffer;
+    png_set_write_fn(png, &buffer, Subtitle_PngWriteCallback, nullptr);
+
+    const int width = img->w;
+    const int height = img->h;
+    const int color_type = PNG_COLOR_TYPE_RGBA;
+    const int bit_depth = 8;
+
+    png_set_IHDR(png, info, width, height, bit_depth, color_type,
+                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
+
+    const uint32_t ass_color = img->color;
+    const uint8_t r = (ass_color >> 24) & 0xFF;
+    const uint8_t g = (ass_color >> 16) & 0xFF;
+    const uint8_t b = (ass_color >> 8) & 0xFF;
+    const uint8_t a = ass_color & 0xFF;
+
+    // 准备行数据
+    std::vector<png_bytep> row_pointers(height);
+    std::vector<uint8_t> rgba_buffer(width * height * 4);
+
+    for (int y = 0; y < height; ++y) {
+        const uint8_t* alpha_row = img->bitmap + y * img->stride;
+        uint8_t* dst_row = &rgba_buffer[y * width * 4];
+        
+        for (int x = 0; x < width; ++x) {
+            const uint8_t alpha = alpha_row[x];
+            dst_row[x*4] = r;       // R
+            dst_row[x*4+1] = g;     // G
+            dst_row[x*4+2] = b;     // B
+            dst_row[x*4+3] = (alpha * a) / 255; // 应用全局透明度
+        }
+        row_pointers[y] = dst_row;
+    }
+
+    // 写入PNG数据
+    png_write_info(png, info);
+    png_write_image(png, row_pointers.data());
+    png_write_end(png, nullptr);
+
+    // 清理资源
+    png_destroy_write_struct(&png, &info);
+
+    // 返回内存数据
+    png_size = buffer.data.size();
+    uint8_t* result = new uint8_t[png_size];
+    memcpy(result, buffer.data.data(), png_size);
+    return result;
 }
 
 void SubtitleRenderer::initASS(char *buf, size_t bufsize) {
@@ -47,7 +102,22 @@ void SubtitleRenderer::initASS(char *buf, size_t bufsize) {
         return;
     }
     
-    ass_set_fonts(m_assRenderer, "/data/storage/el2/base/haps/player/files/fallback.ttf", "HarmonyOS Sans SC", 1, nullptr, 0);
+    // ass_set_fonts(m_assRenderer, "/data/storage/el2/base/haps/player/files/fallback.ttf", "HarmonyOS Sans SC", 1, nullptr, 0);
+    ASS_DefaultFontProvider* providers;
+    size_t size;
+    ass_get_available_font_providers(m_assLibrary, &providers, &size);
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK!: available font providers amount: %{public}ld", size);
+    
+    if (!fonts_.empty()) {
+        for (const auto& [fontName, fontData] : fonts_) {
+            OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK!: added font with name %{public}s", fontName.c_str());
+            ass_add_font(m_assLibrary, fontName.c_str(),
+                                         fontData.fontData, fontData.fontSize);
+        }
+        ass_set_fonts(m_assRenderer, nullptr, "HarmonyOS Sans SC", 1, nullptr, 1);
+    } else {
+        OH_LOG_Print(LOG_APP, LOG_WARN, 0, "FontAdd", "No custom fonts available");
+    }
     
     // char* url = new char[path.size() + 1];
     // std::strcpy(url, path.c_str());
@@ -101,42 +171,58 @@ napi_value SubtitleRenderer::Init(napi_env env, napi_callback_info info) {
     return nullptr;
 }
 
-napi_value create_array_buffer_from_rgba(napi_env env, uint8_t* rgba_data, size_t data_size) {
-    napi_value array_buffer;
-    void* buffer_data = NULL;
-
-    napi_create_arraybuffer(env, data_size, &buffer_data, &array_buffer);
-
-    memcpy(buffer_data, rgba_data, data_size);
-
-    return array_buffer;
-}
-
-napi_value convert_ass_image_to_rgba(napi_env env, const ASS_Image* ass_image) {
-    size_t rgba_size = ass_image->w * ass_image->h * 4;
-    uint8_t* rgba_buffer = (uint8_t*)malloc(rgba_size);
-    if (!rgba_buffer) {
-        return NULL;
-    }
-
-    for (int y = 0; y < ass_image->h; ++y) {
-        for (int x = 0; x < ass_image->w; ++x) {
-            uint8_t alpha = ass_image->bitmap[y * ass_image->stride + x];
-
-            uint8_t red = (ass_image->color >> 24) & 0xFF;
-            uint8_t green = (ass_image->color >> 16) & 0xFF;
-            uint8_t blue = (ass_image->color >> 8) & 0xFF;
-
-            size_t index = (y * ass_image->w + x) * 4;
-
-            rgba_buffer[index] = red;
-            rgba_buffer[index + 1] = green;
-            rgba_buffer[index + 2] = blue;
-            rgba_buffer[index + 3] = alpha;
-        }
+napi_value SubtitleRenderer::AddFont(napi_env env, napi_callback_info info) {
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK! add font");
+    
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+    if (napi_ok != napi_get_cb_info(env, info, &argc, args, nullptr, nullptr)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ParseId", "GetContext napi_get_cb_info failed");
+        return nullptr;
     }
     
-    return create_array_buffer_from_rgba(env, rgba_buffer, rgba_size);
+    std::string fontName;
+    NapiUtils::JsValueToString(env, args[0], 2048, fontName);
+    
+    void* data;
+    size_t length;
+    napi_get_buffer_info(env, args[1], &data, &length);
+    
+    FontData fontData;
+    fontData.fontData = (char*) data;
+    fontData.fontSize = length;
+    
+    SubtitleRenderer::GetInstance()->fonts_[fontName] = fontData;
+    
+    return nullptr;
+}
+
+uint8_t* ConvertAssImageToRGBA(const ASS_Image* img) {
+    const int width = img->w;
+    const int height = img->h;
+    const int src_stride = img->stride;
+    const int dst_stride = width * 4;
+    uint8_t* rgba_data = new uint8_t[height * dst_stride]();
+
+    uint32_t color = img->color;
+    uint8_t r = ((color >> 24) & 0xFF);
+    uint8_t g = ((color >> 16) & 0xFF);
+    uint8_t b = ((color >> 8) & 0xFF);
+
+    for (int y = 0; y < height; ++y) {
+        const uint8_t* src_row = img->bitmap + y * src_stride;
+        uint8_t* dst_row = rgba_data + y * dst_stride;
+
+        for (int x = 0; x < width; ++x) {
+            uint8_t alpha = src_row[x];
+            dst_row[x * 4]     = r;
+            dst_row[x * 4 + 1] = g;
+            dst_row[x * 4 + 2] = b;
+            dst_row[x * 4 + 3] = alpha;
+        }
+    }
+
+    return rgba_data;
 }
 
 napi_value SubtitleRenderer::Render(napi_env env, napi_callback_info info) {
@@ -174,27 +260,34 @@ napi_value SubtitleRenderer::Render(napi_env env, napi_callback_info info) {
     napi_create_array(env, &array);
 
     size_t i = 0;
-    while (img != nullptr) {/*
-        std::vector<uint8_t> buffer;
-        PngUtils::ConvertAssImageToPng(img, buffer);
-        
-        napi_value array_buffer;
-        napi_create_arraybuffer(env, buffer.size(), reinterpret_cast<void**>(buffer.data()), &array_buffer);*/
-        
-        uint8_t* rgba_data = ConvertAssImageToRGBA(img);
-        const size_t buffer_size = img->h * img->w * 4;
+    
+    while (img != nullptr) {
+        napi_value image_obj;
+        napi_create_object(env, &image_obj);
 
-        // 创建 ArrayBuffer
+        const int buffer_size = img->w * img->h * 4;
+        uint8_t* rgba_buffer = ConvertAssImageToRGBA(img);
+
         napi_value array_buffer;
         void* buffer_data = nullptr;
         napi_create_arraybuffer(env, buffer_size, &buffer_data, &array_buffer);
+        memcpy(buffer_data, rgba_buffer, buffer_size);
+        delete[] rgba_buffer;
 
-        memcpy(buffer_data, rgba_data, buffer_size);
-        delete[] rgba_data;
-        
-        napi_set_element(env, array, i, array_buffer);
-        
-        i++;
+        napi_value js_width, js_height, js_x, js_y;
+        napi_create_int32(env, img->w, &js_width);
+        napi_create_int32(env, img->h, &js_height);
+        napi_create_int32(env, img->dst_x, &js_x);
+        napi_create_int32(env, img->dst_y, &js_y);
+
+        napi_set_named_property(env, image_obj, "buffer", array_buffer);
+        napi_set_named_property(env, image_obj, "width", js_width);
+        napi_set_named_property(env, image_obj, "height", js_height);
+        napi_set_named_property(env, image_obj, "x", js_x);
+        napi_set_named_property(env, image_obj, "y", js_y);
+
+        napi_set_element(env, array, i, image_obj);
+        i += 1;
         img = img->next;
     }
     

@@ -1,8 +1,7 @@
-import { batteryInfo, BusinessError } from '@kit.BasicServicesKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { media } from '@kit.MediaKit';
 import { fileIo, hash, picker } from '@kit.CoreFileKit';
 import { convertNumberToDurationString } from '../../util/TimeUtil';
-import { common } from '@kit.AbilityKit';
 import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
@@ -12,11 +11,9 @@ import { SubtitleEntity, Subtitles } from '../../entity/SubtitleEntity';
 import { AudioEntity, Audios } from '../../entity/AudioEntity';
 import { JSON } from '@kit.ArkTS';
 import { compile } from '../../lib/ass_compiler';
-import { AssSubtitleView, NativeAssSubtitleView, SubtitleController } from '../subtitle/AssSubtitleView';
+import { NativeAssSubtitleView, SubtitleController } from '../subtitle/AssSubtitleView';
 import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
-import { BatteryInfo } from '../statusbar/info/BatteryInfo';
-import { TimeInfo } from '../statusbar/info/TimeInfo';
 import { StatusBar } from '../statusbar/StatusBar';
 
 @Observed
@@ -164,7 +161,6 @@ export struct AVVideoPlayer {
   @StorageLink(`videoAbility_shouldDie`)
   @Watch("shouldDieWatcher")
   videoAbility_shouldDie: StringArray = [];
-
   @State
   private shouldReallyDie: boolean = false
 
@@ -324,17 +320,9 @@ export struct AVVideoPlayer {
               path: this.availableSubtitles[this.selectedSubtitle].path,
               actualWidth: this.calculateWidth(this.surfaceFillingMode),
               actualHeight: this.calculateHeight(this.surfaceFillingMode),
+              metadata: this.availableSubtitles[this.selectedSubtitle].compiledASS,
               controller: this.subtitleController
             })
-            /*AssSubtitleView({
-              subtitle: this.availableSubtitles[this.selectedSubtitle].compiledASS,
-              actualWidth: this.calculateWidth(this.surfaceFillingMode),
-              actualHeight: this.calculateHeight(this.surfaceFillingMode),
-              currentTime: this.currentPosition
-            })
-              .onAppear(() => {
-                console.error("showing subtitle!")
-              })*/
           }
         }
         .height(this.calculateHeightPercent(this.surfaceFillingMode))
@@ -417,7 +405,6 @@ export struct AVVideoPlayer {
   private repeatPlay: boolean = false
   @State
   private mirrorClip: boolean = false
-
   @StorageLink('statusBarBatteryPercent')
   statusBarBatteryPercent: boolean = false;
 
@@ -506,7 +493,8 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.slidersMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.slidersMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
@@ -668,7 +656,8 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.surfaceFillingModeMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.surfaceFillingModeMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -684,7 +673,8 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.speedMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.speedMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -700,9 +690,10 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.audioMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.audioMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
-/*
+
       Button({
         type: ButtonType.Circle
       }) {
@@ -716,8 +707,9 @@ export struct AVVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.subtitleMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))*/
+      .bindMenu(this.subtitleMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
       left: 16,
@@ -863,6 +855,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         ForEach(this.availableSubtitles, (subtitle: SubtitleEntity, index: number) => {
           MenuItem() {
             Row() {
@@ -1008,6 +1001,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.surfaceFillingMode_stretch"))
@@ -1017,7 +1011,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.surfaceFillingMode == SurfaceFillingMode.Stretch ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.Stretch ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1030,6 +1025,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.surfaceFillingMode_4by3"))
@@ -1039,7 +1035,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1052,6 +1049,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.surfaceFillingMode_16by9"))
@@ -1061,7 +1059,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1097,7 +1096,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1111,6 +1111,7 @@ export struct AVVideoPlayer {
           right: 4,
           top: 4
         })
+
         MenuItem() {
           Row() {
             Text("0.75x")
@@ -1120,7 +1121,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1133,6 +1135,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.00x")
@@ -1142,7 +1145,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1155,6 +1159,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.25x")
@@ -1164,7 +1169,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1177,6 +1183,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.50x")
@@ -1186,7 +1193,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1199,6 +1207,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.75")
@@ -1208,7 +1217,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1221,6 +1231,7 @@ export struct AVVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("2.00x")
@@ -1230,7 +1241,8 @@ export struct AVVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1508,7 +1520,9 @@ export struct AVVideoPlayer {
             this.movingPosition = time
           }
           console.error(`WTF? just updating: ${time}`)
-          this.subtitleController.seek(time)
+          if (this.selectedSubtitle != undefined) {
+            this.subtitleController.seek(time)
+          }
           AppStorage.setOrCreate("videoPosition", time)
         })
         avPlayer.on('seekDone', (seekDoneTime: number) => {
@@ -1517,7 +1531,9 @@ export struct AVVideoPlayer {
             this.movingPosition = seekDoneTime
           }
           console.error(`WTF? seeking: ${seekDoneTime}`)
-          this.subtitleController.seek(seekDoneTime)
+          if (this.selectedSubtitle != undefined) {
+            this.subtitleController.seek(seekDoneTime)
+          }
           AppStorage.setOrCreate("videoPosition", seekDoneTime)
         });
         avPlayer.on("durationUpdate", (duration: number) => {

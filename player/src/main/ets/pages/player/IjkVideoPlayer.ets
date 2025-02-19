@@ -4,13 +4,13 @@ import { convertNumberToDurationString } from '../../util/TimeUtil';
 import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
-import { FileUtil, RegexUtil } from '@pura/harmony-utils';
+import { FileUtil } from '@pura/harmony-utils';
 import { showAlert } from '../../util/AlertUtil';
 import { SubtitleEntity, Subtitles } from '../../entity/SubtitleEntity';
 import { AudioEntity, Audios } from '../../entity/AudioEntity';
 import { JSON } from '@kit.ArkTS';
 import { compile } from '../../lib/ass_compiler';
-import { AssSubtitleView } from '../subtitle/AssSubtitleView';
+import { NativeAssSubtitleView, SubtitleController } from '../subtitle/AssSubtitleView';
 import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
 import { StatusBar } from '../statusbar/StatusBar';
@@ -36,6 +36,7 @@ interface MediaInfoType {
 
 const TRACKS_REGEX = "([0-9]+)\\{((?:key\\:[a-zA-Z0-9_]+,value:.+\\n?)+)\\}"
 const TRACK_META_REGEX = "key\\:([a-zA-Z0-9_]+),value:(.+)"
+
 /**
  * 由原本的 AVPlayer 转移为 ijkPlayer
  */
@@ -163,6 +164,8 @@ export struct IjkVideoPlayer {
   private adjustingBrightness: boolean = false
   @State
   private adjustingVolume: boolean = false
+  @State
+  private subtitleController: SubtitleController = new SubtitleController()
   @StorageLink('statusBar')
   settings$statusBar: boolean = false;
   @StorageLink('autoShutdown')
@@ -173,7 +176,6 @@ export struct IjkVideoPlayer {
   videoAbility_shouldDie: StringArray = [];
   @StorageLink('hardwareDecode')
   hardwareDecode: boolean = false;
-
   @State
   private shouldReallyDie: boolean = false
 
@@ -223,6 +225,10 @@ export struct IjkVideoPlayer {
   private startProgressTask() {
     this.progressUpdaterTimer = setInterval(() => {
       this.currentPosition = this.ijkPlayer?.getCurrentPosition() || 0
+      this.subtitleController.seek(this.currentPosition)
+      if (this.selectedSubtitle != undefined) {
+        this.subtitleController.seek(this.currentPosition)
+      }
     }, 200);
   }
 
@@ -340,11 +346,12 @@ export struct IjkVideoPlayer {
       Stack() {
         Stack() {
           if (this.selectedSubtitle != undefined) {
-            AssSubtitleView({
-              subtitle: this.availableSubtitles[this.selectedSubtitle].compiledASS,
+            NativeAssSubtitleView({
+              path: this.availableSubtitles[this.selectedSubtitle].path,
               actualWidth: this.calculateWidth(this.surfaceFillingMode),
               actualHeight: this.calculateHeight(this.surfaceFillingMode),
-              currentTime: this.currentPosition
+              metadata: this.availableSubtitles[this.selectedSubtitle].compiledASS,
+              controller: this.subtitleController
             })
               .onAppear(() => {
                 console.error("showing subtitle!")
@@ -435,7 +442,6 @@ export struct IjkVideoPlayer {
   private repeatPlay: boolean = false
   @State
   private mirrorClip: boolean = false
-
   @StorageLink('statusBarBatteryPercent')
   statusBarBatteryPercent: boolean = false;
 
@@ -524,7 +530,8 @@ export struct IjkVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.slidersMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.slidersMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
@@ -686,7 +693,8 @@ export struct IjkVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.surfaceFillingModeMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.surfaceFillingModeMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -702,7 +710,8 @@ export struct IjkVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.speedMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.speedMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
 
       Button({
@@ -718,9 +727,10 @@ export struct IjkVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.audioMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .bindMenu(this.audioMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
       .backgroundColor($r("app.color.comp_background_tertiary"))
-/*
+
       Button({
         type: ButtonType.Circle
       }) {
@@ -734,8 +744,9 @@ export struct IjkVideoPlayer {
       })
       .width(40)
       .height(40)
-      .bindMenu(this.subtitleMenus, { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))*/
+      .bindMenu(this.subtitleMenus,
+        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+      .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
       left: 16,
@@ -882,6 +893,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         ForEach(this.availableSubtitles, (subtitle: SubtitleEntity, index: number) => {
           MenuItem() {
             Row() {
@@ -1033,6 +1045,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.surfaceFillingMode_stretch"))
@@ -1042,7 +1055,8 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.surfaceFillingMode == SurfaceFillingMode.Stretch ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.Stretch ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1055,6 +1069,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.surfaceFillingMode_4by3"))
@@ -1064,7 +1079,8 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1077,6 +1093,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text($r("app.string.surfaceFillingMode_16by9"))
@@ -1086,7 +1103,8 @@ export struct IjkVideoPlayer {
               .width("76vp")
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
-              .visibility(this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? Visibility.Visible : Visibility.Hidden)
+              .visibility(this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? Visibility.Visible :
+              Visibility.Hidden)
               .margin(12)
               .fontSize(24)
           }
@@ -1136,6 +1154,7 @@ export struct IjkVideoPlayer {
           right: 4,
           top: 4
         })
+
         MenuItem() {
           Row() {
             Text("0.75x")
@@ -1158,6 +1177,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.00x")
@@ -1180,6 +1200,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.25x")
@@ -1202,6 +1223,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.50x")
@@ -1224,6 +1246,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("1.75x")
@@ -1246,6 +1269,7 @@ export struct IjkVideoPlayer {
           left: 4,
           right: 4
         })
+
         MenuItem() {
           Row() {
             Text("2.00x")
@@ -1453,7 +1477,8 @@ export struct IjkVideoPlayer {
       if ((this.surfaceHeight / this.surfaceWidth) == (this.screenHeight / this.screenWidth)) {
         return "100%"
       } else if ((this.surfaceHeight / this.surfaceWidth) > (this.screenHeight / this.screenWidth)) {
-        console.error(`width percent: ${`${((this.screenHeight / this.surfaceHeight * this.surfaceWidth) / this.screenWidth) * 100}%`}`)
+        console.error(`width percent: ${`${((this.screenHeight / this.surfaceHeight * this.surfaceWidth) /
+        this.screenWidth) * 100}%`}`)
         return `${((this.screenHeight / this.surfaceHeight * this.surfaceWidth) / this.screenWidth) * 100}%`
       } else {
         return "100%"
@@ -1591,6 +1616,9 @@ export struct IjkVideoPlayer {
       onSeekComplete: () => {
         let time = ijkPlayer.getCurrentPosition()
         this.currentPosition = time
+        if (this.selectedSubtitle != undefined) {
+          this.subtitleController.seek(time)
+        }
         if (!this.movingProgressBar) {
           this.movingPosition = time
         }
@@ -1707,7 +1735,6 @@ export struct IjkVideoPlayer {
     ijkPlayer.prepareAsync();
     ijkPlayer.start();
   }
-
 }
 
 class VideoPlayerGestureModifier implements GestureModifier {

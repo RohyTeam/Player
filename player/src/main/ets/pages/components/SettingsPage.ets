@@ -99,7 +99,6 @@ export struct SettingsSwitch {
   switchEvent: SwitchEvent
   @Prop
   switchValue: boolean
-
   @State
   showPopup: boolean = false
 
@@ -206,7 +205,6 @@ export struct SettingsSelection {
   selectedButtons: number[] = [0]
   @State
   segmentOptions: SegmentButtonOptions | undefined = undefined
-
   @State
   showPopup: boolean = false
 
