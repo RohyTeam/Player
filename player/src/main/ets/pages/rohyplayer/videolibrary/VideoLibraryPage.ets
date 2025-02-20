@@ -29,6 +29,7 @@ export interface VideoDeleter {
 
   action: (video: VideoEntityV2) => void
   renamer: (video: VideoEntityV2, name: string) => void
+  updater: (video: VideoEntityV2, played: number) => void
 
 }
 
@@ -58,6 +59,23 @@ export struct VideoLibraryPage {
   searching: string = ""
   @Consume('pageController')
   pageController: NavPathStack
+  @StorageLink(`updateVideoTime`)
+  @Watch("videoUpdater")
+  toBeUpdatedVideoHash: string = ""
+
+  videoUpdater(changedPropertyName: string) {
+    console.error(`changes detected, ready to update video`)
+    VideoLibraryDatabase.tryFetchByHash(getContext(this), this.toBeUpdatedVideoHash)
+      .then((updatedVideo) => {
+        if (updatedVideo) {
+          let index = this.videos.findIndex((video) => video.hash == this.toBeUpdatedVideoHash)
+          if (index >= 0) {
+            this.videos[index].played = updatedVideo.played
+            this.sort()
+          }
+        }
+      })
+  }
 
   @Builder
   browseMenus() {
@@ -391,6 +409,13 @@ export struct VideoLibraryPage {
                   renamer: (video, name) => {
                     video.title = name
                     this.sort()
+                  },
+                  updater: (video, played) => {
+                    VideoLibraryDatabase.updatePlayedByHash(getContext(this), video.hash, played)
+                      .then(() => {
+                        video.played = played
+                        this.sort()
+                      })
                   }
                 },
               })
@@ -415,6 +440,13 @@ export struct VideoLibraryPage {
                   renamer: (video, name) => {
                     video.title = name
                     this.sort()
+                  },
+                  updater: (video, played) => {
+                    VideoLibraryDatabase.updatePlayedByHash(getContext(this), video.hash, played)
+                      .then(() => {
+                        video.played = played
+                        this.sort()
+                      })
                   }
                 },
               })
@@ -930,9 +962,10 @@ export struct VideoLibraryPage {
               "",
               0,
               "",
-              0,
-              0,
-              0,
+              -1,
+              -1,
+              -1,
+              -1,
               new ArrayBuffer(0)
             )
             videoV2.status = FileStatus.Importing

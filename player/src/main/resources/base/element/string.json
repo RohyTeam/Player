@@ -267,6 +267,18 @@
     {
       "name": "add_font",
       "value": "＋Add Font"
+    },
+    {
+      "name": "played_status_no",
+      "value": "Not played"
+    },
+    {
+      "name": "played_status_all",
+      "value": "Completed"
+    },
+    {
+      "name": "played_status_playing",
+      "value": "Played %s%"
     }
   ]
 }

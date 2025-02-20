@@ -15,6 +15,7 @@ import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
 import { StatusBar } from '../statusbar/StatusBar';
 import { IjkMediaPlayer } from '@ohos/ijkplayer';
+import { VideoLibraryDatabase } from '../../database/VideoLibraryDatabase';
 
 @Observed
 export class VideoState {
@@ -379,8 +380,8 @@ export struct IjkVideoPlayer {
             if (context != undefined) {
               console.error(`about to appear`)
               VideoAbility.getWindow().setWindowBrightness(0.5)
+              this.parameterStartTime = AppStorage.get("videoPosition") || 0
               if (this.isContinuation) {
-                this.parameterStartTime = AppStorage.get("videoPosition") || -1
                 this.parameterStartPaused = AppStorage.get("videoPaused") || undefined
               }
               this.initIjkPlayer(context, `ijkvideoplayer_${this.hash}`)
@@ -1313,6 +1314,12 @@ export struct IjkVideoPlayer {
   }
 
   aboutToDisappear(): void {
+    if (!this.isContinuation) {
+      VideoLibraryDatabase.updatePlayedByHash(getContext(this), this.hash, this.currentPosition)
+        .then(() => {
+          AppStorage.setOrCreate("updateVideoTime", this.hash)
+        })
+    }
     if (!this.backTrigger) {
       this.backTrigger = true
       this.ijkPlayer?.pause()

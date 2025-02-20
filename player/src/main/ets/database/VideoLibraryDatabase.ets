@@ -18,6 +18,7 @@ export class VideoLibraryDatabase {
     'VIDEO_LENGTH INTEGER,' +
     'VIDEO_WIDTH INTEGER,' +
     'VIDEO_HEIGHT INTEGER,' +
+    'PLAYED_LENGTH INTEGER,' +
     'FILE_SOURCE TEXT' +
     ');';
   private static databaseConfig: relationalStore.StoreConfig = {
@@ -54,10 +55,53 @@ export class VideoLibraryDatabase {
         store.executeSync('ALTER TABLE VideoLibrary ADD COLUMN VIDEO_WIDTH INTEGER DEFAULT -1;');
         store.executeSync('ALTER TABLE VideoLibrary ADD COLUMN VIDEO_HEIGHT INTEGER DEFAULT -1;');
         store.version = 3
+      } else if (store.version == 3) {
+        store.executeSync('ALTER TABLE VideoLibrary ADD COLUMN PLAYED_LENGTH INTEGER DEFAULT -1;');
+        store.version = 4
       }
 
       hilog.debug(0x0, "database", "created video database")
     })
+  }
+
+  public static tryFetchByHash(context: common.Context, hashValue: string): Promise<VideoEntity | undefined> {
+    return new Promise((resultReturner) => {
+      relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
+        if (err) {
+          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          return;
+        }
+
+        store.query(new relationalStore.RdbPredicates("VideoLibrary")
+          .equalTo("FILE_HASH", hashValue), async (err: BusinessError, resultSet) => {
+          if (err) {
+            hilog.error(0x2, "database", `Failed to query data. Code:${err.code}, message:${err.message}`)
+            resultReturner(undefined)
+            return
+          }
+          if (resultSet.rowCount == 0) {
+            console.error("there are no data in database")
+            resultReturner(undefined)
+          } else {
+            resultSet.goToFirstRow()
+            let video: VideoEntity = {
+              uri: resultSet.getString(resultSet.getColumnIndex("LOCATION")),
+              title: resultSet.getString(resultSet.getColumnIndex("TITLE")),
+              addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
+              hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH")),
+              fileSource: resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase(),
+              played: resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
+              length: resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
+              width: resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
+              height: resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
+              cover: resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer
+            }
+            resultReturner(video)
+          }
+        })
+      })
+    })
+
   }
 
   public static addFromLocalFile(context: common.Context, uri: string): Promise<VideoEntity> {
@@ -114,6 +158,7 @@ export class VideoLibraryDatabase {
                                           "VIDEO_LENGTH": length,
                                           "VIDEO_WIDTH": width,
                                           "VIDEO_HEIGHT": height,
+                                          "PLAYED_LENGTH": -1,
                                           "VIDEO_COVER": new Uint8Array(buffer)
                                         }
                                       ).then(() => {
@@ -124,6 +169,7 @@ export class VideoLibraryDatabase {
                                           addedTime: Date.now(),
                                           hash: hashValue,
                                           fileSource: "local_file",
+                                          played: -1,
                                           length: length,
                                           width: width,
                                           height: height,
@@ -188,6 +234,7 @@ export class VideoLibraryDatabase {
                                 "VIDEO_LENGTH": length,
                                 "VIDEO_WIDTH": width,
                                 "VIDEO_HEIGHT": height,
+                                "PLAYED_LENGTH": -1,
                                 "VIDEO_COVER": new Uint8Array(buffer)
                               }
                             ).then(() => {
@@ -198,6 +245,7 @@ export class VideoLibraryDatabase {
                                 addedTime: Date.now(),
                                 hash: photoHash,
                                 fileSource: "photos",
+                                played: -1,
                                 length: length,
                                 width: width,
                                 height: height,
@@ -240,6 +288,7 @@ export class VideoLibraryDatabase {
                 addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
                 hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH")),
                 fileSource: resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase(),
+                played: resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
                 length: resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
                 width: resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
                 height: resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
@@ -284,6 +333,27 @@ export class VideoLibraryDatabase {
         store.update(
           {
             "TITLE": newTitle
+          },
+          new relationalStore.RdbPredicates("VideoLibrary")
+            .equalTo("FILE_HASH", hashValue)
+        )
+          .then((num: number) => {
+            resultReturner()
+          })
+      })
+    })
+  }
+
+  public static updatePlayedByHash(context: common.Context, hashValue: string, played: number): Promise<void> {
+    return new Promise((resultReturner) => {
+      relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
+        if (err) {
+          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          return;
+        }
+        store.update(
+          {
+            "PLAYED_LENGTH": played
           },
           new relationalStore.RdbPredicates("VideoLibrary")
             .equalTo("FILE_HASH", hashValue)

@@ -15,6 +15,7 @@ import { NativeAssSubtitleView, SubtitleController } from '../subtitle/AssSubtit
 import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
 import { StatusBar } from '../statusbar/StatusBar';
+import { VideoLibraryDatabase } from '../../database/VideoLibraryDatabase';
 
 @Observed
 export class VideoState {
@@ -345,8 +346,8 @@ export struct AVVideoPlayer {
           .width(this.calculateWidthPercent(this.surfaceFillingMode))
           .onAppear(() => {
             VideoAbility.getWindow().setWindowBrightness(0.5)
+            this.parameterStartTime = AppStorage.get("videoPosition") || 0
             if (this.isContinuation) {
-              this.parameterStartTime = AppStorage.get("videoPosition") || -1
               this.parameterStartPaused = AppStorage.get("videoPaused") || undefined
             }
             this.initAvPlayer()
@@ -1275,6 +1276,12 @@ export struct AVVideoPlayer {
   }
 
   aboutToDisappear(): void {
+    if (!this.isContinuation) {
+      VideoLibraryDatabase.updatePlayedByHash(getContext(this), this.hash, this.currentPosition)
+        .then(() => {
+          AppStorage.setOrCreate("updateVideoTime", this.hash)
+        })
+    }
     if (!this.backTrigger) {
       this.backTrigger = true
       this.avPlayer?.pause()

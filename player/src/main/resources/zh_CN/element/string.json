@@ -251,6 +251,18 @@
     {
       "name": "add_font",
       "value": "＋添加字体"
+    },
+    {
+      "name": "played_status_no",
+      "value": "未播放"
+    },
+    {
+      "name": "played_status_all",
+      "value": "已看完"
+    },
+    {
+      "name": "played_status_playing",
+      "value": "已看 %s%"
     }
   ]
 }

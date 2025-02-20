@@ -5,6 +5,7 @@ export interface VideoEntity {
   hash: string,
   addedTime: number,
   fileSource: string
+  played: number
   length: number
   width: number
   height: number
@@ -39,6 +40,7 @@ export class VideoEntityV2 {
   hash: string
   addedTime: number
   fileSource: string
+  played: number
   length: number
   width: number
   height: number
@@ -51,6 +53,7 @@ export class VideoEntityV2 {
     hash: string,
     addedTime: number,
     fileSource: string,
+    played: number,
     length: number,
     width: number,
     height: number,
@@ -61,6 +64,7 @@ export class VideoEntityV2 {
     this.hash = hash
     this.addedTime = addedTime
     this.fileSource = fileSource
+    this.played = played
     this.length = length
     this.width = width
     this.height = height
@@ -74,10 +78,12 @@ export class VideoEntityV2 {
       entity.hash,
       entity.addedTime,
       entity.fileSource,
+      entity.played,
       entity.length,
       entity.width,
       entity.height,
       entity.cover
     )
   }
+  
 }

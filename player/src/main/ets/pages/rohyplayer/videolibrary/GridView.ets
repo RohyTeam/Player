@@ -206,8 +206,35 @@ struct VideoRow {
               .margin({
                 left: "8vp",
                 right: "8vp",
-                bottom: "8vp"
               })
+            if (this.video.played == -1) {
+              Text($r("app.string.played_status_no"))
+                .fontSize(10)
+                .fontColor($r("app.color.font_secondary"))
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                  bottom: "8vp"
+                })
+            } else if (this.video.played >= this.video.length) {
+              Text($r("app.string.played_status_all"))
+                .fontSize(10)
+                .fontColor($r("app.color.font_secondary"))
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                  bottom: "8vp"
+                })
+            } else {
+              Text($r("app.string.played_status_playing", `${Math.ceil(this.video.played / this.video.length * 100)}`))
+                .fontSize(10)
+                .fontColor($r("app.color.font_secondary"))
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                  bottom: "8vp"
+                })
+            }
           }
           .alignItems(HorizontalAlign.Start)
         }
@@ -221,6 +248,11 @@ struct VideoRow {
                   fileIo.readSync(file.fd, arrayBuffer)
                   SubtitleManager.Subtitle_AddMemoryFont(font.familyName, arrayBuffer)
                 }
+              }
+              if (this.video.played >= this.video.length) {
+                AppStorage.setOrCreate("videoPosition", 0)
+              } else {
+                AppStorage.setOrCreate("videoPosition", this.video.played)
               }
               openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
             })
