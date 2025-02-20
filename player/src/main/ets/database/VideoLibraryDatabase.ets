@@ -1,10 +1,12 @@
 import { common } from '@kit.AbilityKit';
 import { relationalStore } from '@kit.ArkData';
 import hilog from '@ohos.hilog';
-import { fileShare, hash } from '@kit.CoreFileKit';
+import { fileIo, fileShare, hash } from '@kit.CoreFileKit';
 import { FileUtil } from '@pura/harmony-utils';
 import { VideoEntity } from '../entity/VideoEntity';
 import { BusinessError } from '@kit.BasicServicesKit';
+import { media } from '@kit.MediaKit';
+import { pixelMapToArrayBuffer } from '../util/ImageUtil';
 
 export class VideoLibraryDatabase {
   private static SQL_CREATE_TABLE = 'CREATE TABLE IF NOT EXISTS VideoLibrary (' +
@@ -12,6 +14,10 @@ export class VideoLibraryDatabase {
     'TITLE TEXT,' +
     'ADDED_TIME INTEGER,' +
     'FILE_HASH TEXT,' +
+    'VIDEO_COVER BLOB,' +
+    'VIDEO_LENGTH INTEGER,' +
+    'VIDEO_WIDTH INTEGER,' +
+    'VIDEO_HEIGHT INTEGER,' +
     'FILE_SOURCE TEXT' +
     ');';
   private static databaseConfig: relationalStore.StoreConfig = {
@@ -26,14 +32,28 @@ export class VideoLibraryDatabase {
         hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
         return;
       }
+      /*
+
+            store.version = 1001;
+            if (store.version == 1001) {
+              store.executeSync("DROP TABLE VideoLibrary;")
+              store.executeSync(VideoLibraryDatabase.SQL_CREATE_TABLE)
+              store.version = 3
+            }
+      */
 
       if (store.version === 0) {
         store.executeSql(VideoLibraryDatabase.SQL_CREATE_TABLE)
         store.version = 1
       } else if (store.version == 1) {
-        store.executeSql('\n' +
-          'ALTER TABLE VideoLibrary ADD COLUMN FILE_SOURCE TEXT DEFAULT `LOCAL_FILE`;');
+        store.executeSql('ALTER TABLE VideoLibrary ADD COLUMN FILE_SOURCE TEXT DEFAULT `LOCAL_FILE`;');
         store.version = 2
+      } else if (store.version == 2) {
+        store.executeSync('ALTER TABLE VideoLibrary ADD COLUMN VIDEO_COVER BLOB;');
+        store.executeSync('ALTER TABLE VideoLibrary ADD COLUMN VIDEO_LENGTH INTEGER DEFAULT -1;');
+        store.executeSync('ALTER TABLE VideoLibrary ADD COLUMN VIDEO_WIDTH INTEGER DEFAULT -1;');
+        store.executeSync('ALTER TABLE VideoLibrary ADD COLUMN VIDEO_HEIGHT INTEGER DEFAULT -1;');
+        store.version = 3
       }
 
       hilog.debug(0x0, "database", "created video database")
@@ -59,24 +79,63 @@ export class VideoLibraryDatabase {
 
             hash.hash(path, "sha256")
               .then((hashValue) => {
-                store.insert(
-                  "VideoLibrary",
-                  {
-                    "LOCATION": uri,
-                    "TITLE": FileUtil.getFileName(uri),
-                    "ADDED_TIME": Date.now(),
-                    "FILE_HASH": hashValue,
-                    "FILE_SOURCE": "LOCAL_FILE"
-                  }
-                ).then(() => {
-                  resultReturner({
-                    uri: uri,
-                    title: FileUtil.getFileName(uri),
-                    addedTime: Date.now(),
-                    hash: hashValue,
-                    fileSource: "local_file"
+                fileIo.open(uri)
+                  .then((file) => {
+                    media.createAVImageGenerator().then((avImageGenerator: media.AVImageGenerator) => {
+                      avImageGenerator.fdSrc = { fd: file.fd }
+                      let timeUs = 0
+                      let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
+                      let param: media.PixelMapParams = {
+                        width: 720,
+                        height: 540
+                      }
+                      avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
+                        .then((pixelMap) => {
+                          pixelMapToArrayBuffer(pixelMap)
+                            .then((buffer) => {
+                              avImageGenerator.release()
+
+                              media.createAVMetadataExtractor()
+                                .then((avMetadataExtractor: media.AVMetadataExtractor) => {
+                                  avMetadataExtractor.fdSrc = { fd: file.fd }
+                                  avMetadataExtractor.fetchMetadata()
+                                    .then((metadata) => {
+                                      let length = parseInt(metadata.duration!) || 0
+                                      let width = parseInt(metadata.videoWidth!) || 0
+                                      let height = parseInt(metadata.videoHeight!) || 0
+                                      store.insert(
+                                        "VideoLibrary",
+                                        {
+                                          "LOCATION": uri,
+                                          "TITLE": FileUtil.getFileName(uri),
+                                          "ADDED_TIME": Date.now(),
+                                          "FILE_HASH": hashValue,
+                                          "FILE_SOURCE": "LOCAL_FILE",
+                                          "VIDEO_LENGTH": length,
+                                          "VIDEO_WIDTH": width,
+                                          "VIDEO_HEIGHT": height,
+                                          "VIDEO_COVER": new Uint8Array(buffer)
+                                        }
+                                      ).then(() => {
+                                        avMetadataExtractor.release()
+                                        resultReturner({
+                                          uri: uri,
+                                          title: FileUtil.getFileName(uri),
+                                          addedTime: Date.now(),
+                                          hash: hashValue,
+                                          fileSource: "local_file",
+                                          length: length,
+                                          width: width,
+                                          height: height,
+                                          cover: buffer
+                                        })
+                                      })
+                                    })
+                                })
+                            })
+                        })
+                    })
                   })
-                })
               })
           })
           .catch(() => {
@@ -95,24 +154,62 @@ export class VideoLibraryDatabase {
           return;
         }
 
-        store.insert(
-          "VideoLibrary",
-          {
-            "LOCATION": uri,
-            "TITLE": displayName,
-            "ADDED_TIME": Date.now(),
-            "FILE_HASH": photoHash,
-            "FILE_SOURCE": "PHOTOS"
-          }
-        ).then(() => {
-          resultReturner({
-            uri: uri,
-            title: displayName,
-            addedTime: Date.now(),
-            hash: photoHash,
-            fileSource: "photos"
+        fileIo.open(uri)
+          .then((file) => {
+            media.createAVImageGenerator().then((avImageGenerator: media.AVImageGenerator) => {
+              avImageGenerator.fdSrc = { fd: file.fd }
+              let timeUs = 0
+              let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
+              let param: media.PixelMapParams = {
+                width: 720,
+                height: 540
+              }
+              avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
+                .then((pixelMap) => {
+                  pixelMapToArrayBuffer(pixelMap)
+                    .then((buffer) => {
+                      avImageGenerator.release()
+
+                      media.createAVMetadataExtractor().then((avMetadataExtractor: media.AVMetadataExtractor) => {
+                        avMetadataExtractor.fdSrc = { fd: file.fd }
+                        avMetadataExtractor.fetchMetadata()
+                          .then((metadata) => {
+                            let length = parseInt(metadata.duration!) || 0
+                            let width = parseInt(metadata.videoWidth!) || 0
+                            let height = parseInt(metadata.videoHeight!) || 0
+                            store.insert(
+                              "VideoLibrary",
+                              {
+                                "LOCATION": uri,
+                                "TITLE": displayName,
+                                "ADDED_TIME": Date.now(),
+                                "FILE_HASH": photoHash,
+                                "FILE_SOURCE": "PHOTOS",
+                                "VIDEO_LENGTH": length,
+                                "VIDEO_WIDTH": width,
+                                "VIDEO_HEIGHT": height,
+                                "VIDEO_COVER": new Uint8Array(buffer)
+                              }
+                            ).then(() => {
+                              avMetadataExtractor.release()
+                              resultReturner({
+                                uri: uri,
+                                title: FileUtil.getFileName(uri),
+                                addedTime: Date.now(),
+                                hash: photoHash,
+                                fileSource: "photos",
+                                length: length,
+                                width: width,
+                                height: height,
+                                cover: buffer
+                              })
+                            })
+                          })
+                      })
+                    })
+                })
+            })
           })
-        })
       })
     })
   }
@@ -143,6 +240,10 @@ export class VideoLibraryDatabase {
                 addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
                 hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH")),
                 fileSource: resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase(),
+                length: resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
+                width: resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
+                height: resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
+                cover: resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer
               }
               videos.push(video)
             }
@@ -189,6 +290,59 @@ export class VideoLibraryDatabase {
         )
           .then((num: number) => {
             resultReturner()
+          })
+      })
+    })
+  }
+
+  public static updateVersion3ByHash(context: common.Context, hashValue: string, uri: string): Promise<void> {
+    return new Promise((resultReturner) => {
+      relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
+        if (err) {
+          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          return;
+        }
+
+        fileIo.open(uri)
+          .then((file) => {
+            media.createAVImageGenerator().then((avImageGenerator: media.AVImageGenerator) => {
+              avImageGenerator.fdSrc = { fd: file.fd }
+              let timeUs = 0
+              let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
+              let param: media.PixelMapParams = {
+                width: 720,
+                height: 540
+              }
+              avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
+                .then((pixelMap) => {
+                  pixelMapToArrayBuffer(pixelMap)
+                    .then((buffer) => {
+                      avImageGenerator.release()
+
+                      media.createAVMetadataExtractor().then((avMetadataExtractor: media.AVMetadataExtractor) => {
+                        avMetadataExtractor.fdSrc = { fd: file.fd }
+                        avMetadataExtractor.fetchMetadata()
+                          .then((metadata) => {
+
+                            store.update(
+                              {
+                                "VIDEO_LENGTH": parseInt(metadata.duration) || 0,
+                                "VIDEO_WIDTH": parseInt(metadata.videoWidth) || 0,
+                                "VIDEO_HEIGHT": parseInt(metadata.videoHeight) || 0,
+                                "VIDEO_COVER": new Uint8Array(buffer)
+                              },
+                              new relationalStore.RdbPredicates("VideoLibrary")
+                                .equalTo("FILE_HASH", hashValue)
+                            )
+                              .then((num: number) => {
+                                avMetadataExtractor.release()
+                                resultReturner()
+                              })
+                          })
+                      })
+                    })
+                })
+            })
           })
       })
     })

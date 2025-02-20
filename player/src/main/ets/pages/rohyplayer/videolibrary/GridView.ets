@@ -1,7 +1,6 @@
 import { FileSources, FileStatus, VideoEntityV2, VideoEntityV2Array } from '../../../entity/VideoEntity'
 import common from '@ohos.app.ability.common'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
-import { media } from '@kit.MediaKit'
 import { VideoDeleter } from './VideoLibraryPage'
 import { fileIo, fileShare, hash } from '@kit.CoreFileKit'
 import { convertNumberToDurationString } from '../../../util/TimeUtil'
@@ -11,9 +10,14 @@ import { DialogHelper } from '@pura/harmony-dialog'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
 import { openVideo } from '../../../util/PlayerUtil'
 import { showAlert } from '../../../util/AlertUtil'
+import { arrayBufferToPixelMap } from '../../../util/ImageUtil'
+import { Fonts } from '../../../entity/FontEntity'
+import SubtitleManager from 'librohy_subtitle.so'
 
 @Component
 export struct GridView {
+  @Link
+  fonts: Fonts
   @Prop
   searching: string
   @ObjectLink
@@ -22,8 +26,6 @@ export struct GridView {
   deleter: VideoDeleter
   @Link
   covers: Record<string, PixelMap>
-  @Link
-  metadatas: Record<string, media.AVMetadata>
   @StorageLink('currentWidthBreakpoint')
   currentWidthBreakpoint: string = BreakpointConstants.BREAKPOINT_LG;
 
@@ -40,15 +42,14 @@ export struct GridView {
             video.title.indexOf(this.searching) >= 0 && video.status != FileStatus.Disappear) {
             GridItem() {
               VideoRow({
+                fonts: this.fonts,
                 deleter: this.deleter,
                 covers: this.covers,
-                metadatas: this.metadatas,
                 video: video,
               })
                 .onAppear(() => {
                   if (video.status == FileStatus.Authorized) {
-                    this.findMetadata(video)
-                    this.findCover(video)
+                    this.convertCover(video)
                   } else if (video.status == FileStatus.None) {
                     if (video.fileSource == FileSources.LOCAL_FILE) {
                       fileShare.activatePermission([{
@@ -62,9 +63,20 @@ export struct GridView {
                                 video.status = FileStatus.Disappear
                                 this.deleter.action(video)
                               } else {
-                                video.status = FileStatus.Authorized
-                                this.findMetadata(video)
-                                this.findCover(video)
+                                if (video.length == -1) {
+                                  VideoLibraryDatabase.updateVersion3ByHash(
+                                    getContext(this),
+                                    video.hash,
+                                    video.uri
+                                  )
+                                    .then(() => {
+                                      video.status = FileStatus.Authorized
+                                      this.convertCover(video)
+                                    })
+                                } else {
+                                  video.status = FileStatus.Authorized
+                                  this.convertCover(video)
+                                }
                               }
                             })
                         })
@@ -76,9 +88,20 @@ export struct GridView {
                       // 由于用户无法直接修改视频在相册里的名称（除非删除）所以只验证文件是否存在，而不验证是否对的上哈希值
                       fileIo.open(video.uri)
                         .then((file) => {
-                          video.status = FileStatus.Authorized
-                          this.findMetadata(video)
-                          this.findCover(video)
+                          if (video.length == -1) {
+                            VideoLibraryDatabase.updateVersion3ByHash(
+                              getContext(this),
+                              video.hash,
+                              video.uri
+                            )
+                              .then(() => {
+                                video.status = FileStatus.Authorized
+                                this.convertCover(video)
+                              })
+                          } else {
+                            video.status = FileStatus.Authorized
+                            this.convertCover(video)
+                          }
                         })
                         .catch(() => {
                           video.status = FileStatus.Disappear
@@ -121,49 +144,12 @@ export struct GridView {
     .height("100%")
   }
 
-  private findMetadata(video: VideoEntityV2) {
-    if (this.metadatas[video.hash] == undefined) {
-      media.createAVMetadataExtractor().then((avMetadataExtractor: media.AVMetadataExtractor) => {
-        fileIo.open(video.uri)
-          .then((file) => {
-            avMetadataExtractor.fdSrc = { fd: file.fd }
-            avMetadataExtractor.fetchMetadata()
-              .then((metadata) => {
-                this.metadatas[video.hash] = metadata
-                avMetadataExtractor.release()
-              })
-          })
-          .catch(() => {
-            video.status = FileStatus.Disappear
-            this.deleter.action(video)
-          })
-      })
-    }
-  }
-
-  private findCover(video: VideoEntityV2) {
+  private convertCover(video: VideoEntityV2) {
     if (this.covers[video.hash] == undefined) {
-      media.createAVImageGenerator().then((avImageGenerator: media.AVImageGenerator) => {
-        fileIo.open(video.uri)
-          .then((file) => {
-            avImageGenerator.fdSrc = { fd: file.fd }
-            let timeUs = 0
-            let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
-            let param: media.PixelMapParams = {
-              width: 720,
-              height: 540
-            }
-            avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
-              .then((pixelMap) => {
-                this.covers[video.hash] = pixelMap
-                avImageGenerator.release()
-              })
-          })
-          .catch(() => {
-            video.status = FileStatus.Disappear
-            this.deleter.action(video)
-          })
-      })
+      arrayBufferToPixelMap(video.cover)
+        .then((pixelMap) => {
+          this.covers[video.hash] = pixelMap
+        })
     }
   }
 }
@@ -171,14 +157,14 @@ export struct GridView {
 
 @Component
 struct VideoRow {
+  @Link
+  fonts: Fonts
   @Prop
   deleter: VideoDeleter
   @ObjectLink
   video: VideoEntityV2
   @Link
   covers: Record<string, PixelMap>
-  @Link
-  metadatas: Record<string, media.AVMetadata>
 
   build() {
     if (this.video.status == FileStatus.Authorized) {
@@ -202,16 +188,14 @@ struct VideoRow {
                 right: "8vp",
                 top: "4vp"
               })
-            if (this.metadatas[this.video.hash] != undefined) {
-              Text($r("app.string.duration",
-                `${convertNumberToDurationString(parseInt(this.metadatas[this.video.hash].duration))}`))
-                .fontSize(10)
-                .fontColor($r("app.color.font_secondary"))
-                .margin({
-                  left: "8vp",
-                  right: "8vp",
-                })
-            }
+            Text($r("app.string.duration",
+              `${convertNumberToDurationString(this.video.length)}`))
+              .fontSize(10)
+              .fontColor($r("app.color.font_secondary"))
+              .margin({
+                left: "8vp",
+                right: "8vp",
+              })
             Text(DateUtil.getFormatDateStr(this.video.addedTime))
               .maxLines(1)
               .textOverflow({
@@ -230,6 +214,14 @@ struct VideoRow {
         .onClick(() => {
           fileIo.open(this.video.uri)
             .then(() => {
+              for (let font of this.fonts) {
+                if (font.on && font.status == FileStatus.Authorized) {
+                  let file = fileIo.openSync(font.uri)
+                  const arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size);
+                  fileIo.readSync(file.fd, arrayBuffer)
+                  SubtitleManager.Subtitle_AddMemoryFont(font.familyName, arrayBuffer)
+                }
+              }
               openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
             })
             .catch(() => {

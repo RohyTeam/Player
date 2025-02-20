@@ -1,8 +1,8 @@
 import { CompiledASS } from '../../lib/ass_compiler';
 import { LengthMetricsUnit } from '@kit.ArkUI';
 import { fileIo } from '@kit.CoreFileKit';
-import SubtitleManager from 'libplayer.so';
 import { image } from '@kit.ImageKit';
+import SubtitleManager from 'librohy_subtitle.so';
 
 interface SubtitleImage {
   buffer: ArrayBuffer;
@@ -54,7 +54,7 @@ export struct NativeAssSubtitleView {
   aboutToAppear(): void {
     getContext(this).resourceManager.getRawFileContent('HarmonyOS_Sans_SC_Regular.ttf')// fallback 字体，TODO: 字体管理实现字体加载
       .then((data) => {
-        SubtitleManager.Subtitle_AddFont("HarmonyOS Sans SC", data.buffer)
+        SubtitleManager.Subtitle_AddMemoryFont("HarmonyOS Sans SC", data.buffer)
         fileIo.open(this.path)
           .then((file) => {
             console.error("SHIT: init")
@@ -93,7 +93,8 @@ export struct NativeAssSubtitleView {
   }
 
   aboutToDisappear(): void {
-    this.controller.initPositioner(() => {}) // clear positioner to prevent crashing due to release the ass track
+    this.controller.initPositioner(() => {
+    }) // clear positioner to prevent crashing due to release the ass track
     SubtitleManager.Subtitle_Release()
   }
 

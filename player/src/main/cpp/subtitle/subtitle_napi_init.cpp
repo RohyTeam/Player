@@ -6,7 +6,8 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
         { "Subtitle_Init", nullptr, SubtitleRenderer::Init, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "Subtitle_AddFont", nullptr, SubtitleRenderer::AddFont, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "Subtitle_AddMemoryFont", nullptr, SubtitleRenderer::AddMemoryFont, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "Subtitle_GetFontFamilyName", nullptr, SubtitleRenderer::GetFontFamilyName, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "Subtitle_Render", nullptr, SubtitleRenderer::Render, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "Subtitle_Release", nullptr, SubtitleRenderer::Release, nullptr, nullptr, nullptr, napi_default, nullptr },
     };
@@ -15,17 +16,17 @@ static napi_value Init(napi_env env, napi_value exports)
 }
 EXTERN_C_END
 
-static napi_module demoModule = {
+static napi_module subtitleModule = {
     .nm_version = 1,
     .nm_flags = 0,
     .nm_filename = nullptr,
     .nm_register_func = Init,
-    .nm_modname = "player",
+    .nm_modname = "rohy_subtitle",
     .nm_priv = ((void*)0),
     .reserved = { 0 },
 };
 
 extern "C" __attribute__((constructor)) void RegisterPlayerModule(void)
 {
-    napi_module_register(&demoModule);
+    napi_module_register(&subtitleModule);
 }

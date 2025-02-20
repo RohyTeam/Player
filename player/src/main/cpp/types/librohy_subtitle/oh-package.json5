@@ -1,5 +1,5 @@
 {
-  "name": "libplayer.so",
+  "name": "librohy_subtitle.so",
   "types": "./index.d.ts",
   "version": "1.0.0",
   "description": "Please describe the basic information."

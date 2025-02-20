@@ -1,0 +1,1 @@
+export const Metadata_GetMetadata: (path: string) => object | undefined;

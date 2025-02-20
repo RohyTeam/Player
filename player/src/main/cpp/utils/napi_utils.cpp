@@ -21,4 +21,9 @@ void NapiUtils::JsValueToString(const napi_env & env, const napi_value & value, 
     target = buf.get();
 }
 
+napi_value NapiUtils::CStringToJsString(napi_env env, const char* value) {
+    napi_value jsValue;
+    napi_create_string_utf8(env, value, sizeof(value), &jsValue);
+    return jsValue;
+}
 

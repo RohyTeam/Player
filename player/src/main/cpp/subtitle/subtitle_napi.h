@@ -25,15 +25,16 @@ struct FontData {
 class SubtitleRenderer {
 public:
     static SubtitleRenderer* GetInstance();
+    static napi_value GetFontFamilyName(napi_env env, napi_callback_info info);
     static napi_value Init(napi_env env, napi_callback_info info);
-    static napi_value AddFont(napi_env env, napi_callback_info info);
+    static napi_value AddMemoryFont(napi_env env, napi_callback_info info);
     static napi_value Render(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
 private:
     void initASS(char *buf, size_t bufsize);
     void release();
 public:
-    std::map<std::string, FontData> fonts_;
+    std::map<std::string, FontData> memoryFonts_;
 private:
     ASS_Library* m_assLibrary = nullptr;
     ASS_Renderer* m_assRenderer = nullptr;
