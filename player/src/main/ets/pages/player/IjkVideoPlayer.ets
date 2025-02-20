@@ -878,7 +878,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.selectedSubtitle == undefined ? Visibility.Visible : Visibility.Hidden)
@@ -941,6 +941,7 @@ export struct IjkVideoPlayer {
           })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
@@ -1013,6 +1014,7 @@ export struct IjkVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
@@ -1030,7 +1032,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.Fit ? Visibility.Visible : Visibility.Hidden)
@@ -1054,7 +1056,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.Stretch ? Visibility.Visible :
@@ -1078,7 +1080,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? Visibility.Visible :
@@ -1102,7 +1104,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? Visibility.Visible :
@@ -1122,6 +1124,7 @@ export struct IjkVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
@@ -1139,7 +1142,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == 0.5 ? Visibility.Visible : Visibility.Hidden)
@@ -1163,7 +1166,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == 0.75 ? Visibility.Visible : Visibility.Hidden)
@@ -1186,7 +1189,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == 1 ? Visibility.Visible : Visibility.Hidden)
@@ -1209,7 +1212,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == 1.25 ? Visibility.Visible : Visibility.Hidden)
@@ -1232,7 +1235,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == 1.5 ? Visibility.Visible : Visibility.Hidden)
@@ -1255,7 +1258,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == 1.75 ? Visibility.Visible : Visibility.Hidden)
@@ -1278,7 +1281,7 @@ export struct IjkVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == 2 ? Visibility.Visible : Visibility.Hidden)
@@ -1297,6 +1300,7 @@ export struct IjkVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),

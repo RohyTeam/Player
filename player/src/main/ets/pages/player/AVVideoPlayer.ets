@@ -840,7 +840,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.selectedSubtitle == undefined ? Visibility.Visible : Visibility.Hidden)
@@ -865,7 +865,7 @@ export struct AVVideoPlayer {
                 .fontWeight(FontWeight.Medium)
                 .margin(12)
               Blank()
-                .width("76vp")
+                .layoutWeight(1)
               SymbolGlyph($r("sys.symbol.checkmark"))
                 .fontColor([$r("app.color.icon_primary")])
                 .visibility(this.selectedSubtitle == subtitle.index ? Visibility.Visible : Visibility.Hidden)
@@ -903,6 +903,7 @@ export struct AVVideoPlayer {
           })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
@@ -928,7 +929,7 @@ export struct AVVideoPlayer {
                 .fontWeight(FontWeight.Medium)
                 .margin(12)
               Blank()
-                .width("76vp")
+                .layoutWeight(1)
               SymbolGlyph($r("sys.symbol.checkmark"))
                 .fontColor([$r("app.color.icon_primary")])
                 .visibility(this.selectedAudio == audio.index ? Visibility.Visible : Visibility.Hidden)
@@ -969,6 +970,7 @@ export struct AVVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
@@ -986,7 +988,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.Fit ? Visibility.Visible : Visibility.Hidden)
@@ -1010,7 +1012,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.Stretch ? Visibility.Visible :
@@ -1034,7 +1036,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.FourByThree ? Visibility.Visible :
@@ -1058,7 +1060,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.surfaceFillingMode == SurfaceFillingMode.SixteenByNine ? Visibility.Visible :
@@ -1095,7 +1097,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_50_X ? Visibility.Visible :
@@ -1120,7 +1122,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_0_75_X ? Visibility.Visible :
@@ -1144,7 +1146,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_00_X ? Visibility.Visible :
@@ -1168,7 +1170,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_25_X ? Visibility.Visible :
@@ -1192,7 +1194,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_50_X ? Visibility.Visible :
@@ -1216,7 +1218,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_1_75_X ? Visibility.Visible :
@@ -1240,7 +1242,7 @@ export struct AVVideoPlayer {
               .fontWeight(FontWeight.Medium)
               .margin(12)
             Blank()
-              .width("76vp")
+              .layoutWeight(1)
             SymbolGlyph($r("sys.symbol.checkmark"))
               .fontColor([$r("app.color.icon_primary")])
               .visibility(this.currentSpeed == media.PlaybackSpeed.SPEED_FORWARD_2_00_X ? Visibility.Visible :
@@ -1260,6 +1262,7 @@ export struct AVVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
