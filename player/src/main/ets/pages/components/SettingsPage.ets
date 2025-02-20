@@ -21,6 +21,12 @@ export struct SettingsPage {
   build() {
     List({ space: 12 }) {
       this.content()
+      ListItem() {
+        Column() {
+          Blank()
+            .height("120vp")
+        }
+      }
     }
     .scrollBar(BarState.Off)
     .backgroundColor($r("app.color.rohy_settings_background"))
