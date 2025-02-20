@@ -9,7 +9,6 @@ import { promptAction } from '@kit.ArkUI';
 import { PreferencesUtil } from '@pura/harmony-utils';
 import { FontManagementGroup } from './FontManagementGroup';
 import { Fonts } from '../../../entity/FontEntity';
-ntity";
 
 @Component
 export struct MorePage {
