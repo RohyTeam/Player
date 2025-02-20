@@ -146,8 +146,9 @@ napi_value SubtitleRenderer::GetFontFamilyName(napi_env env, napi_callback_info 
     }
     
     char* familyName = face->family_name;
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "font", "Get the name of font: %{public}s", familyName);
     napi_value jsValue;
-    napi_create_string_utf8(env, familyName, sizeof(familyName), &jsValue);
+    napi_create_string_utf8(env, familyName, strlen(familyName), &jsValue);
     
     FT_Done_Face(face);
     FT_Done_FreeType(library);

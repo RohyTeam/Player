@@ -52,6 +52,7 @@ export class FontLibraryDatabase {
           .then(() => {
             let path = FileUtil.getFilePath(uri)
             let fontName = SubtitleManager.Subtitle_GetFontFamilyName(path)
+            console.error(`js side name is ${fontName}`)
             hash.hash(path, "sha256")
               .then((fontHash) => {
                 store.insert(
