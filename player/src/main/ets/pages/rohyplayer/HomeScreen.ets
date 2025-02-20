@@ -3,6 +3,11 @@ import { deviceInfo } from '@kit.BasicServicesKit';
 import { CommonConstants } from '../../common/constants/CommonConstants';
 import { VideoLibraryPage } from './videolibrary/VideoLibraryPage';
 import { MorePage } from './more/MorePage';
+import { FontEntityV2, Fonts } from '../../entity/FontEntity';
+import { FontLibraryDatabase } from '../../database/FontLibraryDatabase';
+import { FileStatus } from '../../entity/VideoEntity';
+import { fileShare, hash } from '@kit.CoreFileKit';
+import { FileUtil } from '@pura/harmony-utils';
 
 export class FooterTab {
   private name: Resource;
@@ -46,6 +51,39 @@ export struct RohyPlayerHome {
       $r('sys.symbol.more')
     )
   ]
+  @State
+  fonts: Fonts = []
+
+  aboutToAppear(): void {
+    FontLibraryDatabase.unsafeList(getContext(this)).then((fonts) => {
+      this.fonts.push(...fonts.map((v1) => FontEntityV2.fromV1(v1)))
+
+      for (let font of this.fonts) {
+        if (font.status == FileStatus.None) {
+          fileShare.activatePermission([{
+            uri: font.uri,
+            operationMode: 0b1
+          }])
+            .then(() => {
+              hash.hash(FileUtil.getFilePath(font.uri), "sha256")
+                .then((fileHash) => {
+                  if (fileHash != font.hash) {
+                    font.status = FileStatus.Disappear
+                    FontLibraryDatabase.deleteByFontHash(getContext(this), font.hash)
+                  } else {
+                    font.status = FileStatus.Authorized
+                  }
+                })
+            })
+            .catch(() => {
+              font.status = FileStatus.Disappear
+              font.on = false
+              FontLibraryDatabase.deleteByFontHash(getContext(this), font.hash)
+            })
+        }
+      }
+    })
+  }
 
   @Builder
   BottomTabBuilder(item: FooterTab, index: number) {
@@ -83,7 +121,9 @@ export struct RohyPlayerHome {
         BarPosition.End
       }) {
         TabContent() {
-          VideoLibraryPage()
+          VideoLibraryPage({
+            fonts: this.fonts
+          })
         }
         .tabBar(this.BottomTabBuilder(this.tabs[0], 0))
 
@@ -98,7 +138,9 @@ export struct RohyPlayerHome {
         .tabBar(this.BottomTabBuilder(this.tabs[2], 2))
         */
         TabContent() {
-          MorePage()
+          MorePage({
+            fonts: this.fonts
+          })
         }
         .tabBar(this.BottomTabBuilder(this.tabs[3], 1))
       }

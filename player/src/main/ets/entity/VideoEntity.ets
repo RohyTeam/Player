@@ -5,6 +5,10 @@ export interface VideoEntity {
   hash: string,
   addedTime: number,
   fileSource: string
+  length: number
+  width: number
+  height: number
+  cover: ArrayBuffer
 
 }
 
@@ -35,6 +39,10 @@ export class VideoEntityV2 {
   hash: string
   addedTime: number
   fileSource: string
+  length: number
+  width: number
+  height: number
+  cover: ArrayBuffer
   status: FileStatus = FileStatus.None
 
   constructor(
@@ -42,13 +50,21 @@ export class VideoEntityV2 {
     title: string,
     hash: string,
     addedTime: number,
-    fileSource: string
+    fileSource: string,
+    length: number,
+    width: number,
+    height: number,
+    cover: ArrayBuffer
   ) {
     this.uri = uri
     this.title = title
     this.hash = hash
     this.addedTime = addedTime
     this.fileSource = fileSource
+    this.length = length
+    this.width = width
+    this.height = height
+    this.cover = cover
   }
 
   public static fromV1(entity: VideoEntity): VideoEntityV2 {
@@ -57,7 +73,11 @@ export class VideoEntityV2 {
       entity.title,
       entity.hash,
       entity.addedTime,
-      entity.fileSource
+      entity.fileSource,
+      entity.length,
+      entity.width,
+      entity.height,
+      entity.cover
     )
   }
 }

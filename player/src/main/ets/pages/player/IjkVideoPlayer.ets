@@ -178,6 +178,8 @@ export struct IjkVideoPlayer {
   hardwareDecode: boolean = false;
   @State
   private shouldReallyDie: boolean = false
+  @State
+  private landscapeView: boolean = true
 
   shouldDieWatcher(changedPropertyName: string) {
     this.shouldReallyDie = this.videoAbility_shouldDie.indexOf(this.hash) >= 0
@@ -1358,7 +1360,7 @@ export struct IjkVideoPlayer {
     let documentViewPicker = new picker.DocumentViewPicker(this.getUIContext().getHostContext()!);
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = 10; // 太多了处理不过来
-    documentSelectOptions.fileSuffixFilters = ['ass 字幕文件|.ass'];
+    documentSelectOptions.fileSuffixFilters = ['ass/ssa 字幕文件|.ass,.ssa'];
 
     documentViewPicker.select(documentSelectOptions)
       .then((documentSelectResult: Array<string>) => {

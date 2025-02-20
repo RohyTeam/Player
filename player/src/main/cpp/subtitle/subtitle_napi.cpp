@@ -9,85 +9,9 @@
 #include "utils/napi_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "png_utils.h"
-
-
-struct PngMemoryBuffer {
-    std::vector<uint8_t> data;
-};
-
-void Subtitle_PngWriteCallback(png_structp png_ptr, png_bytep data, png_size_t length) {
-    PngMemoryBuffer* buffer = static_cast<PngMemoryBuffer*>(png_get_io_ptr(png_ptr));
-    buffer->data.insert(buffer->data.end(), data, data + length);
-}
-
-uint8_t* Subtitle_ConvertAssImageToPng(const ASS_Image* img, size_t& png_size) {
-    if (!img || !img->bitmap) return nullptr;
-
-    png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (!png) return nullptr;
-
-    png_infop info = png_create_info_struct(png);
-    if (!info) {
-        png_destroy_write_struct(&png, nullptr);
-        return nullptr;
-    }
-
-    if (setjmp(png_jmpbuf(png))) {
-        png_destroy_write_struct(&png, &info);
-        return nullptr;
-    }
-
-    PngMemoryBuffer buffer;
-    png_set_write_fn(png, &buffer, Subtitle_PngWriteCallback, nullptr);
-
-    const int width = img->w;
-    const int height = img->h;
-    const int color_type = PNG_COLOR_TYPE_RGBA;
-    const int bit_depth = 8;
-
-    png_set_IHDR(png, info, width, height, bit_depth, color_type,
-                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
-                 PNG_FILTER_TYPE_DEFAULT);
-
-    const uint32_t ass_color = img->color;
-    const uint8_t r = (ass_color >> 24) & 0xFF;
-    const uint8_t g = (ass_color >> 16) & 0xFF;
-    const uint8_t b = (ass_color >> 8) & 0xFF;
-    const uint8_t a = ass_color & 0xFF;
-
-    // 准备行数据
-    std::vector<png_bytep> row_pointers(height);
-    std::vector<uint8_t> rgba_buffer(width * height * 4);
-
-    for (int y = 0; y < height; ++y) {
-        const uint8_t* alpha_row = img->bitmap + y * img->stride;
-        uint8_t* dst_row = &rgba_buffer[y * width * 4];
-        
-        for (int x = 0; x < width; ++x) {
-            const uint8_t alpha = alpha_row[x];
-            dst_row[x*4] = r;       // R
-            dst_row[x*4+1] = g;     // G
-            dst_row[x*4+2] = b;     // B
-            dst_row[x*4+3] = (alpha * a) / 255; // 应用全局透明度
-        }
-        row_pointers[y] = dst_row;
-    }
-
-    // 写入PNG数据
-    png_write_info(png, info);
-    png_write_image(png, row_pointers.data());
-    png_write_end(png, nullptr);
-
-    // 清理资源
-    png_destroy_write_struct(&png, &info);
-
-    // 返回内存数据
-    png_size = buffer.data.size();
-    uint8_t* result = new uint8_t[png_size];
-    memcpy(result, buffer.data.data(), png_size);
-    return result;
-}
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <vector>
 
 void SubtitleRenderer::initASS(char *buf, size_t bufsize) {
     m_assLibrary = ass_library_init();
@@ -102,14 +26,13 @@ void SubtitleRenderer::initASS(char *buf, size_t bufsize) {
         return;
     }
     
-    // ass_set_fonts(m_assRenderer, "/data/storage/el2/base/haps/player/files/fallback.ttf", "HarmonyOS Sans SC", 1, nullptr, 0);
     ASS_DefaultFontProvider* providers;
     size_t size;
     ass_get_available_font_providers(m_assLibrary, &providers, &size);
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK!: available font providers amount: %{public}ld", size);
     
-    if (!fonts_.empty()) {
-        for (const auto& [fontName, fontData] : fonts_) {
+    if (!memoryFonts_.empty()) {
+        for (const auto& [fontName, fontData] : memoryFonts_) {
             OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK!: added font with name %{public}s", fontName.c_str());
             ass_add_font(m_assLibrary, fontName.c_str(),
                                          fontData.fontData, fontData.fontSize);
@@ -119,10 +42,6 @@ void SubtitleRenderer::initASS(char *buf, size_t bufsize) {
         OH_LOG_Print(LOG_APP, LOG_WARN, 0, "FontAdd", "No custom fonts available");
     }
     
-    // char* url = new char[path.size() + 1];
-    // std::strcpy(url, path.c_str());
-    // OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK!: path is %{public}s", url);
-    // m_assTrack = ass_read_file(m_assLibrary, url, nullptr);
     m_assTrack = ass_read_memory(m_assLibrary, buf, bufsize, nullptr);
     if (m_assTrack == nullptr) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCKERROR!: failed to read subtitle file");
@@ -143,8 +62,11 @@ void SubtitleRenderer::release() {
         ass_free_track(m_assTrack);
     if (m_assRenderer) 
         ass_renderer_done(m_assRenderer);
-    if (m_assLibrary) 
+    if (m_assLibrary)  {
+        ass_clear_fonts(m_assLibrary);
         ass_library_done(m_assLibrary);
+        memoryFonts_.clear();
+    }
 }
 
 napi_value SubtitleRenderer::Init(napi_env env, napi_callback_info info) {
@@ -171,7 +93,7 @@ napi_value SubtitleRenderer::Init(napi_env env, napi_callback_info info) {
     return nullptr;
 }
 
-napi_value SubtitleRenderer::AddFont(napi_env env, napi_callback_info info) {
+napi_value SubtitleRenderer::AddMemoryFont(napi_env env, napi_callback_info info) {
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK! add font");
     
     size_t argc = 2;
@@ -192,7 +114,61 @@ napi_value SubtitleRenderer::AddFont(napi_env env, napi_callback_info info) {
     fontData.fontData = (char*) data;
     fontData.fontSize = length;
     
-    SubtitleRenderer::GetInstance()->fonts_[fontName] = fontData;
+    SubtitleRenderer::GetInstance()->memoryFonts_[fontName] = fontData;
+    
+    return nullptr;
+}
+
+napi_value SubtitleRenderer::GetFontFamilyName(napi_env env, napi_callback_info info) {
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK! get font family name");
+    
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    if (napi_ok != napi_get_cb_info(env, info, &argc, args, nullptr, nullptr)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ParseId", "GetContext napi_get_cb_info failed");
+        return nullptr;
+    }
+    
+    std::string fontPath;
+    NapiUtils::JsValueToString(env, args[0], 2048, fontPath);
+    
+    FT_Library library;
+    FT_Face face;
+    if (FT_Init_FreeType(&library)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "font", "Failed to init freetype2 library");
+        return nullptr;
+    }
+
+    if (FT_New_Face(library, fontPath.c_str(), 0, &face)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "font", "Failed to load font file");
+        FT_Done_FreeType(library);
+        return nullptr;
+    }
+    
+    char* familyName = face->family_name;
+    napi_value jsValue;
+    napi_create_string_utf8(env, familyName, sizeof(familyName), &jsValue);
+    
+    FT_Done_Face(face);
+    FT_Done_FreeType(library);
+    
+    return jsValue;
+}
+
+napi_value GetInternalSubtitles(napi_env env, napi_callback_info info) {
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "test", "FUCK! get font family name");
+    
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    if (napi_ok != napi_get_cb_info(env, info, &argc, args, nullptr, nullptr)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ParseId", "GetContext napi_get_cb_info failed");
+        return nullptr;
+    }
+    
+    std::string filePath;
+    NapiUtils::JsValueToString(env, args[0], 2048, filePath);
+    
+    // TODO: get internal subtitles
     
     return nullptr;
 }

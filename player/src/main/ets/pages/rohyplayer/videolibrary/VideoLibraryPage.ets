@@ -10,7 +10,6 @@ import { FileUtil, PreferencesUtil } from '@pura/harmony-utils'
 import { StringArray } from '../../../entity/Arrays'
 import { showAlert } from '../../../util/AlertUtil'
 import { GridView } from './GridView'
-import { media } from '@kit.MediaKit'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { dataSharePredicates } from '@kit.ArkData'
 import { hashByFd } from '../../../util/HashUtil'
@@ -24,6 +23,7 @@ import {
 } from '../../components/SettingsPage'
 import { checkPermissionGrant, requestPermissionsFromUser } from '../../../util/PermissionUtils'
 import { abilityAccessCtrl, common } from '@kit.AbilityKit'
+import { Fonts } from '../../../entity/FontEntity'
 
 export interface VideoDeleter {
 
@@ -34,6 +34,8 @@ export interface VideoDeleter {
 
 @Component
 export struct VideoLibraryPage {
+  @Link
+  fonts: Fonts
   @State
   showSettings: boolean = false
   @State
@@ -42,8 +44,6 @@ export struct VideoLibraryPage {
   private videos: VideoEntityV2Array = []
   @State
   private covers: Record<string, PixelMap> = {}
-  @State
-  private metadatas: Record<string, media.AVMetadata> = {}
   @State
   private loaded: boolean = false
   @State
@@ -372,10 +372,10 @@ export struct VideoLibraryPage {
           Column() {
             if (this.gridOrList) {
               ListView({
+                fonts: this.fonts,
                 searching: this.searching,
                 videos: this.videos,
                 covers: this.covers,
-                metadatas: this.metadatas,
                 deleter: {
                   action: (video) => {
                     VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
@@ -396,10 +396,10 @@ export struct VideoLibraryPage {
               })
             } else {
               GridView({
+                fonts: this.fonts,
                 searching: this.searching,
                 videos: this.videos,
                 covers: this.covers,
-                metadatas: this.metadatas,
                 deleter: {
                   action: (video) => {
                     VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
@@ -929,7 +929,11 @@ export struct VideoLibraryPage {
               "",
               "",
               0,
-              ""
+              "",
+              0,
+              0,
+              0,
+              new ArrayBuffer(0)
             )
             videoV2.status = FileStatus.Importing
             this.videos.push(videoV2)
@@ -940,6 +944,10 @@ export struct VideoLibraryPage {
                 videoV2.hash = video.hash
                 videoV2.addedTime = video.addedTime
                 videoV2.fileSource = video.fileSource
+                videoV2.length = video.length
+                videoV2.width = video.width
+                videoV2.height = video.height
+                videoV2.cover = video.cover
                 videoV2.status = FileStatus.Authorized
                 this.sort()
                 this.hashes.push(video.hash)

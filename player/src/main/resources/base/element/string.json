@@ -93,6 +93,10 @@
       "value": "Delete this video will only removed this video from library, video file is still on your device."
     },
     {
+      "name": "confirm_to_delete_font_desc",
+      "value": "Delete this font will only removed this font from library, font file is still on your device."
+    },
+    {
       "name": "cancel",
       "value": "Cancel"
     },
@@ -255,6 +259,14 @@
     {
       "name": "settings_hardware_decode_tips",
       "value": "Enable this option allows you to use your gpu to render video. But it may lead to abnormal video pictures, and this option will only available on IJK player."
+    },
+    {
+      "name": "page_more_subheader_fonts",
+      "value": "Fonts"
+    },
+    {
+      "name": "add_font",
+      "value": "＋Add Font"
     }
   ]
 }

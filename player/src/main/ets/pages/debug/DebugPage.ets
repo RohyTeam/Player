@@ -1,4 +1,3 @@
-
 @Component
 export struct DebugPage {
   aboutToAppear(): void {

@@ -89,6 +89,10 @@
       "value": "删除这个视频只会从库中移除，并不会从您的设备上删除视频文件。"
     },
     {
+      "name": "confirm_to_delete_font_desc",
+      "value": "删除这个字体只会从库中移除，并不会从您的设备上删除视频文件。"
+    },
+    {
       "name": "cancel",
       "value": "取消"
     },
@@ -239,6 +243,14 @@
     {
       "name": "settings_hardware_decode_tips",
       "value": "开启此选项后，将会使用 GPU 进行视频解码渲染。但是开启此选项后画面可能会出现错误，并且此选项仅支持 IJK 播放器。"
+    },
+    {
+      "name": "page_more_subheader_fonts",
+      "value": "字体"
+    },
+    {
+      "name": "add_font",
+      "value": "＋添加字体"
     }
   ]
 }

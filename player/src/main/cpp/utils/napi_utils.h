@@ -14,6 +14,7 @@ class NapiUtils {
 public:
     static void JsValueToString(const napi_env &env, const napi_value &value, const int32_t bufLen,
         std::string &target);
+    static napi_value CStringToJsString(napi_env env, const char* value);
 };
 
 #endif //HONEY_NAPI_UTILS_H
