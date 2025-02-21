@@ -91,37 +91,6 @@ export default class VideoAbility extends UIAbility {
       AppUtil.init(this.context)
     }
 
-
-    this.context.resourceManager.getRawFileContent('HarmonyOS_Sans_SC_Regular.ttf')
-      .then((data) => {
-        fileIo.open(`${getContext(this).filesDir}/fallback.ttf`, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
-          .then((file) => {
-            console.error(`file path: ${file.path}`)
-            fileIo.write(file.fd, data.buffer)
-            fileIo.close(file.fd)
-              .then(() => {
-                fileIo.listFile(`${getContext(this).filesDir}`)
-                  .then((files) => {
-                    for (let file of files) {
-                      console.error(`FUCK! listed: ${file}`)
-                    }
-                  })
-                  .catch((err: BusinessError) => {
-                    console.error(`FUCK4: error with ${JSON.stringify(err)}, messgae: ${err.message}`)
-                  })
-              })
-              .catch((err: BusinessError) => {
-                console.error(`FUCK3: error with ${JSON.stringify(err)}, messgae: ${err.message}`)
-              })
-          })
-          .catch((err: BusinessError) => {
-            console.error(`FUCK2: error with ${JSON.stringify(err)}, messgae: ${err.message}`)
-          })
-      })
-      .catch((err: BusinessError) => {
-        console.error(`FUCK1: error with ${JSON.stringify(err)}, messgae: ${err.message}`)
-      })
-
     AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
     AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))
