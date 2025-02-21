@@ -279,6 +279,14 @@
     {
       "name": "played_status_playing",
       "value": "Played %s%"
+    },
+    {
+      "name": "settings_less_covering",
+      "value": "Less Cover"
+    },
+    {
+      "name": "settings_less_covering_tips",
+      "value": "Enable this option, speeding up and dragging progress bar will have less covering field."
     }
   ]
 }

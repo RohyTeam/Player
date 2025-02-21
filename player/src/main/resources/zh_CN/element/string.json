@@ -126,7 +126,7 @@
     },
     {
       "name": "long_press_speeding_up",
-      "value": "加速中"
+      "value": "加速播放中"
     },
     {
       "name": "no_subtitle",
@@ -263,6 +263,14 @@
     {
       "name": "played_status_playing",
       "value": "已看 %s%"
+    },
+    {
+      "name": "settings_less_covering",
+      "value": "减少遮挡"
+    },
+    {
+      "name": "settings_less_covering_tips",
+      "value": "开启此选项后，长按加速和调整进度条时的提示将不会覆盖整个屏幕。"
     }
   ]
 }

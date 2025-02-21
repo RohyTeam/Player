@@ -660,6 +660,8 @@ export struct VideoLibraryPage {
   preferFFmpeg: boolean = false;
   @StorageLink('hardwareDecode')
   hardwareDecode: boolean = false;
+  @StorageLink('lessCovering')
+  lessCovering: boolean = false;
 
   @Builder
   settings() {
@@ -745,6 +747,22 @@ export struct VideoLibraryPage {
         }
 
         SettingsGroup() {
+          SettingsSwitch({
+            settingsTitle: $r("app.string.settings_less_covering"),
+            settingsTips: $r("app.string.settings_less_covering_tips"),
+            switchValue: this.statusBar,
+            switchEvent: {
+              action: (value: boolean) => {
+                if (this.lessCovering) {
+                  AppStorage.setOrCreate("lessCovering", false)
+                  PreferencesUtil.putSync("lessCovering", false)
+                } else {
+                  AppStorage.setOrCreate("lessCovering", true)
+                  PreferencesUtil.putSync("lessCovering", true)
+                }
+              }
+            }
+          })
           SettingsSwitch({
             settingsTitle: $r("app.string.settings_status_bar"),
             settingsTips: $r("app.string.settings_status_bar_desc"),

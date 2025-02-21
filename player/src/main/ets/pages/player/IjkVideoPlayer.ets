@@ -169,6 +169,8 @@ export struct IjkVideoPlayer {
   private subtitleController: SubtitleController = new SubtitleController()
   @StorageLink('statusBar')
   settings$statusBar: boolean = false;
+  @StorageLink('lessCovering')
+  lessCovering: boolean = false;
   @StorageLink('autoShutdown')
   @Watch("autoShutdownSwitchWatcher")
   autoShutdown: boolean = false;
@@ -296,48 +298,168 @@ export struct IjkVideoPlayer {
       .zIndex(100) // 由于字幕也有分层，把 zIndex 设置高一点防止被字母遮挡
       Stack() {
         if (this.speedingUp) {
-          Stack() {
-            Text($r("app.string.long_press_speeding_up"))
-              .fontSize(32)
-              .fontColor("#ffffffff")
+          if (this.lessCovering) {
+            Stack() {
+              Column() {
+                Blank()
+                  .layoutWeight(1)
+                Row() {
+                  Blank()
+                    .layoutWeight(1)
+                  Button({
+                    type: ButtonType.Capsule
+                  }) { // 用按钮实现一个完全的圆边
+                    Text($r("app.string.long_press_speeding_up"))
+                      .fontSize(12)
+                      .fontColor("#ffffffff")
+                      .margin(16)
+                  }
+                  .enabled(false)
+                  .backgroundColor($r('sys.color.mask_primary'))
+                  Blank()
+                    .layoutWeight(1)
+                }
+                Blank()
+                  .layoutWeight(4)
+              }
+            }
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
+          } else {
+            Stack() {
+              Text($r("app.string.long_press_speeding_up"))
+                .fontSize(32)
+                .fontColor("#ffffffff")
+            }
+            .backgroundColor("#88000000")
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
           }
-          .backgroundColor("#88000000")
-          .alignContent(Alignment.Center)
-          .width("100%")
-          .height("100%")
         }
         if (this.adjustingBrightness) {
-          Stack() {
-            Text($r("app.string.adjusting_brightness", this.surfaceBrightness))
-              .fontSize(32)
-              .fontColor("#ffffffff")
+          if (this.lessCovering) {
+            Stack() {
+              Column() {
+                Blank()
+                  .layoutWeight(1)
+                Row() {
+                  Blank()
+                    .layoutWeight(1)
+                  Button({
+                    type: ButtonType.Capsule
+                  }) { // 用按钮实现一个完全的圆边
+                    Text($r("app.string.adjusting_brightness", this.surfaceBrightness))
+                      .fontSize(12)
+                      .fontColor("#ffffffff")
+                      .margin(16)
+                  }
+                  .enabled(false)
+                  .backgroundColor($r('sys.color.mask_primary'))
+                  Blank()
+                    .layoutWeight(1)
+                }
+                Blank()
+                  .layoutWeight(4)
+              }
+            }
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
+          } else {
+            Stack() {
+              Text($r("app.string.adjusting_brightness", this.surfaceBrightness))
+                .fontSize(32)
+                .fontColor("#ffffffff")
+            }
+            .backgroundColor("#88000000")
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
           }
-          .backgroundColor("#88000000")
-          .alignContent(Alignment.Center)
-          .width("100%")
-          .height("100%")
         }
         if (this.adjustingVolume) {
-          Stack() {
-            Text($r("app.string.adjusting_volume", this.surfaceVolume))
-              .fontSize(32)
-              .fontColor("#ffffffff")
+          if (this.lessCovering) {
+            Stack() {
+              Column() {
+                Blank()
+                  .layoutWeight(1)
+                Row() {
+                  Blank()
+                    .layoutWeight(1)
+                  Button({
+                    type: ButtonType.Capsule
+                  }) { // 用按钮实现一个完全的圆边
+                    Text($r("app.string.adjusting_volume", this.surfaceVolume))
+                      .fontSize(12)
+                      .fontColor("#ffffffff")
+                      .margin(16)
+                  }
+                  .enabled(false)
+                  .backgroundColor($r('sys.color.mask_primary'))
+                  Blank()
+                    .layoutWeight(1)
+                }
+                Blank()
+                  .layoutWeight(4)
+              }
+            }
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
+          } else {
+            Stack() {
+              Text($r("app.string.adjusting_volume", this.surfaceVolume))
+                .fontSize(32)
+                .fontColor("#ffffffff")
+            }
+            .backgroundColor("#88000000")
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
           }
-          .backgroundColor("#88000000")
-          .alignContent(Alignment.Center)
-          .width("100%")
-          .height("100%")
         }
         if (this.movingProgressBar) {
-          Stack() {
-            Text(`${convertNumberToDurationString(this.movingPosition)}/${convertNumberToDurationString(this.max)}`)
-              .fontSize(32)
-              .fontColor("#ffffffff")
+          if (this.lessCovering) {
+            Stack() {
+              Column() {
+                Blank()
+                  .layoutWeight(3)
+                Row() {
+                  Blank()
+                    .layoutWeight(1)
+                  Button({
+                    type: ButtonType.Capsule
+                  }) { // 用按钮实现一个完全的圆边
+                    Text(`${convertNumberToDurationString(this.movingPosition)}/${convertNumberToDurationString(this.max)}`)
+                      .fontSize(12)
+                      .fontColor("#ffffffff")
+                      .margin(16)
+                  }
+                  .enabled(false)
+                  .backgroundColor($r('sys.color.mask_primary'))
+                  Blank()
+                    .layoutWeight(1)
+                }
+                Blank()
+                  .layoutWeight(2)
+              }
+            }
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
+          } else {
+            Stack() {
+              Text(`${convertNumberToDurationString(this.movingPosition)}/${convertNumberToDurationString(this.max)}`)
+                .fontSize(32)
+                .fontColor("#ffffffff")
+            }
+            .backgroundColor("#88000000")
+            .alignContent(Alignment.Center)
+            .width("100%")
+            .height("100%")
           }
-          .backgroundColor("#88000000")
-          .alignContent(Alignment.Center)
-          .width("100%")
-          .height("100%")
         }
       }
       .alignContent(Alignment.Center)

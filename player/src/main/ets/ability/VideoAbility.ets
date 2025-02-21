@@ -98,6 +98,8 @@ export default class VideoAbility extends UIAbility {
     AppStorage.setOrCreate("statusBarBatteryPercent", PreferencesUtil.getBooleanSync("statusBarBatteryPercent", false))
     AppStorage.setOrCreate("preferFFmpeg", PreferencesUtil.getBooleanSync("preferFFmpeg", false))
     AppStorage.setOrCreate("hardwareDecode", PreferencesUtil.getBooleanSync("hardwareDecode", false))
+    AppStorage.setOrCreate("lessCovering", PreferencesUtil.getBooleanSync("lessCovering", false))
+
     let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
     AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
     /**
