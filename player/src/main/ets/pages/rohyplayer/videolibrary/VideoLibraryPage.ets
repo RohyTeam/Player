@@ -72,6 +72,9 @@ export struct VideoLibraryPage {
           if (index >= 0) {
             this.videos[index].played = updatedVideo.played
             this.sort()
+          } else { // 说明通过别的办法添加了新的视频
+            this.videos.push(VideoEntityV2.fromV1(updatedVideo))
+            this.sort()
           }
         }
       })

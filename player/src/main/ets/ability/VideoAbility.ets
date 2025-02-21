@@ -6,10 +6,11 @@ import { EventData } from '../pages/VideoIndex';
 import { copyFileToContinueDir } from '../util/ContinueUtil';
 import { distributedDeviceManager } from '@kit.DistributedServiceKit';
 import { JSON } from '@kit.ArkTS';
-import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
+import { AppUtil, FileUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { checkPermissionGrant } from '../util/PermissionUtils';
 import { StringArray } from '../entity/Arrays';
-import { fileIo } from '@kit.CoreFileKit';
+import { fileIo, hash } from '@kit.CoreFileKit';
+import { VideoLibraryDatabase } from '../database/VideoLibraryDatabase';
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
@@ -104,6 +105,24 @@ export default class VideoAbility extends UIAbility {
      */
     AppStorage.setOrCreate("comesFromApp", false)
     if (want.uri) {
+      // 把视频导入到视频库里
+      if (want.uri.startsWith("file://media")) { // 媒体库
+        // TODO 因为我不确定媒体库里的是否能用别的软件打开，所以这一部分先不做
+      } else if (want.uri.startsWith("file://")) { // 文件管理
+        hash.hash(FileUtil.getFilePath(want.uri), "sha256")
+          .then((fileHash) => {
+            // 即使能判断 PlayerAbility 是否启动，也没法从 VideoLibraryPage 中获取到缓存的文件哈希值列表，所以只能直接从数据库进行判断
+            VideoLibraryDatabase.tryFetchByHash(this.context, fileHash)
+              .then((result) => {
+                if (result == undefined) {
+                  VideoLibraryDatabase.addFromLocalFile(this.context, want.uri!)
+                    .then(() => {
+                      AppStorage.setOrCreate("videoUpdater", fileHash)
+                    })
+                }
+              })
+          })
+      }
       // 如果是通过传入文件来打开视频
       // 为了防止问题，未导入播放器的不进行接续支持
       // 关闭接续
