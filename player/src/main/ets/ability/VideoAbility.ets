@@ -1,4 +1,4 @@
-import { AbilityConstant, common, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { display, window } from '@kit.ArkUI';
 import hilog from '@ohos.hilog';
 import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
@@ -92,13 +92,22 @@ export default class VideoAbility extends UIAbility {
       AppUtil.init(this.context)
     }
 
-    AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
+    let colorMode = PreferencesUtil.getStringSync("colorMode", "system")
+    AppStorage.setOrCreate("appColorMode", colorMode)
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
     AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))
     AppStorage.setOrCreate("statusBarBatteryPercent", PreferencesUtil.getBooleanSync("statusBarBatteryPercent", false))
     AppStorage.setOrCreate("preferFFmpeg", PreferencesUtil.getBooleanSync("preferFFmpeg", false))
     AppStorage.setOrCreate("hardwareDecode", PreferencesUtil.getBooleanSync("hardwareDecode", false))
     AppStorage.setOrCreate("lessCovering", PreferencesUtil.getBooleanSync("lessCovering", false))
+
+    if (colorMode == "light") {
+      this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
+    } else if (colorMode == "dark") {
+      this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_DARK
+    } else {
+      this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
+    }
 
     let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
     AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -186,6 +195,11 @@ export default class VideoAbility extends UIAbility {
 
       let windowClass: window.Window = windowStage.getMainWindowSync()
 
+      windowClass.setWindowLayoutFullScreen(true).then(() => { // 防止出现导航避让区
+        console.info('Succeeded in setting the window layout to full-screen mode.');
+      }).catch((err: BusinessError) => {
+        console.error('Failed to set the window layout to full-screen mode. Cause:' + JSON.stringify(err));
+      });
       windowClass.setSpecificSystemBarEnabled('status', false).then(() => {
         console.info('Succeeded in setting the status bar to be invisible.');
       }).catch((err: BusinessError) => {

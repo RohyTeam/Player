@@ -1,4 +1,4 @@
-import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
@@ -52,13 +52,23 @@ export default class PlayerAbility extends UIAbility {
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     AppUtil.init(this.context)
-    AppStorage.setOrCreate("appColorMode", PreferencesUtil.getStringSync("colorMode", "system"))
+
+    let colorMode = PreferencesUtil.getStringSync("colorMode", "system")
+    AppStorage.setOrCreate("appColorMode", colorMode)
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
     AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))
     AppStorage.setOrCreate("statusBarBatteryPercent", PreferencesUtil.getBooleanSync("statusBarBatteryPercent", false))
     AppStorage.setOrCreate("preferFFmpeg", PreferencesUtil.getBooleanSync("preferFFmpeg", false))
     AppStorage.setOrCreate("hardwareDecode", PreferencesUtil.getBooleanSync("hardwareDecode", false))
     AppStorage.setOrCreate("lessCovering", PreferencesUtil.getBooleanSync("lessCovering", false))
+
+    if (colorMode == "light") {
+      this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
+    } else if (colorMode == "dark") {
+      this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_DARK
+    } else {
+      this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
+    }
 
     // runTest()
   }

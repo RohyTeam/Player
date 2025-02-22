@@ -9,6 +9,7 @@ import { promptAction } from '@kit.ArkUI';
 import { PreferencesUtil } from '@pura/harmony-utils';
 import { FontManagementGroup } from './FontManagementGroup';
 import { Fonts } from '../../../entity/FontEntity';
+import { common, ConfigurationConstant } from '@kit.AbilityKit';
 
 @Component
 export struct MorePage {
@@ -93,6 +94,7 @@ export struct MorePage {
               {
                 title: $r("app.string.color_mode_system"),
                 onSwitch: () => {
+                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
                   AppStorage.setOrCreate("appColorMode", "system")
                   PreferencesUtil.putSync("colorMode", "system")
                 }
@@ -100,6 +102,7 @@ export struct MorePage {
               {
                 title: $r("app.string.color_mode_light"),
                 onSwitch: () => {
+                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
                   AppStorage.setOrCreate("appColorMode", "light")
                   PreferencesUtil.putSync("colorMode", "light")
                 }
@@ -107,6 +110,7 @@ export struct MorePage {
               {
                 title: $r("app.string.color_mode_dark"),
                 onSwitch: () => {
+                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_DARK
                   AppStorage.setOrCreate("appColorMode", "dark")
                   PreferencesUtil.putSync("colorMode", "dark")
                 }

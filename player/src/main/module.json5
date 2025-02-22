@@ -55,8 +55,10 @@
         "skills": [
           {
             "actions": [
-              "ohos.want.action.sendData",
               "ohos.want.action.viewData"
+            ],
+            "entities": [
+              "entity.system.video"
             ],
             "uris": [
               {
