@@ -16,6 +16,8 @@ import { connectDevice, disconnectDevice } from '../../util/ContinueUtil';
 import VideoAbility from '../../ability/VideoAbility';
 import { StatusBar } from '../statusbar/StatusBar';
 import { VideoLibraryDatabase } from '../../database/VideoLibraryDatabase';
+import { parseSrtSubtitle } from '../../lib/srt/srt';
+import { SimpleSrtSubtitleView } from '../subtitle/SrtSubtitleView';
 
 @Observed
 export class VideoState {
@@ -441,12 +443,21 @@ export struct AVVideoPlayer {
       Stack() {
         Stack() {
           if (this.selectedSubtitle != undefined) {
-            NativeAssSubtitleView({
-              path: this.availableSubtitles[this.selectedSubtitle].path,
-              actualWidth: this.calculateWidth(this.surfaceFillingMode),
-              actualHeight: this.calculateHeight(this.surfaceFillingMode),
-              controller: this.subtitleController
-            })
+            if (this.availableSubtitles[this.selectedSubtitle].type == SubtitleType.ASS) {
+              NativeAssSubtitleView({
+                path: this.availableSubtitles[this.selectedSubtitle].path,
+                actualWidth: this.calculateWidth(this.surfaceFillingMode),
+                actualHeight: this.calculateHeight(this.surfaceFillingMode),
+                controller: this.subtitleController
+              })
+            } else if (this.availableSubtitles[this.selectedSubtitle].type == SubtitleType.SRT) {
+              SimpleSrtSubtitleView({
+                subtitle: this.availableSubtitles[this.selectedSubtitle],
+                currentTime: this.currentPosition,
+                actualWidth: this.calculateWidth(this.surfaceFillingMode),
+                actualHeight: this.calculateHeight(this.surfaceFillingMode)
+              })
+            }
           }
         }
         .height(this.calculateHeightPercent(this.surfaceFillingMode))
@@ -1448,7 +1459,7 @@ export struct AVVideoPlayer {
     let documentViewPicker = new picker.DocumentViewPicker(this.getUIContext().getHostContext()!);
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = 10; // 太多了处理不过来
-    documentSelectOptions.fileSuffixFilters = ['ass/ssa 字幕文件|.ass,.ssa'];
+    documentSelectOptions.fileSuffixFilters = ['SubStation Alpha 字幕|.ass,.ssa', 'SubRip 字幕|.srt'];
 
     documentViewPicker.select(documentSelectOptions)
       .then((documentSelectResult: Array<string>) => {
@@ -1466,7 +1477,7 @@ export struct AVVideoPlayer {
               } else {
                 SubtitleLibraryDatabase.add(getContext(this), fileHash, fileUrl)
                   .then((tuple) => {
-                    if (tuple[0].endsWith(".ass") || tuple[0].endsWith(".ssa")) {
+                    if (tuple[0].toLowerCase().endsWith(".ass") || tuple[0].toLowerCase().endsWith(".ssa")) {
                       fileIo.open(tuple[0])
                         .then((subtitleFile) => {
                           fileIo.readText(subtitleFile.path)
@@ -1479,7 +1490,25 @@ export struct AVVideoPlayer {
                                 name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
                                 language: "Ukn",
                                 path: fileUrl,
-                                type: SubtitleType.ASS
+                                type: SubtitleType.ASS,
+                                extra: undefined
+                              })
+                            })
+                        })
+                    } else if (tuple[0].toLowerCase().endsWith(".srt")) {
+                      fileIo.open(tuple[0])
+                        .then((subtitleFile) => {
+                          fileIo.readText(subtitleFile.path)
+                            .then((readText) => {
+                              let fileName = FileUtil.getFileName(fileUrl)
+                              this.subtitleHashes.push(tuple[1])
+                              this.availableSubtitles.push({
+                                index: this.availableSubtitles.length,
+                                name: fileName.substring(0, fileName.length - 4),
+                                language: "Ukn",
+                                path: fileUrl,
+                                type: SubtitleType.SRT,
+                                extra: parseSrtSubtitle(readText)
                               })
                             })
                         })
@@ -1792,7 +1821,7 @@ export struct AVVideoPlayer {
                     .then((subtitleUris) => {
                       avPlayer.url = `fd://${file.fd}`
                       subtitleUris.forEach(subtitleUrl => {
-                        if (subtitleUrl.endsWith(".ass") || subtitleUrl.endsWith(".ssa")) {
+                        if (subtitleUrl.toLowerCase().endsWith(".ass") || subtitleUrl.toLowerCase().endsWith(".ssa")) {
                           fileIo.open(subtitleUrl)
                             .then((subtitleFile) => {
                               hash.hash(subtitleFile.path, "sha256")
@@ -1807,7 +1836,28 @@ export struct AVVideoPlayer {
                                         name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
                                         language: "Ukn",
                                         path: subtitleUrl,
-                                        type: SubtitleType.ASS
+                                        type: SubtitleType.ASS,
+                                        extra: undefined
+                                      })
+                                    })
+                                })
+                            })
+                        } else if (subtitleUrl.toLowerCase().endsWith(".srt")) {
+                          fileIo.open(subtitleUrl)
+                            .then((subtitleFile) => {
+                              hash.hash(subtitleFile.path, "sha256")
+                                .then((subtitleHash) => {
+                                  fileIo.readText(subtitleFile.path)
+                                    .then((readText) => {
+                                      let fileName = FileUtil.getFileName(subtitleUrl)
+                                      this.subtitleHashes.push(subtitleHash)
+                                      this.availableSubtitles.push({
+                                        index: this.availableSubtitles.length,
+                                        name: fileName.substring(0, fileName.length - 4),
+                                        language: "Ukn",
+                                        path: subtitleUrl,
+                                        type: SubtitleType.SRT,
+                                        extra: parseSrtSubtitle(readText)
                                       })
                                     })
                                 })

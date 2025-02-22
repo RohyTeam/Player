@@ -12,6 +12,7 @@ export interface SubtitleEntity {
   language: string,
   path: string
   type: SubtitleType
+  extra: object | undefined
 
 }
 
