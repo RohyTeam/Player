@@ -753,7 +753,7 @@ export struct VideoLibraryPage {
           SettingsSwitch({
             settingsTitle: $r("app.string.settings_less_covering"),
             settingsTips: $r("app.string.settings_less_covering_tips"),
-            switchValue: this.statusBar,
+            switchValue: this.lessCovering,
             switchEvent: {
               action: (value: boolean) => {
                 if (this.lessCovering) {
