@@ -399,7 +399,7 @@ export struct VideoLibraryPage {
                 covers: this.covers,
                 deleter: {
                   action: (video) => {
-                    VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
+                    VideoLibraryDatabase.deleteByHash(getContext(this), video.uri, video.hash)
                       .then(() => {
                         video.status = FileStatus.Disappear
                         let index = this.videos.indexOf(video)
@@ -430,7 +430,7 @@ export struct VideoLibraryPage {
                 covers: this.covers,
                 deleter: {
                   action: (video) => {
-                    VideoLibraryDatabase.deleteByHash(getContext(this), video.hash)
+                    VideoLibraryDatabase.deleteByHash(getContext(this), video.uri, video.hash)
                       .then(() => {
                         video.status = FileStatus.Disappear
                         let index = this.videos.indexOf(video)

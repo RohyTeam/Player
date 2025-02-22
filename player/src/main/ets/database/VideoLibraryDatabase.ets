@@ -328,13 +328,19 @@ export class VideoLibraryDatabase {
     })
   }
 
-  public static deleteByHash(context: common.Context, hashValue: string): Promise<void> {
+  public static deleteByHash(context: common.Context, uri: string, hashValue: string): Promise<void> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
           hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
           return;
         }
+        fileShare.revokePermission([ // 移除持久化授权，保护用户文件安全
+          {
+            uri: uri,
+            operationMode: 0b1
+          }
+        ])
 
         store.delete(
           new relationalStore.RdbPredicates("VideoLibrary")
