@@ -1213,6 +1213,7 @@ export struct AVVideoPlayer {
         })
       }
     }
+    .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
       strokeWidth: LengthMetrics.vp(1),
