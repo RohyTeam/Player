@@ -15,6 +15,10 @@ export struct FontManagementGroup {
   @State
   private showingFonts: boolean = false
 
+  aboutToAppear() {
+    this.showingFonts = this.fonts.length <= 8
+  }
+
   build() {
     Column() {
       Row() {
