@@ -1,12 +1,17 @@
-import { CompiledASS } from '../lib/ass_compiler';
+export enum SubtitleType {
+
+  ASS,
+  SRT
+
+}
 
 export interface SubtitleEntity {
 
   index: number,
   name: string,
   language: string,
-  path: string,
-  compiledASS: CompiledASS
+  path: string
+  type: SubtitleType
 
 }
 

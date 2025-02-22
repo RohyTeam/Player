@@ -89,6 +89,7 @@ export default class VideoAbility extends UIAbility {
     VideoAbility.context = this.context
     if (!appUtilInited()) {
       // 这种情况一般是流转导致的，但是从文件预览打开也会导致这个情况
+      console.error(`requires to reinit context`)
       AppUtil.init(this.context)
     }
 
@@ -116,24 +117,38 @@ export default class VideoAbility extends UIAbility {
      */
     AppStorage.setOrCreate("comesFromApp", false)
     if (want.uri) {
+      /* 由于权限问题，此功能暂时无效，所以先做屏蔽处理
       // 把视频导入到视频库里
       if (want.uri.startsWith("file://media")) { // 媒体库
         // TODO 因为我不确定媒体库里的是否能用别的软件打开，所以这一部分先不做
       } else if (want.uri.startsWith("file://")) { // 文件管理
+        console.error(`starting importing an external video`)
         hash.hash(FileUtil.getFilePath(want.uri), "sha256")
           .then((fileHash) => {
+            console.error(`video hashed, trying fetch from database`)
             // 即使能判断 PlayerAbility 是否启动，也没法从 VideoLibraryPage 中获取到缓存的文件哈希值列表，所以只能直接从数据库进行判断
             VideoLibraryDatabase.tryFetchByHash(this.context, fileHash)
               .then((result) => {
                 if (result == undefined) {
+                  console.error(`not exists, it's fine to add to library`)
                   VideoLibraryDatabase.addFromLocalFile(this.context, want.uri!)
                     .then(() => {
+                      console.error(`ready to update video list if necessary`)
                       AppStorage.setOrCreate("videoUpdater", fileHash)
+                    })
+                    .catch((error: BusinessError) => {
+                      console.error(`error occurs when trying to add file to database, code: ${error.code}, message: ${error.message}`)
                     })
                 }
               })
+              .catch((error: BusinessError) => {
+                console.error(`error occurs when trying to fetch from database, code: ${error.code}, message: ${error.message}`)
+              })
           })
-      }
+          .catch((error: BusinessError) => {
+            console.error(`error occurs when trying to hash the file, code: ${error.code}, message: ${error.message}`)
+          })
+      }*/
       // 如果是通过传入文件来打开视频
       // 为了防止问题，未导入播放器的不进行接续支持
       // 关闭接续
@@ -267,8 +282,7 @@ function tryGetPreference(key: string): boolean {
 
 function appUtilInited(): boolean {
   try {
-    AppUtil.getContext()
-    return true
+    return AppUtil.getContext() != undefined
   } catch (error) {
     return false
   }

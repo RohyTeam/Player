@@ -176,16 +176,40 @@ export class VideoLibraryDatabase {
                                           cover: buffer
                                         })
                                       })
+                                        .catch((error: BusinessError) => {
+                                          console.error(`error occurs when processing data (inserting to library), code: ${error.code}, message: ${error.message}`)
+                                        })
+                                    })
+                                    .catch((error: BusinessError) => {
+                                      console.error(`error occurs when processing data (getting metadata), code: ${error.code}, message: ${error.message}`)
                                     })
                                 })
+                                .catch((error: BusinessError) => {
+                                  console.error(`error occurs when processing data (initing metadata fetcher), code: ${error.code}, message: ${error.message}`)
+                                })
+                            })
+                            .catch((error: BusinessError) => {
+                              console.error(`error occurs when processing data (converting cover data), code: ${error.code}, message: ${error.message}`)
                             })
                         })
+                        .catch((error: BusinessError) => {
+                          console.error(`error occurs when processing data (generating cover), code: ${error.code}, message: ${error.message}`)
+                        })
                     })
+                      .catch((error: BusinessError) => {
+                        console.error(`error occurs when processing data (initing cover generator), code: ${error.code}, message: ${error.message}`)
+                      })
+                  })
+                  .catch((error: BusinessError) => {
+                    console.error(`error occurs when processing data (opening), code: ${error.code}, message: ${error.message}`)
                   })
               })
+              .catch((error: BusinessError) => {
+                console.error(`error occurs when processing data (hashing), code: ${error.code}, message: ${error.message}`)
+              })
           })
-          .catch(() => {
-
+          .catch((error: BusinessError) => {
+            console.error(`error occurs when processing data, code: ${error.code}, message: ${error.message}`)
           })
       })
     })

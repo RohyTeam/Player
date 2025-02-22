@@ -6,7 +6,7 @@ import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
 import { FileUtil } from '@pura/harmony-utils';
 import { showAlert } from '../../util/AlertUtil';
-import { SubtitleEntity, Subtitles } from '../../entity/SubtitleEntity';
+import { SubtitleEntity, Subtitles, SubtitleType } from '../../entity/SubtitleEntity';
 import { AudioEntity, Audios } from '../../entity/AudioEntity';
 import { JSON } from '@kit.ArkTS';
 import { compile } from '../../lib/ass_compiler';
@@ -475,7 +475,6 @@ export struct IjkVideoPlayer {
               path: this.availableSubtitles[this.selectedSubtitle].path,
               actualWidth: this.calculateWidth(this.surfaceFillingMode),
               actualHeight: this.calculateHeight(this.surfaceFillingMode),
-              metadata: this.availableSubtitles[this.selectedSubtitle].compiledASS,
               controller: this.subtitleController
             })
               .onAppear(() => {
@@ -1511,22 +1510,24 @@ export struct IjkVideoPlayer {
               } else {
                 SubtitleLibraryDatabase.add(getContext(this), fileHash, fileUrl)
                   .then((tuple) => {
-                    fileIo.open(tuple[0])
-                      .then((subtitleFile) => {
-                        fileIo.readText(subtitleFile.path)
-                          .then((readText) => {
-                            let compiledASS = compile(readText, void 0)
-                            let fileName = FileUtil.getFileName(fileUrl)
-                            this.subtitleHashes.push(tuple[1])
-                            this.availableSubtitles.push({
-                              index: this.availableSubtitles.length,
-                              name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
-                              language: "Ukn",
-                              path: fileUrl,
-                              compiledASS: compiledASS
+                    if (tuple[0].endsWith(".ass") || tuple[0].endsWith(".ssa")) {
+                      fileIo.open(tuple[0])
+                        .then((subtitleFile) => {
+                          fileIo.readText(subtitleFile.path)
+                            .then((readText) => {
+                              let compiledASS = compile(readText, void 0)
+                              let fileName = FileUtil.getFileName(fileUrl)
+                              this.subtitleHashes.push(tuple[1])
+                              this.availableSubtitles.push({
+                                index: this.availableSubtitles.length,
+                                name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
+                                language: "Ukn",
+                                path: fileUrl,
+                                type: SubtitleType.ASS
+                              })
                             })
-                          })
-                      })
+                        })
+                    }
                   })
               }
             }
@@ -1696,25 +1697,27 @@ export struct IjkVideoPlayer {
       let subtitleUris = await SubtitleLibraryDatabase.get(getContext(this), fileHash)
       ijkPlayer.setDataSource(file.path)
       subtitleUris.forEach(subtitleUrl => {
-        fileIo.open(subtitleUrl)
-          .then((subtitleFile) => {
-            hash.hash(subtitleFile.path, "sha256")
-              .then((subtitleHash) => {
-                fileIo.readText(subtitleFile.path)
-                  .then((readText) => {
-                    let compiledASS = compile(readText, void 0)
-                    let fileName = FileUtil.getFileName(subtitleUrl)
-                    this.subtitleHashes.push(subtitleHash)
-                    this.availableSubtitles.push({
-                      index: this.availableSubtitles.length,
-                      name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
-                      language: "Ukn",
-                      path: subtitleUrl,
-                      compiledASS: compiledASS
+        if (subtitleUrl.endsWith(".ass") || subtitleUrl.endsWith(".ssa")) {
+          fileIo.open(subtitleUrl)
+            .then((subtitleFile) => {
+              hash.hash(subtitleFile.path, "sha256")
+                .then((subtitleHash) => {
+                  fileIo.readText(subtitleFile.path)
+                    .then((readText) => {
+                      let compiledASS = compile(readText, void 0)
+                      let fileName = FileUtil.getFileName(subtitleUrl)
+                      this.subtitleHashes.push(subtitleHash)
+                      this.availableSubtitles.push({
+                        index: this.availableSubtitles.length,
+                        name: compiledASS.info.Title || fileName.substring(0, fileName.length - 4),
+                        language: "Ukn",
+                        path: subtitleUrl,
+                        type: SubtitleType.ASS
+                      })
                     })
-                  })
-              })
-          })
+                })
+            })
+        }
       })
     } else if (this.url.startsWith("dfs:")) {
       console.error("opening file")

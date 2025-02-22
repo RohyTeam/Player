@@ -1,4 +1,3 @@
-import { CompiledASS } from '../../lib/ass_compiler';
 import { LengthMetricsUnit } from '@kit.ArkUI';
 import { fileIo } from '@kit.CoreFileKit';
 import { image } from '@kit.ImageKit';
@@ -40,8 +39,6 @@ export struct NativeAssSubtitleView {
   actualWidth: number
   @Prop
   actualHeight: number
-  @Prop
-  metadata: CompiledASS
   @Link
   controller: SubtitleController
   @State
