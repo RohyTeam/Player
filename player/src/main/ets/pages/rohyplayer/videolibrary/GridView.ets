@@ -196,7 +196,7 @@ struct VideoRow {
                 left: "8vp",
                 right: "8vp",
               })
-            Text(DateUtil.getFormatDateStr(this.video.addedTime))
+            Text($r("app.string.import_time", DateUtil.getFormatDateStr(this.video.addedTime)))
               .maxLines(1)
               .textOverflow({
                 overflow: TextOverflow.Ellipsis
