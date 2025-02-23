@@ -54,9 +54,7 @@ export function parseFiles(parentDir: string, xmlData: ArrayBuffer): WebDAVFile[
 // 下面的实际不需要使用，只是方便理解结构
 
 interface XmlRoot {
-
   multistatus: XmlMultistatus
-
 }
 
 interface XmlMultistatus {
@@ -77,7 +75,8 @@ interface XmlProp {
   displayname: string
   creationdate: string
   supportedlock: XmlSupportedLock
-  resourcetype: XmlResourceType
+  // 如果是 string 说明这是个文件，因为这玩意变成了空标签，fast xml parser 就会认为里面是一个空字符串而把这个值设置为字符串
+  resourcetype: XmlResourceType | string
   getlastmodified: string
   getcontentlength: number | undefined
   getcontenttype: string | undefined

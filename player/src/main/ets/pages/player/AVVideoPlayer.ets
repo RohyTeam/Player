@@ -18,6 +18,8 @@ import { StatusBar } from '../statusbar/StatusBar';
 import { VideoLibraryDatabase } from '../../database/VideoLibraryDatabase';
 import { parseSrtSubtitle } from '../../lib/srt/srt';
 import { SimpleSrtSubtitleView } from '../subtitle/SrtSubtitleView';
+import { Want } from '@kit.AbilityKit';
+import { Headers } from '../../entity/Headers';
 
 @Observed
 export class VideoState {
@@ -33,6 +35,9 @@ enum SurfaceFillingMode {
 
 @Component
 export struct AVVideoPlayer {
+  @Prop
+  @Require
+  want: Want
   @Prop
   @Require
   title: string
@@ -1879,6 +1884,12 @@ export struct AVVideoPlayer {
             .catch((error: BusinessError) => {
               console.error(`error occurs when accessing remote files: ${JSON.stringify(error)}`)
             })
+        } else if (this.url.startsWith("https://") || this.url.startsWith("http://")) { // 网络视频
+          let headers = JSON.parse(this.want.parameters!.headers as string) as Headers
+          let mediaSource = media.createMediaSourceWithUrl(this.url, headers.headers)
+          avPlayer.setMediaSource(mediaSource, {
+            preferredBufferDuration: 30 // 缓存 30s 的内容
+          })
         }
       })
   }

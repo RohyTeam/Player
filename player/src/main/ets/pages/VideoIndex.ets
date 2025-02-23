@@ -12,6 +12,8 @@ export class EventData {
 @Component
 struct VideoIndex {
   @State
+  private want: Want | undefined = undefined
+  @State
   private title: string = ''
   @State
   private url: string | undefined = undefined
@@ -33,6 +35,7 @@ struct VideoIndex {
     let eventData = new EventData()
     getContext(this).eventHub.emit('getAbilityData', eventData)
     let want = eventData.launchWant!
+    this.want = want
     if (want.parameters!['originalDevice'] != undefined) {
       this.isContinuation = true
       console.error("find continue video")
@@ -57,24 +60,28 @@ struct VideoIndex {
         this.colorMode == "dark" ? ThemeColorMode.DARK : ThemeColorMode.LIGHT,
     }) {
       Stack() {
-        if (this.preferFFmpeg) {
-          IjkVideoPlayer({
-            title: this.title,
-            url: this.url,
-            hash: this.hash,
-            videoHolder: this.videoHolder,
-            isContinuation: this.isContinuation,
-            backTrigger: this.backTrigger,
-          })
-        } else {
-          AVVideoPlayer({
-            title: this.title,
-            url: this.url,
-            hash: this.hash,
-            videoHolder: this.videoHolder,
-            isContinuation: this.isContinuation,
-            backTrigger: this.backTrigger,
-          })
+        if (this.want != undefined) {
+          if (this.preferFFmpeg) {
+            IjkVideoPlayer({
+              want: this.want,
+              title: this.title,
+              url: this.url,
+              hash: this.hash,
+              videoHolder: this.videoHolder,
+              isContinuation: this.isContinuation,
+              backTrigger: this.backTrigger,
+            })
+          } else {
+            AVVideoPlayer({
+              want: this.want,
+              title: this.title,
+              url: this.url,
+              hash: this.hash,
+              videoHolder: this.videoHolder,
+              isContinuation: this.isContinuation,
+              backTrigger: this.backTrigger,
+            })
+          }
         }
       }
       .width("100%")

@@ -18,6 +18,8 @@ import { IjkMediaPlayer } from '@ohos/ijkplayer';
 import { VideoLibraryDatabase } from '../../database/VideoLibraryDatabase';
 import { parseSrtSubtitle } from '../../lib/srt/srt';
 import { SimpleSrtSubtitleView } from '../subtitle/SrtSubtitleView';
+import { Want } from '@kit.AbilityKit';
+import { Headers } from '../../entity/Headers';
 
 @Observed
 export class VideoState {
@@ -45,6 +47,9 @@ const TRACK_META_REGEX = "key\\:([a-zA-Z0-9_]+),value:(.+)"
  */
 @Component
 export struct IjkVideoPlayer {
+  @Prop
+  @Require
+  want: Want
   @Prop
   @Require
   title: string
@@ -1771,6 +1776,14 @@ export struct IjkVideoPlayer {
       console.error("opening file")
       let file = fileIo.openSync(this.url.substring(4))
       ijkPlayer.setDataSource(file.path)
+    } else if (this.url.startsWith("https://") || this.url.startsWith("http://")) { // 网络视频
+      let headers = JSON.parse(this.want.parameters!.headers as string) as Headers
+      let map = new Map<string, string>()
+      for (let key of Object.keys(headers.headers)) {
+        map.set(key, headers.headers[key])
+      }
+      ijkPlayer.setDataSource(this.url)
+      ijkPlayer.setDataSourceHeader(map)
     }
 
     // options
@@ -1914,6 +1927,12 @@ export struct IjkVideoPlayer {
     ijkPlayer.setOnInfoListener({
       onInfo: (what: number, extra: number) => {
         console.error(`Oninfo, what: ${what}; extra: ${extra}`)
+      }
+    })
+
+    ijkPlayer.setOnErrorListener({
+      onError: (what: number, extra: number) => {
+        console.error(`OnError, what: ${what}; extra: ${extra}`)
       }
     })
 

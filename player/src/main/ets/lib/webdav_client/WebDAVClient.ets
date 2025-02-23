@@ -7,11 +7,12 @@ import { XMLParser } from '@ifbear/fast-xml-parser'
 import { saveDebugString } from '../../util/PickerUtil'
 import { common } from '@kit.AbilityKit'
 import { parseFiles, WebDAVFile } from './WebDAVFileSystem'
+import { Headers } from '../../entity/Headers'
 
 export interface WebDAVClient {
 
   authenticate(): Promise<boolean>
-
+  authenticateFile(file: string): Promise<Headers>
   listDirectory(path: string): Promise<Array<WebDAVFile>>
 
 }
@@ -90,6 +91,23 @@ class WebDAVClientImpl implements WebDAVClient {
       this.serverUri = this.serverUri.substring(0, this.serverUri.length - 1)
     }
     this.options = options
+  }
+
+  authenticateFile(file: string): Promise<Headers> {
+    return new Promise((resultReturner) => {
+      if (!file.startsWith("/")) {
+        file = `/${file}`
+      }
+      let requestUri = `${this.serverUri}${file}`
+      this.authenticateMethod?.use(requestUri)
+        .then((token) => {
+          resultReturner({
+            headers: {
+              "authorization": token
+            }
+          })
+        })
+    })
   }
 
   listDirectory(path: string): Promise<WebDAVFile[]> {

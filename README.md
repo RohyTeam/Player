@@ -23,6 +23,7 @@
 1. 从华为的 [下载官网](https://developer.huawei.com/consumer/cn/download/) 分别下载 DevEco Studio 和 仓颉支持插件（该插件需要申请才能获得，[申请地址](https://developer.huawei.com/consumer/cn/activityDetail/cangjie-beta/)）
 2. 使用 git 工具将此项目的代码拉取至本地：`git clone https://github.com/RohyTeam/Player.git`
 3. 使用 DevEco Studio 打开此项目
+4. 删除测试相关的代码，寻找的办法就是寻找哪些地方使用了 Secrets 这个类
 
 ## 编译
 如果你想自行编译本项目，可以根据如下步骤进行操作：

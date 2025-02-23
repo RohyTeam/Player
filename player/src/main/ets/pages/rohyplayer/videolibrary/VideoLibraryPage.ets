@@ -976,6 +976,10 @@ export struct VideoLibraryPage {
             unsupported = true
             continue
           }
+          if (fileUrl.startsWith("file://com.huawei.hmos.filemanager")) { // 说明是云空间的文件，被文件管理缓存到文件管理的沙箱中了
+            unsupported = true
+            continue
+          }
           let hashValue = await hash.hash(FileUtil.getFilePath(fileUrl), "sha256")
           if (this.hashes.indexOf(hashValue) >= 0) {
             duplicated = true
