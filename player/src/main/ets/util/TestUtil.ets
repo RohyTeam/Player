@@ -10,10 +10,15 @@ export function runTest() {
     client.authenticate()
       .then((result) => {
         if (result) {
+          console.error(`trying to list directory`)
           client.listDirectory("/")
-            .then(() => {
-
+            .then((files) => {
+              for (let file of files) {
+                console.error(`webdav file, name: ${file.displayName}, path: ${file.path}`)
+              }
             })
+        } else {
+          console.error(`failed to authenticate`)
         }
       })
   } catch (err) {

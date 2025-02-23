@@ -3,7 +3,8 @@
   "description": "",
   "dependencies": {
     "@pura/harmony-utils": "^1.2.5",
-    "@pura/harmony-dialog": "^1.1.1"
+    "@pura/harmony-dialog": "^1.1.1",
+    "@ifbear/fast-xml-parser": "^5.0.6"
   },
   "devDependencies": {
     "@ohos/hypium": "1.0.19",

@@ -1,15 +1,12 @@
 import { http } from '@kit.NetworkKit'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { JSON } from '@kit.ArkTS'
+import { JSON, xml } from '@kit.ArkTS'
 import { StrUtil } from '@pura/harmony-utils'
 import { rcp } from '@kit.RemoteCommunicationKit'
-
-export interface WebDAVFile {
-
-  name: string
-  path: string
-
-}
+import { XMLParser } from '@ifbear/fast-xml-parser'
+import { saveDebugString } from '../../util/PickerUtil'
+import { common } from '@kit.AbilityKit'
+import { parseFiles, WebDAVFile } from './WebDAVFileSystem'
 
 export interface WebDAVClient {
 
@@ -53,6 +50,28 @@ class BasicAuthenticateMethod implements AuthenticateMethod {
       resultReturner(`Basic ${this.token}`)
     })
   }
+
+}
+
+class DigestAuthenticateMethod implements AuthenticateMethod {
+
+  type: AuthenticateMethodType = AuthenticateMethodType.Digest
+
+  private username: string
+  private password: string
+
+  constructor(username: string, password: string) {
+    this.username = username
+    this.password = password
+  }
+
+  use(uri: string): Promise<string> {
+    return new Promise((resultReturner) => {
+      let session = rcp.createSession()
+      // TODO
+    })
+  }
+
 }
 
 export interface Unauthorized {}
@@ -95,10 +114,8 @@ class WebDAVClientImpl implements WebDAVClient {
             )
             session.fetch(request)
               .then((response) => {
-                if (response.statusCode == 207) {
-                  let result = StrUtil.bufferToStr(response.body)
-
-                  resultReturner([])
+                if (response.statusCode == 207 && response.body != undefined) {
+                  resultReturner(parseFiles(path, response.body))
                 } else {
                   resultReturner([])
                 }
@@ -160,6 +177,7 @@ class WebDAVClientImpl implements WebDAVClient {
               console.error(`authenticate method is ${authenticateMethod}`)
               if (authenticateMethod.startsWith('Digest')) {
                 // TODO: digest support
+                // this.authenticateMethod = new DigestAuthenticateMethod(this.options.username, this.options.password)
               } else if (authenticateMethod.startsWith("Basic")) {
                 this.authenticateMethod = new BasicAuthenticateMethod(this.options.username, this.options.password)
               }
