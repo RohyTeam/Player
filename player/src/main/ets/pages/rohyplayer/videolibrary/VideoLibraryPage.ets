@@ -603,7 +603,7 @@ export struct VideoLibraryPage {
                   webdav: webdav,
                   functions: {
                     clear: () => {
-                      this.showPickerSelection = false
+                      // this.showPickerSelection = false
                     }
                   }
                 })
@@ -1149,16 +1149,17 @@ struct WebDAVPickerRow {
             sheetDismiss.dismiss()
             console.error(`virtual picker should dismiss triggered`)
             this.showVirtualPicker = false
+            this.functions.clear()
           },
           onWillDismiss: () => {
             console.error(`virtual picker will dismiss triggered`)
             this.showVirtualPicker = false
+            this.functions.clear()
           },
           backgroundColor: $r("app.color.rohy_settings_background")
         }
       )
       .onClick(() => {
-        this.functions.clear()
         this.showVirtualPicker = true
       })
       .width("100%")
@@ -1185,7 +1186,7 @@ struct WebDAVPickerRow {
                     let files: VirtualNode[] = []
                     for (let webdavFile of webdavFiles) {
                       files.push({
-                        name: webdavFile.path,
+                        name: decodeURI(webdavFile.path),
                         isDirectory: webdavFile.isDirectory
                       })
                     }

@@ -37,20 +37,32 @@ export function parseFiles(parentDir: string, xmlData: ArrayBuffer): WebDAVFile[
     fullpath = parentDir
   }
 
-  let baseHrefLength = `${root.multistatus.response[0].href}/`.length
+  let baseHrefLength = `${root.multistatus.response[0].href}`.length
 
   console.error(`root is ${JSON.stringify(root)}`)
-  return root.multistatus.response
-    .map((response) => {
-      let name = response.propstat.prop.displayname as string
-      let path = response.href.substring(baseHrefLength)
-      return {
-        displayName: name,
-        path: path,
-        fullPath: `${fullpath}${path}`,
-        isDirectory: response.propstat.prop.resourcetype != ""
-      } as WebDAVFile
+
+  let webDAVFiles: WebDAVFile[] = []
+
+  let indexSkipped = false
+  for (let response of root.multistatus.response) {
+    if (!indexSkipped) {
+      indexSkipped = true
+      continue
+    }
+    let name = response.propstat.prop.displayname as string
+    let path = response.href.substring(baseHrefLength)
+    if (path.endsWith("/")) {
+      path = path.substring(0, path.length - 1) // 去掉末尾的 /
+    }
+    webDAVFiles.push({
+      displayName: name,
+      path: path,
+      fullPath: `${fullpath}${path}`,
+      isDirectory: response.propstat.prop.resourcetype != ""
     })
+  }
+
+  return webDAVFiles
 }
 
 // 下面的实际不需要使用，只是方便理解结构

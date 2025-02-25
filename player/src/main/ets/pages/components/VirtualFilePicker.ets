@@ -77,7 +77,7 @@ export struct FileTreeView {
         }
       }
       .onAppear(() => {
-        if (!this.loaded && Object.keys(this.fileSystemCache).length == 0) {
+        if (!this.loaded && this.fileSystemCache.length == 0) {
           console.error(`entering a directory`)
           this.fileSystem.listFiles(this.path)
             .then((files) => {
