@@ -6,11 +6,9 @@ import { EventData } from '../pages/VideoIndex';
 import { copyFileToContinueDir } from '../util/ContinueUtil';
 import { distributedDeviceManager } from '@kit.DistributedServiceKit';
 import { JSON } from '@kit.ArkTS';
-import { AppUtil, FileUtil, PreferencesUtil } from '@pura/harmony-utils';
+import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { checkPermissionGrant } from '../util/PermissionUtils';
 import { StringArray } from '../entity/Arrays';
-import { fileIo, hash } from '@kit.CoreFileKit';
-import { VideoLibraryDatabase } from '../database/VideoLibraryDatabase';
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏

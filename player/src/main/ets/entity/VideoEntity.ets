@@ -13,8 +13,6 @@ export interface VideoEntity {
 
 }
 
-interface VideoMetadata {}
-
 export enum FileStatus {
 
   Authorized,
@@ -85,5 +83,141 @@ export class VideoEntityV2 {
       entity.cover
     )
   }
-  
+}
+
+export enum SourceType {
+
+  LOCAL,
+  PHOTOS,
+  WEBDAV
+
+}
+
+@Observed
+export class VideoSource {
+  uri: string
+  title: string
+  type: SourceType
+  addedTime: number
+  played: number
+  length: number
+  width: number
+  height: number
+  cover: ArrayBuffer
+  status: FileStatus = FileStatus.None
+
+  constructor(
+    uri: string,
+    title: string,
+    type: SourceType,
+    addedTime: number,
+    played: number,
+    length: number,
+    width: number,
+    height: number,
+    cover: ArrayBuffer
+  ) {
+    this.uri = uri
+    this.title = title
+    this.type = type
+    this.addedTime = addedTime
+    this.played = played
+    this.length = length
+    this.width = width
+    this.height = height
+    this.cover = cover
+  }
+}
+
+@Observed
+export class LocalVideoSource extends VideoSource {
+  hash: string
+
+  constructor(
+    uri: string,
+    title: string,
+    addedTime: number,
+    played: number,
+    length: number,
+    width: number,
+    height: number,
+    cover: ArrayBuffer,
+    hash: string
+  ) {
+    super(
+      uri,
+      title,
+      SourceType.LOCAL,
+      addedTime,
+      played,
+      length,
+      width,
+      height,
+      cover
+    )
+    this.hash = hash
+  }
+}
+
+@Observed
+export class PhotosVideoSource extends VideoSource {
+  hash: string
+
+  constructor(
+    uri: string,
+    title: string,
+    addedTime: number,
+    played: number,
+    length: number,
+    width: number,
+    height: number,
+    cover: ArrayBuffer,
+    hash: string
+  ) {
+    super(
+      uri,
+      title,
+      SourceType.LOCAL,
+      addedTime,
+      played,
+      length,
+      width,
+      height,
+      cover
+    )
+    this.hash = hash
+  }
+}
+
+export class WebDAVVideoSource extends VideoSource {
+  serverUrl: string
+
+  constructor(
+    uri: string,
+    title: string,
+    addedTime: number,
+    played: number,
+    length: number,
+    width: number,
+    height: number,
+    cover: ArrayBuffer,
+    serverUrl: string
+  ) {
+    super(
+      uri,
+      title,
+      SourceType.LOCAL,
+      addedTime,
+      played,
+      length,
+      width,
+      height,
+      cover
+    )
+    this.serverUrl = serverUrl
+  }
+}
+
+@Observed
+export class VideosV2 extends Array<VideoSource> {
 }

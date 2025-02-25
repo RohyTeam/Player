@@ -4,7 +4,7 @@ import { BreakpointConstants } from '../../../common/constants/BreakpointConstan
 import { VideoDeleter } from './VideoLibraryPage'
 import { fileIo, fileShare, hash } from '@kit.CoreFileKit'
 import { convertNumberToDurationString } from '../../../util/TimeUtil'
-import { DateUtil, FileUtil } from '@pura/harmony-utils'
+import { FileUtil } from '@pura/harmony-utils'
 import { LengthMetrics } from '@kit.ArkUI'
 import { DialogHelper } from '@pura/harmony-dialog'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
@@ -190,17 +190,6 @@ struct VideoRow {
               })
             Text($r("app.string.duration",
               `${convertNumberToDurationString(this.video.length)}`))
-              .fontSize(10)
-              .fontColor($r("app.color.font_secondary"))
-              .margin({
-                left: "8vp",
-                right: "8vp",
-              })
-            Text($r("app.string.import_time", DateUtil.getFormatDateStr(this.video.addedTime)))
-              .maxLines(1)
-              .textOverflow({
-                overflow: TextOverflow.Ellipsis
-              })
               .fontSize(10)
               .fontColor($r("app.color.font_secondary"))
               .margin({

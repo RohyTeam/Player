@@ -38,5 +38,6 @@ export class FontEntityV2 {
   }
 }
 
+@Observed
 export class Fonts extends Array<FontEntityV2> {
 }

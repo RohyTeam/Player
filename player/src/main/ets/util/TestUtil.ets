@@ -4,7 +4,7 @@ import { Secrets } from '../Secrets'
 // 用于测试，上传之后为空代码文件
 export function runTest() {
   try {
-    let client = createClient(Secrets.WEBDAV_URL, {
+    let client = createClient("", Secrets.WEBDAV_URL, {
       username: Secrets.WEBDAV_USERNAME,
       password: Secrets.WEBDAV_PASSWORD
     })

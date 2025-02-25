@@ -15,9 +15,9 @@ function parseSrtLine(line: string): SrtSubtitleLine {
   let match = line.match(/(\d\d:\d\d:\d\d,\d\d\d) --> (\d\d:\d\d:\d\d,\d\d\d)\n([\S\s]*)/m)!
 
   return {
-    text:  match[3].trim(),
+    text: match[3].trim(),
     start: srtTimeToSeconds(match[1]),
-    end:   srtTimeToSeconds(match[2])
+    end: srtTimeToSeconds(match[2])
   };
 }
 

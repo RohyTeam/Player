@@ -24,6 +24,9 @@ import {
 import { checkPermissionGrant, requestPermissionsFromUser } from '../../../util/PermissionUtils'
 import { abilityAccessCtrl, common, ConfigurationConstant } from '@kit.AbilityKit'
 import { Fonts } from '../../../entity/FontEntity'
+import { WebDAVAuthorization, WebDAVs } from '../../../entity/WebDAVEntity'
+import { VirtualFilePicker, VirtualNode } from '../../components/VirtualFilePicker'
+import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
 
 export interface VideoDeleter {
 
@@ -37,6 +40,8 @@ export interface VideoDeleter {
 export struct VideoLibraryPage {
   @Link
   fonts: Fonts
+  @Link
+  webdavs: WebDAVs
   @State
   showSettings: boolean = false
   @State
@@ -587,6 +592,22 @@ export struct VideoLibraryPage {
               }
               .height("64vp")
               .width("100%")
+
+              ForEach(this.webdavs, (webdav: WebDAVAuthorization) => {
+                Divider()
+                  .margin({
+                    left: 72,
+                    right: 12
+                  })
+                WebDAVPickerRow({
+                  webdav: webdav,
+                  functions: {
+                    clear: () => {
+                      this.showPickerSelection = false
+                    }
+                  }
+                })
+              })
             }
           }
           .padding(4)
@@ -678,7 +699,8 @@ export struct VideoLibraryPage {
               {
                 title: $r("app.string.color_mode_system"),
                 onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
+                  (getContext(this) as common.UIAbilityContext).config.colorMode =
+                    ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
                   AppStorage.setOrCreate("appColorMode", "system")
                   PreferencesUtil.putSync("colorMode", "system")
                 }
@@ -686,7 +708,8 @@ export struct VideoLibraryPage {
               {
                 title: $r("app.string.color_mode_light"),
                 onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
+                  (getContext(this) as common.UIAbilityContext).config.colorMode =
+                    ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
                   AppStorage.setOrCreate("appColorMode", "light")
                   PreferencesUtil.putSync("colorMode", "light")
                 }
@@ -694,7 +717,8 @@ export struct VideoLibraryPage {
               {
                 title: $r("app.string.color_mode_dark"),
                 onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_DARK
+                  (getContext(this) as common.UIAbilityContext).config.colorMode =
+                    ConfigurationConstant.ColorMode.COLOR_MODE_DARK
                   AppStorage.setOrCreate("appColorMode", "dark")
                   PreferencesUtil.putSync("colorMode", "dark")
                 }
@@ -1067,5 +1091,114 @@ export struct VideoLibraryPage {
           this.settings$continuation = false
         }
       })
+  }
+}
+
+interface WebDAVPickerRowFunctions {
+
+  clear: () => void
+
+}
+
+@Component
+struct WebDAVPickerRow {
+  @Prop
+  @Require
+  webdav: WebDAVAuthorization
+  @Prop
+  @Require
+  functions: WebDAVPickerRowFunctions
+  @State
+  private webdavClient: WebDAVClient | undefined = undefined
+  @State
+  private showVirtualPicker: boolean = false
+
+  aboutToAppear(): void {
+    this.webdavClient = createClientByData(this.webdav)
+  }
+
+  build() {
+    Row() {
+      Button() {
+        Row() {
+          Image(getIcon($r("app.media.webdav_icon")))
+            .width("48vp")
+            .height("48vp")
+            .margin(12)
+            .border({
+              width: 1,
+              radius: 12,
+              color: $r("app.color.icon_fourth")
+            })
+          Text(this.webdav.displayName)
+            .fontColor($r("app.color.font_primary"))
+          Blank()
+            .layoutWeight(1)
+        }
+        .alignItems(VerticalAlign.Center)
+      }
+      .bindSheet(
+        $$this.showVirtualPicker,
+        this.virtualFilePicker,
+        {
+          showClose: false,
+          preferType: SheetType.CENTER,
+          shadow: ShadowStyle.OUTER_DEFAULT_MD,
+          enableOutsideInteractive: false,
+          shouldDismiss: (sheetDismiss) => {
+            sheetDismiss.dismiss()
+            console.error(`virtual picker should dismiss triggered`)
+            this.showVirtualPicker = false
+          },
+          onWillDismiss: () => {
+            console.error(`virtual picker will dismiss triggered`)
+            this.showVirtualPicker = false
+          },
+          backgroundColor: $r("app.color.rohy_settings_background")
+        }
+      )
+      .onClick(() => {
+        this.functions.clear()
+        this.showVirtualPicker = true
+      })
+      .width("100%")
+      .height("100%")
+      .borderRadius(10)
+      .type(ButtonType.Normal)
+      .backgroundColor($r("app.color.rohy_settings_card"))
+    }
+    .height("64vp")
+    .width("100%")
+  }
+
+  @Builder
+  virtualFilePicker() {
+    VirtualFilePicker({
+      title: this.webdav.displayName,
+      fileSystem: {
+        listFiles: (path: string) => {
+          return new Promise((resultReturner) => {
+            this.webdavClient!.authenticate()
+              .then((result) => {
+                this.webdavClient!.listDirectory(path)
+                  .then((webdavFiles) => {
+                    let files: VirtualNode[] = []
+                    for (let webdavFile of webdavFiles) {
+                      files.push({
+                        name: webdavFile.path,
+                        isDirectory: webdavFile.isDirectory
+                      })
+                    }
+                    resultReturner(files)
+                  })
+              })
+          })
+        },
+        onFileSelected: (path: string) => {
+
+        }
+      },
+      show: this.showVirtualPicker
+    })
   }
 }

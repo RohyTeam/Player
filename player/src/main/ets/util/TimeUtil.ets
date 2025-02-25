@@ -1,6 +1,9 @@
 import { divideAndFloor } from './MathUtil'
 
 export function convertNumberToDurationString(num: number): string {
+  if (num == 0) {
+    return "未知"
+  }
   let left = num
   let hours = divideAndFloor(left, 60 * 60 * 1000)
   left = left - hours * (60 * 60 * 1000)

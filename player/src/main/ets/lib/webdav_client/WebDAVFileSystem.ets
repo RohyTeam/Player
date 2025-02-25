@@ -1,5 +1,5 @@
-import { XMLParser } from "@ifbear/fast-xml-parser"
-import { StrUtil } from "@pura/harmony-utils"
+import { XMLParser } from '@ifbear/fast-xml-parser'
+import { StrUtil } from '@pura/harmony-utils'
 
 const arrayTags = [
   "response",
@@ -23,6 +23,7 @@ export interface WebDAVFile {
   displayName: string
   path: string
   fullPath: string
+  isDirectory: boolean
 
 }
 
@@ -46,7 +47,8 @@ export function parseFiles(parentDir: string, xmlData: ArrayBuffer): WebDAVFile[
       return {
         displayName: name,
         path: path,
-        fullPath: `${fullpath}${path}`
+        fullPath: `${fullpath}${path}`,
+        isDirectory: response.propstat.prop.resourcetype != ""
       } as WebDAVFile
     })
 }

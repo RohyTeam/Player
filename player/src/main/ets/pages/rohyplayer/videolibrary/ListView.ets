@@ -4,7 +4,7 @@ import { DialogHelper } from '@pura/harmony-dialog'
 import { VideoDeleter } from './VideoLibraryPage'
 import { fileIo, fileShare, hash } from '@kit.CoreFileKit'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
-import { DateUtil, FileUtil } from '@pura/harmony-utils'
+import { FileUtil } from '@pura/harmony-utils'
 import { convertNumberToDurationString } from '../../../util/TimeUtil'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { openVideo } from '../../../util/PlayerUtil'
@@ -280,12 +280,9 @@ struct VideoRow {
                 })
               Blank()
                 .layoutWeight(1)
-              Text($r("app.string.duration",
-                `${convertNumberToDurationString(this.video.length)}`))
-                .fontSize(10)
-                .fontColor($r("app.color.font_secondary"))
               Row() {
-                Text($r("app.string.import_time", DateUtil.getFormatDateStr(this.video.addedTime)))
+                Text($r("app.string.duration",
+                  `${convertNumberToDurationString(this.video.length)}`))
                   .fontSize(10)
                   .fontColor($r("app.color.font_secondary"))
                   .margin({
@@ -310,7 +307,8 @@ struct VideoRow {
                       right: "10vp"
                     })
                 } else {
-                  Text($r("app.string.played_status_playing", `${Math.ceil(this.video.played / this.video.length * 100)}`))
+                  Text($r("app.string.played_status_playing",
+                    `${Math.ceil(this.video.played / this.video.length * 100)}`))
                     .fontSize(10)
                     .fontColor($r("app.color.font_secondary"))
                     .margin({

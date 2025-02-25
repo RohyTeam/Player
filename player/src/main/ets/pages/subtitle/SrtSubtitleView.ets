@@ -1,10 +1,9 @@
-import { SubtitleEntity } from "../../entity/SubtitleEntity"
-import { SrtSubtitleLine } from "../../lib/srt/srt"
-import { LengthMetricsUnit } from "@kit.ArkUI"
+import { SubtitleEntity } from '../../entity/SubtitleEntity'
+import { SrtSubtitleLine } from '../../lib/srt/srt'
+import { LengthMetricsUnit } from '@kit.ArkUI'
 
 @Component
 export struct SimpleSrtSubtitleView {
-
   @Prop
   subtitle: SubtitleEntity
   @Prop
@@ -33,19 +32,16 @@ export struct SimpleSrtSubtitleView {
     .width("100%")
     .height("100%")
   }
-
 }
 
 @Component
 export struct SubtitleLine {
-
   @Prop
   text: string
   @Prop
   actualWidth: number
   @Prop
   actualHeight: number
-
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings, LengthMetricsUnit.PX)
 
@@ -68,5 +64,4 @@ export struct SubtitleLine {
         this.context.fillText(this.text, x, y)
       })
   }
-
 }

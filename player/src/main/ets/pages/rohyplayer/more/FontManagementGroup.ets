@@ -22,21 +22,30 @@ export struct FontManagementGroup {
   build() {
     Column() {
       Row() {
-        SymbolGlyph($r("sys.symbol.chevron_right_circle"))
-          .fontColor([$r("app.color.icon_primary")])
-          .margin({
-            left: 16,
-            top: 12,
-            bottom: 12,
-            right: 4
-          })
-          .rotate({
-            z: 1,
-            angle: this.showingFonts ? 90 : 0
-          })
-          .width(24)
-          .height(24)
-          .fontSize(24)
+        Stack() {
+          SymbolGlyph($r("sys.symbol.arrowtriangle_down_fill"))
+            .fontColor([$r("app.color.icon_primary")])
+            .margin({
+              left: 8,
+              top: 8,
+              bottom: 8
+            })
+            .width(24)
+            .height(24)
+            .fontSize(24)
+        }
+        .width(40)
+        .height(40)
+        .margin({
+          left: 4,
+          top: 4,
+          bottom: 4
+        })
+        .rotate({
+          z: 1,
+          angle: !this.showingFonts ? -90 : 0
+        })
+
         Text($r("app.string.page_more_subheader_fonts"))
           .fontSize(20)
           .fontWeight(FontWeight.Bold)

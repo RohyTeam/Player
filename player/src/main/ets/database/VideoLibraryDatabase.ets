@@ -335,7 +335,7 @@ export class VideoLibraryDatabase {
           hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
           return;
         }
-        fileShare.revokePermission([ // 移除持久化授权，保护用户文件安全
+        fileShare.revokePermission([// 移除持久化授权，保护用户文件安全
           {
             uri: uri,
             operationMode: 0b1

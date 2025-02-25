@@ -18,6 +18,4 @@ export interface CategoryFolder {
 
 }
 
-export interface CategoryScan {
-
-}
+export interface CategoryScan {}

@@ -8,6 +8,8 @@ import { FontLibraryDatabase } from '../../database/FontLibraryDatabase';
 import { FileStatus } from '../../entity/VideoEntity';
 import { fileShare, hash } from '@kit.CoreFileKit';
 import { FileUtil } from '@pura/harmony-utils';
+import { WebDAVs } from '../../entity/WebDAVEntity';
+import { WebDAVDatabase } from '../../database/WebDAVDatabase';
 
 export class FooterTab {
   private name: Resource;
@@ -53,6 +55,8 @@ export struct RohyPlayerHome {
   ]
   @State
   fonts: Fonts = []
+  @State
+  webdavs: WebDAVs = []
 
   aboutToAppear(): void {
     FontLibraryDatabase.unsafeList(getContext(this)).then((fonts) => {
@@ -83,6 +87,10 @@ export struct RohyPlayerHome {
         }
       }
     })
+    WebDAVDatabase.unsafeListWebDAV(getContext(this))
+      .then((webdavs) => {
+        this.webdavs.push(...webdavs)
+      })
   }
 
   @Builder
@@ -122,7 +130,8 @@ export struct RohyPlayerHome {
       }) {
         TabContent() {
           VideoLibraryPage({
-            fonts: this.fonts
+            fonts: this.fonts,
+            webdavs: this.webdavs
           })
         }
         .tabBar(this.BottomTabBuilder(this.tabs[0], 0))
@@ -139,7 +148,8 @@ export struct RohyPlayerHome {
         */
         TabContent() {
           MorePage({
-            fonts: this.fonts
+            fonts: this.fonts,
+            webdavs: this.webdavs
           })
         }
         .tabBar(this.BottomTabBuilder(this.tabs[3], 1))

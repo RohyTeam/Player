@@ -1,18 +1,20 @@
 import { http } from '@kit.NetworkKit'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { JSON, xml } from '@kit.ArkTS'
+import { JSON } from '@kit.ArkTS'
 import { StrUtil } from '@pura/harmony-utils'
 import { rcp } from '@kit.RemoteCommunicationKit'
-import { XMLParser } from '@ifbear/fast-xml-parser'
-import { saveDebugString } from '../../util/PickerUtil'
-import { common } from '@kit.AbilityKit'
 import { parseFiles, WebDAVFile } from './WebDAVFileSystem'
 import { Headers } from '../../entity/Headers'
+import { WebDAVAuthorization } from '../../entity/WebDAVEntity'
 
 export interface WebDAVClient {
 
+  getDisplayName(): string
+
   authenticate(): Promise<boolean>
-  authenticateFile(file: string): Promise<Headers>
+
+  authenticateFile(file: string): Promise<FileResult>
+
   listDirectory(path: string): Promise<Array<WebDAVFile>>
 
 }
@@ -51,13 +53,10 @@ class BasicAuthenticateMethod implements AuthenticateMethod {
       resultReturner(`Basic ${this.token}`)
     })
   }
-
 }
 
 class DigestAuthenticateMethod implements AuthenticateMethod {
-
   type: AuthenticateMethodType = AuthenticateMethodType.Digest
-
   private username: string
   private password: string
 
@@ -72,20 +71,29 @@ class DigestAuthenticateMethod implements AuthenticateMethod {
       // TODO
     })
   }
-
 }
 
 export interface Unauthorized {}
 
+export interface FileResult {
+
+  url: string
+  headers: Headers
+
+}
+
 type JsonValue = string | number | boolean | Record<string, object>
 
+@Observed
 class WebDAVClientImpl implements WebDAVClient {
+  private displayName: string
   private serverUri: string
   private options: LoginOptions
   private authenticateResult: boolean | undefined = undefined
   private authenticateMethod: AuthenticateMethod | undefined = undefined
 
-  constructor(serverUri: string, options: LoginOptions) {
+  constructor(displayName: string, serverUri: string, options: LoginOptions) {
+    this.displayName = displayName
     this.serverUri = serverUri
     if (this.serverUri.endsWith("/")) {
       this.serverUri = this.serverUri.substring(0, this.serverUri.length - 1)
@@ -93,7 +101,11 @@ class WebDAVClientImpl implements WebDAVClient {
     this.options = options
   }
 
-  authenticateFile(file: string): Promise<Headers> {
+  getDisplayName(): string {
+    return this.displayName
+  }
+
+  authenticateFile(file: string): Promise<FileResult> {
     return new Promise((resultReturner) => {
       if (!file.startsWith("/")) {
         file = `/${file}`
@@ -101,11 +113,41 @@ class WebDAVClientImpl implements WebDAVClient {
       let requestUri = `${this.serverUri}${file}`
       this.authenticateMethod?.use(requestUri)
         .then((token) => {
-          resultReturner({
-            headers: {
-              "authorization": token
-            }
-          })
+          let session = rcp.createSession()
+          let headers: rcp.RequestHeaders = {
+            'authorization': token
+          }
+          let request = new rcp.Request(
+            requestUri,
+            'PROPFIND',
+            headers,
+            ''
+          )
+          session.fetch(request)
+            .then((response) => {
+              if (response.statusCode == 200) {
+                resultReturner({
+                  url: requestUri,
+                  headers: {
+                    headers: {
+                      "authorization": token
+                    }
+                  }
+                })
+              } else if (response.statusCode == 302) {
+                resultReturner({
+                  url: response.headers.location!,
+                  headers: {
+                    headers: {
+                      "authorization": token
+                    }
+                  }
+                })
+              }
+            })
+            .catch((error: BusinessError) => {
+              console.error(`error occurs when accessing file: ${JSON.stringify(error)}, ${error.message}`)
+            })
         })
     })
   }
@@ -185,6 +227,9 @@ class WebDAVClientImpl implements WebDAVClient {
 
   authenticate(): Promise<boolean> {
     return new Promise((resultReturner) => {
+      if (this.authenticateMethod != undefined) {
+        resultReturner(true)
+      }
       let methodTestRequest = http.createHttp()
       methodTestRequest.request(this.serverUri)
         .then((methodTestResponse: http.HttpResponse) => {
@@ -229,6 +274,10 @@ class WebDAVClientImpl implements WebDAVClient {
   }
 }
 
-export function createClient(serverUri: string, options: LoginOptions): WebDAVClient {
-  return new WebDAVClientImpl(serverUri, options)
+export function createClient(displayName: string, serverUri: string, options: LoginOptions): WebDAVClient {
+  return new WebDAVClientImpl(displayName, serverUri, options)
+}
+
+export function createClientByData(webdav: WebDAVAuthorization): WebDAVClient {
+  return new WebDAVClientImpl(webdav.displayName, webdav.url, webdav.account)
 }

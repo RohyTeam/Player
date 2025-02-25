@@ -287,6 +287,42 @@
     {
       "name": "settings_less_covering_tips",
       "value": "Enable this option, speeding up and dragging progress bar will have less covering field."
+    },
+    {
+      "name": "connect",
+      "value": "Connect"
+    },
+    {
+      "name": "test_connection",
+      "value": "Test"
+    },
+    {
+      "name": "test_connection_success",
+      "value": "Successfully connected!"
+    },
+    {
+      "name": "test_connection_failed",
+      "value": "Failed to connect!"
+    },
+    {
+      "name": "webdav_dialog_title",
+      "value": "Connect to WebDAV server"
+    },
+    {
+      "name": "webdav_dialog_placeholder_display_name",
+      "value": "Display name"
+    },
+    {
+      "name": "webdav_dialog_placeholder_url",
+      "value": "Address"
+    },
+    {
+      "name": "webdav_dialog_placeholder_username",
+      "value": "Username"
+    },
+    {
+      "name": "webdav_dialog_placeholder_password",
+      "value": "Password"
     }
   ]
 }

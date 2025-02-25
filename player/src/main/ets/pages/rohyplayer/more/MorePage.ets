@@ -10,11 +10,15 @@ import { PreferencesUtil } from '@pura/harmony-utils';
 import { FontManagementGroup } from './FontManagementGroup';
 import { Fonts } from '../../../entity/FontEntity';
 import { common, ConfigurationConstant } from '@kit.AbilityKit';
+import { WebDAVs } from '../../../entity/WebDAVEntity';
+import { WebDAVManagementGroup } from './WebDAVManagementGroup';
 
 @Component
 export struct MorePage {
   @Link
   fonts: Fonts
+  @Link
+  webdavs: WebDAVs
   @State
   showSettings: boolean = false
   @StorageLink('appColorMode')
@@ -26,7 +30,14 @@ export struct MorePage {
   build() {
     Column() {
       this.titleBar($r("app.string.home_tab_more"))
-      List() {
+      List({ space: 12 }) {
+        ListItem() {
+          WebDAVManagementGroup({
+            webdavs: this.webdavs
+          })
+        }
+        .width("100%")
+
         ListItem() {
           FontManagementGroup({
             fonts: this.fonts
@@ -94,7 +105,8 @@ export struct MorePage {
               {
                 title: $r("app.string.color_mode_system"),
                 onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
+                  (getContext(this) as common.UIAbilityContext).config.colorMode =
+                    ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
                   AppStorage.setOrCreate("appColorMode", "system")
                   PreferencesUtil.putSync("colorMode", "system")
                 }
@@ -102,7 +114,8 @@ export struct MorePage {
               {
                 title: $r("app.string.color_mode_light"),
                 onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
+                  (getContext(this) as common.UIAbilityContext).config.colorMode =
+                    ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
                   AppStorage.setOrCreate("appColorMode", "light")
                   PreferencesUtil.putSync("colorMode", "light")
                 }
@@ -110,7 +123,8 @@ export struct MorePage {
               {
                 title: $r("app.string.color_mode_dark"),
                 onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_DARK
+                  (getContext(this) as common.UIAbilityContext).config.colorMode =
+                    ConfigurationConstant.ColorMode.COLOR_MODE_DARK
                   AppStorage.setOrCreate("appColorMode", "dark")
                   PreferencesUtil.putSync("colorMode", "dark")
                 }

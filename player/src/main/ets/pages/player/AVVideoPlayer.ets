@@ -293,9 +293,11 @@ export struct AVVideoPlayer {
                   }
                   .enabled(false)
                   .backgroundColor($r('sys.color.mask_primary'))
+
                   Blank()
                     .layoutWeight(1)
                 }
+
                 Blank()
                   .layoutWeight(4)
               }
@@ -334,9 +336,11 @@ export struct AVVideoPlayer {
                   }
                   .enabled(false)
                   .backgroundColor($r('sys.color.mask_primary'))
+
                   Blank()
                     .layoutWeight(1)
                 }
+
                 Blank()
                   .layoutWeight(4)
               }
@@ -375,9 +379,11 @@ export struct AVVideoPlayer {
                   }
                   .enabled(false)
                   .backgroundColor($r('sys.color.mask_primary'))
+
                   Blank()
                     .layoutWeight(1)
                 }
+
                 Blank()
                   .layoutWeight(4)
               }
@@ -416,9 +422,11 @@ export struct AVVideoPlayer {
                   }
                   .enabled(false)
                   .backgroundColor($r('sys.color.mask_primary'))
+
                   Blank()
                     .layoutWeight(1)
                 }
+
                 Blank()
                   .layoutWeight(2)
               }

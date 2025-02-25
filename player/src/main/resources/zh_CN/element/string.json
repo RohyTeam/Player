@@ -271,6 +271,42 @@
     {
       "name": "settings_less_covering_tips",
       "value": "开启此选项后，长按加速和调整进度条时的提示将不会覆盖整个屏幕。"
+    },
+    {
+      "name": "connect",
+      "value": "连接"
+    },
+    {
+      "name": "test_connection",
+      "value": "测试"
+    },
+    {
+      "name": "test_connection_success",
+      "value": "成功连接！"
+    },
+    {
+      "name": "test_connection_failed",
+      "value": "连接失败！"
+    },
+    {
+      "name": "webdav_dialog_title",
+      "value": "连接至 WebDAV 服务器"
+    },
+    {
+      "name": "webdav_dialog_placeholder_display_name",
+      "value": "显示名称"
+    },
+    {
+      "name": "webdav_dialog_placeholder_url",
+      "value": "地址"
+    },
+    {
+      "name": "webdav_dialog_placeholder_username",
+      "value": "用户名"
+    },
+    {
+      "name": "webdav_dialog_placeholder_password",
+      "value": "密码"
     }
   ]
 }
