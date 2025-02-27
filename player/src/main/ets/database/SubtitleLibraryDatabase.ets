@@ -85,7 +85,7 @@ export class SubtitleLibraryDatabase {
             return
           }
           if (resultSet.rowCount == 0) {
-            console.error("there are no data in database")
+            console.error("there are no data in subtitles database")
             resultReturner(new Array())
           } else {
             let subtitles = new Array<string>()

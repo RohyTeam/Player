@@ -307,6 +307,10 @@
     {
       "name": "webdav_dialog_placeholder_password",
       "value": "密码"
+    },
+    {
+      "name": "network_not_accessible",
+      "value": "无法访问的网络资源"
     }
   ]
 }

@@ -59,3 +59,10 @@ export function randomString(length: number,
   }
   return result
 }
+
+export function limitStringLength(value: string, maxLength: number): string {
+  if (value.length > maxLength) {
+    return value.substring(0, maxLength)
+  }
+  return value
+}

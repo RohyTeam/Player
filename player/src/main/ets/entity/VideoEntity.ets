@@ -1,91 +1,16 @@
-export interface VideoEntity {
-
-  uri: string,
-  title: string,
-  hash: string,
-  addedTime: number,
-  fileSource: string
-  played: number
-  length: number
-  width: number
-  height: number
-  cover: ArrayBuffer
-
-}
+import { Base64Util, StrUtil } from "@pura/harmony-utils"
 
 export enum FileStatus {
 
   Authorized,
   Importing,
   Disappear,
+  NetworkNotAccessible,
   None
 
 }
 
-export class FileSources {
-  public static readonly LOCAL_FILE = "local_file"
-  public static readonly PHOTOS = "photos"
-}
-
-@Observed
-export class VideoEntityV2Array extends Array<VideoEntityV2> {
-}
-
-@Observed
-export class VideoEntityV2 {
-  uri: string
-  title: string
-  hash: string
-  addedTime: number
-  fileSource: string
-  played: number
-  length: number
-  width: number
-  height: number
-  cover: ArrayBuffer
-  status: FileStatus = FileStatus.None
-
-  constructor(
-    uri: string,
-    title: string,
-    hash: string,
-    addedTime: number,
-    fileSource: string,
-    played: number,
-    length: number,
-    width: number,
-    height: number,
-    cover: ArrayBuffer
-  ) {
-    this.uri = uri
-    this.title = title
-    this.hash = hash
-    this.addedTime = addedTime
-    this.fileSource = fileSource
-    this.played = played
-    this.length = length
-    this.width = width
-    this.height = height
-    this.cover = cover
-  }
-
-  public static fromV1(entity: VideoEntity): VideoEntityV2 {
-    return new VideoEntityV2(
-      entity.uri,
-      entity.title,
-      entity.hash,
-      entity.addedTime,
-      entity.fileSource,
-      entity.played,
-      entity.length,
-      entity.width,
-      entity.height,
-      entity.cover
-    )
-  }
-}
-
-export enum SourceType {
+export enum VideoSourceType {
 
   LOCAL,
   PHOTOS,
@@ -94,10 +19,10 @@ export enum SourceType {
 }
 
 @Observed
-export class VideoSource {
+export abstract class VideoSource {
   uri: string
   title: string
-  type: SourceType
+  type: VideoSourceType
   addedTime: number
   played: number
   length: number
@@ -109,7 +34,7 @@ export class VideoSource {
   constructor(
     uri: string,
     title: string,
-    type: SourceType,
+    type: VideoSourceType,
     addedTime: number,
     played: number,
     length: number,
@@ -127,15 +52,20 @@ export class VideoSource {
     this.height = height
     this.cover = cover
   }
+
+  public abstract identity(): string
+
 }
 
-@Observed
-export class LocalVideoSource extends VideoSource {
+export abstract class LocalVideoSource extends VideoSource {
+
   hash: string
+  private identityCache: string | undefined = undefined
 
   constructor(
     uri: string,
     title: string,
+    type: VideoSourceType,
     addedTime: number,
     played: number,
     length: number,
@@ -147,7 +77,7 @@ export class LocalVideoSource extends VideoSource {
     super(
       uri,
       title,
-      SourceType.LOCAL,
+      VideoSourceType.LOCAL,
       addedTime,
       played,
       length,
@@ -157,11 +87,18 @@ export class LocalVideoSource extends VideoSource {
     )
     this.hash = hash
   }
+
+  public identity(): string {
+    if (this.identityCache == undefined) {
+      this.identityCache = Base64Util.encodeToStrSync(StrUtil.strToUint8Array(`${this.uri}:${this.hash}`))
+    }
+    return this.identityCache
+  }
+
 }
 
 @Observed
-export class PhotosVideoSource extends VideoSource {
-  hash: string
+export class FileVideoSource extends LocalVideoSource {
 
   constructor(
     uri: string,
@@ -177,20 +114,50 @@ export class PhotosVideoSource extends VideoSource {
     super(
       uri,
       title,
-      SourceType.LOCAL,
+      VideoSourceType.LOCAL,
       addedTime,
       played,
       length,
       width,
       height,
-      cover
+      cover,
+      hash
     )
-    this.hash = hash
+  }
+}
+
+@Observed
+export class PhotosVideoSource extends LocalVideoSource {
+
+  constructor(
+    uri: string,
+    title: string,
+    addedTime: number,
+    played: number,
+    length: number,
+    width: number,
+    height: number,
+    cover: ArrayBuffer,
+    hash: string
+  ) {
+    super(
+      uri,
+      title,
+      VideoSourceType.PHOTOS,
+      addedTime,
+      played,
+      length,
+      width,
+      height,
+      cover,
+      hash
+    )
   }
 }
 
 export class WebDAVVideoSource extends VideoSource {
   serverUrl: string
+  private identityCache: string | undefined = undefined
 
   constructor(
     uri: string,
@@ -206,7 +173,7 @@ export class WebDAVVideoSource extends VideoSource {
     super(
       uri,
       title,
-      SourceType.LOCAL,
+      VideoSourceType.WEBDAV,
       addedTime,
       played,
       length,
@@ -216,8 +183,16 @@ export class WebDAVVideoSource extends VideoSource {
     )
     this.serverUrl = serverUrl
   }
+
+  public identity(): string {
+    if (this.identityCache == undefined) {
+      this.identityCache = Base64Util.encodeToStrSync(StrUtil.strToUint8Array(`${this.serverUrl}:${this.uri}`))
+    }
+    return this.identityCache
+  }
+
 }
 
 @Observed
-export class VideosV2 extends Array<VideoSource> {
+export class Videos extends Array<VideoSource> {
 }

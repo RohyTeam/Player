@@ -2,11 +2,16 @@ import { LengthMetrics, promptAction } from '@kit.ArkUI'
 import { fileIo, hash, picker } from '@kit.CoreFileKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
-import { FileStatus, VideoEntityV2, VideoEntityV2Array } from '../../../entity/VideoEntity'
+import { FileStatus, LocalVideoSource,
+  VideoSourceType,
+  Videos,
+  VideoSource,
+  WebDAVVideoSource,
+  FileVideoSource} from '../../../entity/VideoEntity'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
 import { ListView } from './ListView'
 import { getIcon } from '../../../util/IconUtil'
-import { FileUtil, PreferencesUtil } from '@pura/harmony-utils'
+import { Base64Util, FileUtil, PreferencesUtil, StrUtil } from '@pura/harmony-utils'
 import { StringArray } from '../../../entity/Arrays'
 import { showAlert } from '../../../util/AlertUtil'
 import { GridView } from './GridView'
@@ -27,12 +32,13 @@ import { Fonts } from '../../../entity/FontEntity'
 import { WebDAVAuthorization, WebDAVs } from '../../../entity/WebDAVEntity'
 import { VirtualFilePicker, VirtualNode } from '../../components/VirtualFilePicker'
 import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
+import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 
 export interface VideoDeleter {
 
-  action: (video: VideoEntityV2) => void
-  renamer: (video: VideoEntityV2, name: string) => void
-  updater: (video: VideoEntityV2, played: number) => void
+  action: (video: VideoSource) => void
+  renamer: (video: VideoSource, name: string) => void
+  updater: (video: VideoSource, played: number) => void
 
 }
 
@@ -47,13 +53,13 @@ export struct VideoLibraryPage {
   @State
   showPickerSelection: boolean = false
   @State
-  private videos: VideoEntityV2Array = []
+  private videos: Videos = []
   @State
   private covers: Record<string, PixelMap> = {}
   @State
-  private loaded: boolean = false
+  private webdavClients: Record<string, WebDAVClient> = {}
   @State
-  private hashes: StringArray = []
+  private loaded: boolean = false
   @State
   private gridOrList: boolean = true // true for List, false for grid
   @State
@@ -66,23 +72,49 @@ export struct VideoLibraryPage {
   pageController: NavPathStack
   @StorageLink(`updateVideoTime`)
   @Watch("videoUpdater")
-  toBeUpdatedVideoHash: string = ""
+  toBeUpdatedVideoIdentity: string = ""
 
   videoUpdater(changedPropertyName: string) {
     console.error(`changes detected, ready to update video`)
-    VideoLibraryDatabase.tryFetchByHash(getContext(this), this.toBeUpdatedVideoHash)
-      .then((updatedVideo) => {
-        if (updatedVideo) {
-          let index = this.videos.findIndex((video) => video.hash == this.toBeUpdatedVideoHash)
+    if (this.toBeUpdatedVideoIdentity.startsWith("local:")) {
+      let identity = this.toBeUpdatedVideoIdentity.substring(6)
+      let fileHash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(identity)).split(":")[1]
+      VideoLibraryDatabase.tryFetchByHash(getContext(this), fileHash)
+        .then((updatedVideo) => {
+          if (updatedVideo != undefined) {
+            let index = this.videos.findIndex((video) => video instanceof LocalVideoSource && video.hash == fileHash)
+            if (index >= 0) {
+              this.videos[index].played = updatedVideo.played
+              this.sort()
+            } else { // 说明通过别的办法添加了新的视频
+              // this.videos.push(VideoEntityV2.fromV1(updatedVideo))
+              // TODO: 这个逻辑目前碰不到
+              this.sort()
+            }
+          }
+        })
+    } else if (this.toBeUpdatedVideoIdentity.startsWith("webdav:")) {
+      let identity = this.toBeUpdatedVideoIdentity.substring(7)
+      let splitData = identity.split(":")
+      let serverUrl = splitData[0]
+      let location = splitData[1]
+      WebDAVDatabase.tryFetchByLocationAndUrl(
+        getContext(this),
+        location,
+        serverUrl
+      ).then((updatedVideo) => {
+        if (updatedVideo != undefined) {
+          let index = this.videos.findIndex((video) => video instanceof WebDAVVideoSource && video.identity() == identity)
           if (index >= 0) {
             this.videos[index].played = updatedVideo.played
             this.sort()
-          } else { // 说明通过别的办法添加了新的视频
-            this.videos.push(VideoEntityV2.fromV1(updatedVideo))
+          } else {
+            // FIXME: 理论上不会出现
             this.sort()
           }
         }
       })
+    }
   }
 
   @Builder
@@ -402,28 +434,43 @@ export struct VideoLibraryPage {
                 searching: this.searching,
                 videos: this.videos,
                 covers: this.covers,
+                webdavs: this.webdavs,
+                webdavClients: this.webdavClients,
                 deleter: {
                   action: (video) => {
-                    VideoLibraryDatabase.deleteByHash(getContext(this), video.uri, video.hash)
-                      .then(() => {
-                        video.status = FileStatus.Disappear
-                        let index = this.videos.indexOf(video)
-                        let hashIndex = this.hashes.indexOf(video.hash)
-                        this.videos.splice(index, 1)
-                        this.hashes.splice(hashIndex, 1)
-                        this.sort()
-                      })
+                    if (video.type == VideoSourceType.LOCAL || video.type == VideoSourceType.PHOTOS) {
+                      let localVideo = video as LocalVideoSource
+                      VideoLibraryDatabase.deleteByHash(getContext(this), video.uri, localVideo.hash)
+                        .then(() => {
+                          video.status = FileStatus.Disappear
+                          let index = this.videos.indexOf(video)
+                          this.videos.splice(index, 1)
+                          this.sort()
+                        })
+                    } else if (video.type == VideoSourceType.WEBDAV) {
+                      let webdavVideo = video as WebDAVVideoSource
+                      WebDAVDatabase.deleteVideoByLocationAndUrl(getContext(this), webdavVideo.uri, webdavVideo.serverUrl)
+                        .then(() => {
+                          video.status = FileStatus.Disappear
+                          let index = this.videos.indexOf(video)
+                          this.videos.splice(index, 1)
+                          this.sort()
+                        })
+                    }
                   },
                   renamer: (video, name) => {
                     video.title = name
                     this.sort()
                   },
                   updater: (video, played) => {
-                    VideoLibraryDatabase.updatePlayedByHash(getContext(this), video.hash, played)
-                      .then(() => {
-                        video.played = played
-                        this.sort()
-                      })
+                    if (video.type == VideoSourceType.LOCAL || video.type == VideoSourceType.PHOTOS) {
+                      let localVideo = video as LocalVideoSource
+                      VideoLibraryDatabase.updatePlayedByHash(getContext(this), localVideo.hash, played)
+                        .then(() => {
+                          video.played = played
+                          this.sort()
+                        })
+                    }
                   }
                 },
               })
@@ -433,28 +480,43 @@ export struct VideoLibraryPage {
                 searching: this.searching,
                 videos: this.videos,
                 covers: this.covers,
+                webdavs: this.webdavs,
+                webdavClients: this.webdavClients,
                 deleter: {
                   action: (video) => {
-                    VideoLibraryDatabase.deleteByHash(getContext(this), video.uri, video.hash)
-                      .then(() => {
-                        video.status = FileStatus.Disappear
-                        let index = this.videos.indexOf(video)
-                        let hashIndex = this.hashes.indexOf(video.hash)
-                        this.videos.splice(index, 1)
-                        this.hashes.splice(hashIndex, 1)
-                        this.sort()
-                      })
+                    if (video.type == VideoSourceType.LOCAL || video.type == VideoSourceType.PHOTOS) {
+                      let localVideo = video as LocalVideoSource
+                      VideoLibraryDatabase.deleteByHash(getContext(this), video.uri, localVideo.hash)
+                        .then(() => {
+                          video.status = FileStatus.Disappear
+                          let index = this.videos.indexOf(video)
+                          this.videos.splice(index, 1)
+                          this.sort()
+                        })
+                    } else if (video.type == VideoSourceType.WEBDAV) {
+                      let webdavVideo = video as WebDAVVideoSource
+                      WebDAVDatabase.deleteVideoByLocationAndUrl(getContext(this), webdavVideo.uri, webdavVideo.serverUrl)
+                        .then(() => {
+                          video.status = FileStatus.Disappear
+                          let index = this.videos.indexOf(video)
+                          this.videos.splice(index, 1)
+                          this.sort()
+                        })
+                    }
                   },
                   renamer: (video, name) => {
                     video.title = name
                     this.sort()
                   },
                   updater: (video, played) => {
-                    VideoLibraryDatabase.updatePlayedByHash(getContext(this), video.hash, played)
-                      .then(() => {
-                        video.played = played
-                        this.sort()
-                      })
+                    if (video.type == VideoSourceType.LOCAL || video.type == VideoSourceType.PHOTOS) {
+                      let localVideo = video as LocalVideoSource
+                      VideoLibraryDatabase.updatePlayedByHash(getContext(this), localVideo.hash, played)
+                        .then(() => {
+                          video.played = played
+                          this.sort()
+                        })
+                    }
                   }
                 },
               })
@@ -471,10 +533,13 @@ export struct VideoLibraryPage {
       this.gridOrList = PreferencesUtil.getSync("gridOrList", true) as boolean
       VideoLibraryDatabase.unsafeList(getContext(this)).then((videos) => {
         console.error(`${videos.length} videos loaded`)
-        this.videos.push(...videos.map((v1) => VideoEntityV2.fromV1(v1)))
-        this.hashes.push(...videos.map((v1) => v1.hash))
+        this.videos.push(...videos)
         this.loaded = true
       })
+      WebDAVDatabase.unsafeListVideos(getContext(this))
+        .then((videos) => {
+          this.videos.push(...videos)
+        })
     })
     .backgroundColor($r("app.color.comp_background_focus"))
     .height("100%")
@@ -601,9 +666,10 @@ export struct VideoLibraryPage {
                   })
                 WebDAVPickerRow({
                   webdav: webdav,
+                  videos: this.videos,
                   functions: {
                     clear: () => {
-                      // this.showPickerSelection = false
+                      this.showPickerSelection = false
                     }
                   }
                 })
@@ -790,6 +856,7 @@ export struct VideoLibraryPage {
               }
             }
           })
+          SettingsDivider()
           SettingsSwitch({
             settingsTitle: $r("app.string.settings_status_bar"),
             settingsTips: $r("app.string.settings_status_bar_desc"),
@@ -948,8 +1015,9 @@ export struct VideoLibraryPage {
           let photoFile = fileIo.openSync(photoUri)
           let pre1 = await hashByFd(photoFile.fd, "sha256")
           let pre2 = await hashByFd(photoFile.fd, "sha256")
+          // IMPORTANT: 上面这两行并非无意义操作，对于图库的的文件进行哈希校验存在误差，一般第三次之后的值不会有问题
           let photoHash = await hashByFd(photoFile.fd, "sha256")
-          if (this.hashes.indexOf(photoHash) >= 0) {
+          if (this.videos.findIndex((video) => video instanceof LocalVideoSource && video.hash == photoHash) >= 0) {
             duplicated = true
           } else {
             let predicates = new dataSharePredicates.DataSharePredicates()
@@ -964,10 +1032,8 @@ export struct VideoLibraryPage {
                     .then((photoAsset: photoAccessHelper.PhotoAsset) => {
                       VideoLibraryDatabase.addFromPhotos(getContext(this), photoUri, photoAsset.displayName, photoHash)
                         .then((video) => {
-                          let videoV2 = VideoEntityV2.fromV1(video)
-                          videoV2.status = FileStatus.Authorized
-                          this.videos.push(videoV2)
-                          this.hashes.push(video.hash)
+                          video.status = FileStatus.Authorized
+                          this.videos.push(video)
                         })
                     })
                 }
@@ -1005,37 +1071,34 @@ export struct VideoLibraryPage {
             continue
           }
           let hashValue = await hash.hash(FileUtil.getFilePath(fileUrl), "sha256")
-          if (this.hashes.indexOf(hashValue) >= 0) {
+          if (this.videos.findIndex((video) => video instanceof LocalVideoSource && video.hash == hashValue) >= 0) {
             duplicated = true
           } else {
-            let videoV2 = new VideoEntityV2(
-              "",
+            let videoSource = new FileVideoSource(
               "",
               "",
               0,
-              "",
               -1,
               -1,
               -1,
               -1,
-              new ArrayBuffer(0)
+              new ArrayBuffer(0),
+              ""
             )
-            videoV2.status = FileStatus.Importing
-            this.videos.push(videoV2)
+            videoSource.status = FileStatus.Importing
+            this.videos.push(videoSource)
             VideoLibraryDatabase.addFromLocalFile(getContext(this), fileUrl)
               .then((video) => {
-                videoV2.uri = video.uri
-                videoV2.title = video.title
-                videoV2.hash = video.hash
-                videoV2.addedTime = video.addedTime
-                videoV2.fileSource = video.fileSource
-                videoV2.length = video.length
-                videoV2.width = video.width
-                videoV2.height = video.height
-                videoV2.cover = video.cover
-                videoV2.status = FileStatus.Authorized
+                videoSource.uri = video.uri
+                videoSource.title = video.title
+                videoSource.hash = video.hash
+                videoSource.addedTime = video.addedTime
+                videoSource.length = video.length
+                videoSource.width = video.width
+                videoSource.height = video.height
+                videoSource.cover = video.cover
+                videoSource.status = FileStatus.Authorized
                 this.sort()
-                this.hashes.push(video.hash)
               })
           }
         }
@@ -1108,6 +1171,8 @@ struct WebDAVPickerRow {
   @Prop
   @Require
   functions: WebDAVPickerRowFunctions
+  @Link
+  videos: Videos
   @State
   private webdavClient: WebDAVClient | undefined = undefined
   @State
@@ -1186,7 +1251,9 @@ struct WebDAVPickerRow {
                     let files: VirtualNode[] = []
                     for (let webdavFile of webdavFiles) {
                       files.push({
+                        displayName: webdavFile.displayName,
                         name: decodeURI(webdavFile.path),
+                        size: webdavFile.size,
                         isDirectory: webdavFile.isDirectory
                       })
                     }
@@ -1195,8 +1262,26 @@ struct WebDAVPickerRow {
               })
           })
         },
-        onFileSelected: (path: string) => {
-
+        visibleFilter: (node: VirtualNode) => {
+          if (node.isDirectory) {
+            return true
+          }
+          return node.name.endsWith(".mp4") || node.name.endsWith(".mkv")
+        },
+        onFileSelected: (path: string, node: VirtualNode) => {
+          this.showVirtualPicker = false
+          console.error(`which file was selected: ${path}`)
+          WebDAVDatabase.addVideo(getContext(this), this.webdav.url, path, node.displayName)
+            .then((video) => {
+              if (this.videos.findIndex((savedVideo) => savedVideo instanceof WebDAVVideoSource &&
+              savedVideo.serverUrl == video.serverUrl &&
+              savedVideo.uri == video.uri)) {
+                showAlert(this.getUIContext(), $r("app.string.duplicated_imports"),
+                  $r("app.string.duplicated_imports_desc"))
+              } else {
+                this.videos.push(video)
+              }
+            })
         }
       },
       show: this.showVirtualPicker

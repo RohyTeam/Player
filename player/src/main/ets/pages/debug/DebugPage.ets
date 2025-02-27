@@ -127,17 +127,24 @@ export struct DebugPage {
         listFiles: (path: string) => {
           return new Promise((resultReturner) => {
             let files: VirtualNode[] = [{
+              displayName: "测试目录",
               name: "测试目录",
+              size: -1,
               isDirectory: true
             }]
             for (let i = 0; i < 4; i++) {
               files.push({
+                displayName: "测试文件",
                 name: `测试文件 ${randomString(8)}`,
+                size: -1,
                 isDirectory: false
               })
             }
             resultReturner(files)
           })
+        },
+        visibleFilter: (node: VirtualNode) => {
+          return true
         },
         onFileSelected: () => {
         }

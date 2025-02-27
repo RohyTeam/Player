@@ -23,6 +23,7 @@ export interface WebDAVFile {
   displayName: string
   path: string
   fullPath: string
+  size: number
   isDirectory: boolean
 
 }
@@ -54,11 +55,13 @@ export function parseFiles(parentDir: string, xmlData: ArrayBuffer): WebDAVFile[
     if (path.endsWith("/")) {
       path = path.substring(0, path.length - 1) // 去掉末尾的 /
     }
+    let isDirectory = response.propstat.prop.resourcetype != ""
     webDAVFiles.push({
       displayName: name,
       path: path,
       fullPath: `${fullpath}${path}`,
-      isDirectory: response.propstat.prop.resourcetype != ""
+      size: isDirectory ? -1 : response.propstat.prop.getcontentlength || -1,
+      isDirectory: isDirectory
     })
   }
 

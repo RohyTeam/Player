@@ -4,7 +4,7 @@ import { convertNumberToDurationString } from '../../util/TimeUtil';
 import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
-import { FileUtil } from '@pura/harmony-utils';
+import { Base64Util, FileUtil, StrUtil } from '@pura/harmony-utils';
 import { showAlert } from '../../util/AlertUtil';
 import { SubtitleEntity, Subtitles, SubtitleType } from '../../entity/SubtitleEntity';
 import { AudioEntity, Audios } from '../../entity/AudioEntity';
@@ -20,6 +20,8 @@ import { parseSrtSubtitle } from '../../lib/srt/srt';
 import { SimpleSrtSubtitleView } from '../subtitle/SrtSubtitleView';
 import { Want } from '@kit.AbilityKit';
 import { Headers } from '../../entity/Headers';
+import { WebDAVDatabase } from '../../database/WebDAVDatabase';
+import { PlayerMetadata } from '../../util/PlayerUtil';
 
 @Observed
 export class VideoState {
@@ -58,7 +60,10 @@ export struct IjkVideoPlayer {
   url: string
   @Prop
   @Require
-  hash: string
+  identity: string
+  @Prop
+  @Require
+  private metadata: PlayerMetadata
   @Prop
   @Require
   videoHolder: string
@@ -192,7 +197,7 @@ export struct IjkVideoPlayer {
   private landscapeView: boolean = true
 
   shouldDieWatcher(changedPropertyName: string) {
-    this.shouldReallyDie = this.videoAbility_shouldDie.indexOf(this.hash) >= 0
+    this.shouldReallyDie = this.videoAbility_shouldDie.indexOf(this.identity) >= 0
   }
 
   autoShutdownSwitchWatcher(changedPropertyName: string) {
@@ -211,7 +216,7 @@ export struct IjkVideoPlayer {
                 VideoAbility.getContext().terminateSelf()
                   .then(() => {
                     let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                    let index = shouldDies.indexOf(this.hash)
+                    let index = shouldDies.indexOf(this.identity)
                     if (index >= 0) {
                       shouldDies.slice(index, 1)
                       AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -222,7 +227,7 @@ export struct IjkVideoPlayer {
             VideoAbility.getContext().terminateSelf()
               .then(() => {
                 let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                let index = shouldDies.indexOf(this.hash)
+                let index = shouldDies.indexOf(this.identity)
                 if (index >= 0) {
                   shouldDies.slice(index, 1)
                   AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -513,7 +518,7 @@ export struct IjkVideoPlayer {
 
       Stack() {
         XComponent({
-          id: `ijkvideoplayer_${this.hash}`,
+          id: `ijkvideoplayer_${this.identity}`,
           type: XComponentType.SURFACE,
           libraryname: 'ijkplayer_napi',
           controller: this.xComponentController
@@ -526,7 +531,7 @@ export struct IjkVideoPlayer {
               if (this.isContinuation) {
                 this.parameterStartPaused = AppStorage.get("videoPaused") || undefined
               }
-              this.initIjkPlayer(context, `ijkvideoplayer_${this.hash}`)
+              this.initIjkPlayer(context, `ijkvideoplayer_${this.identity}`)
             }
           })
           .height(this.calculateHeightPercent(this.surfaceFillingMode))
@@ -556,7 +561,7 @@ export struct IjkVideoPlayer {
                   VideoAbility.getContext().terminateSelf()
                     .then(() => {
                       let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                      let index = shouldDies.indexOf(this.hash)
+                      let index = shouldDies.indexOf(this.identity)
                       if (index >= 0) {
                         shouldDies.slice(index, 1)
                         AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -567,7 +572,7 @@ export struct IjkVideoPlayer {
               VideoAbility.getContext().terminateSelf()
                 .then(() => {
                   let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                  let index = shouldDies.indexOf(this.hash)
+                  let index = shouldDies.indexOf(this.identity)
                   if (index >= 0) {
                     shouldDies.slice(index, 1)
                     AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -624,7 +629,7 @@ export struct IjkVideoPlayer {
                 VideoAbility.getContext().terminateSelf()
                   .then(() => {
                     let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                    let index = shouldDies.indexOf(this.hash)
+                    let index = shouldDies.indexOf(this.identity)
                     if (index >= 0) {
                       shouldDies.slice(index, 1)
                       AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -635,7 +640,7 @@ export struct IjkVideoPlayer {
             VideoAbility.getContext().terminateSelf()
               .then(() => {
                 let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                let index = shouldDies.indexOf(this.hash)
+                let index = shouldDies.indexOf(this.identity)
                 if (index >= 0) {
                   shouldDies.slice(index, 1)
                   AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -1458,10 +1463,21 @@ export struct IjkVideoPlayer {
 
   aboutToDisappear(): void {
     if (!this.isContinuation) {
-      VideoLibraryDatabase.updatePlayedByHash(getContext(this), this.hash, this.currentPosition)
-        .then(() => {
-          AppStorage.setOrCreate("updateVideoTime", this.hash)
-        })
+      if (this.url.startsWith("file://")) {
+        let hash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")[1]
+        VideoLibraryDatabase.updatePlayedByHash(getContext(this), hash, this.currentPosition)
+          .then(() => {
+            AppStorage.setOrCreate("updateVideoTime", `local:${this.identity}`)
+          })
+      } else if (this.url.startsWith("http://") || this.url.startsWith("https://")) {
+        let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")
+        let serverUrl = splitData[0]
+        let location = splitData[1]
+        WebDAVDatabase.updatePlayedByLocationAndUrl(getContext(this), this.currentPosition, location, serverUrl)
+          .then(() => {
+            AppStorage.setOrCreate("updateVideoTime", `webdav:${this.identity}`)
+          })
+      }
     }
     if (!this.backTrigger) {
       this.backTrigger = true
@@ -1476,7 +1492,7 @@ export struct IjkVideoPlayer {
             VideoAbility.getContext().terminateSelf()
               .then(() => {
                 let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-                let index = shouldDies.indexOf(this.hash)
+                let index = shouldDies.indexOf(this.identity)
                 if (index >= 0) {
                   shouldDies.slice(index, 1)
                   AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -1487,7 +1503,7 @@ export struct IjkVideoPlayer {
         VideoAbility.getContext().terminateSelf()
           .then(() => {
             let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
-            let index = shouldDies.indexOf(this.hash)
+            let index = shouldDies.indexOf(this.identity)
             if (index >= 0) {
               shouldDies.slice(index, 1)
               AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
@@ -1719,6 +1735,8 @@ export struct IjkVideoPlayer {
   }
 
   private async createIjkPlayer(context: Object, id: string) {
+    console.error(`creating ijk player, playing video url is ${this.url}`)
+    console.error(`video url start with "file://"? ${this.url.startsWith("file://")}`)
     let ijkPlayer = new IjkMediaPlayer()
     this.ijkPlayer = ijkPlayer
 
@@ -1727,7 +1745,7 @@ export struct IjkVideoPlayer {
     ijkPlayer.native_setup();
 
     if (this.url.startsWith("file://media")) {
-      console.error("opening file")
+      console.error("opening photos videos")
       let file = fileIo.openSync(this.url)
       ijkPlayer.setDataSource(file.path)
     } else if (this.url.startsWith("file://")) {
@@ -1785,6 +1803,7 @@ export struct IjkVideoPlayer {
       let file = fileIo.openSync(this.url.substring(4))
       ijkPlayer.setDataSource(file.path)
     } else if (this.url.startsWith("https://") || this.url.startsWith("http://")) { // 网络视频
+      console.error("opening web videos")
       let headers = JSON.parse(this.want.parameters!.headers as string) as Headers
       let map = new Map<string, string>()
       for (let key of Object.keys(headers.headers)) {
@@ -1792,6 +1811,8 @@ export struct IjkVideoPlayer {
       }
       ijkPlayer.setDataSource(this.url)
       ijkPlayer.setDataSourceHeader(map)
+    } else {
+      console.error(`how could you enter the else branket?`)
     }
 
     // options
@@ -1837,6 +1858,17 @@ export struct IjkVideoPlayer {
       onVideoSizeChanged: (width: number, height: number) => {
         this.surfaceWidth = width
         this.surfaceHeight = height
+
+        if (this.url.startsWith("http://") || this.url.startsWith("https://")) {
+          if (this.metadata.width == -1 || this.metadata.height == -1) {
+            let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")
+            let serverUrl = splitData[0]
+            let location = splitData[1]
+            WebDAVDatabase.updateWidthAndHeightByLocationAndUrl(getContext(this), this.surfaceWidth, this.surfaceHeight, location, serverUrl)
+              .then(() => {
+              })
+          }
+        }
       }
     })
 
@@ -1889,6 +1921,17 @@ export struct IjkVideoPlayer {
         }
 
         this.max = ijkPlayer.getDuration()
+
+        if (this.url.startsWith("http://") || this.url.startsWith("https://")) {
+          if (this.metadata.length == -1) {
+            let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")
+            let serverUrl = splitData[0]
+            let location = splitData[1]
+            WebDAVDatabase.updateLengthByLocationAndUrl(getContext(this), ijkPlayer.getDuration(), location, serverUrl)
+              .then(() => {
+              })
+          }
+        }
 
         if (this.parameterStartTime != -1) {
           ijkPlayer.seekTo(`${this.parameterStartTime}`)

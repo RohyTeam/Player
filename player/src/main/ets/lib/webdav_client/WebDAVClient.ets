@@ -9,6 +9,8 @@ import { WebDAVAuthorization } from '../../entity/WebDAVEntity'
 
 export interface WebDAVClient {
 
+  getAuthorizationResult(): boolean | undefined
+
   getDisplayName(): string
 
   authenticate(): Promise<boolean>
@@ -101,6 +103,10 @@ class WebDAVClientImpl implements WebDAVClient {
     this.options = options
   }
 
+  getAuthorizationResult(): boolean | undefined {
+    return this.authenticateResult
+  }
+
   getDisplayName(): string {
     return this.displayName
   }
@@ -110,44 +116,60 @@ class WebDAVClientImpl implements WebDAVClient {
       if (!file.startsWith("/")) {
         file = `/${file}`
       }
+      console.error(`ready to authenticate file`)
       let requestUri = `${this.serverUri}${file}`
+      console.error(`request uri is ${requestUri}`)
+      requestUri = encodeURI(requestUri)
       this.authenticateMethod?.use(requestUri)
         .then((token) => {
-          let session = rcp.createSession()
-          let headers: rcp.RequestHeaders = {
-            'authorization': token
-          }
-          let request = new rcp.Request(
-            requestUri,
-            'PROPFIND',
-            headers,
-            ''
-          )
-          session.fetch(request)
-            .then((response) => {
-              if (response.statusCode == 200) {
-                resultReturner({
-                  url: requestUri,
-                  headers: {
-                    headers: {
-                      "authorization": token
-                    }
-                  }
-                })
-              } else if (response.statusCode == 302) {
-                resultReturner({
-                  url: response.headers.location!,
-                  headers: {
-                    headers: {
-                      "authorization": token
-                    }
-                  }
-                })
+          console.error(`token good`)
+          resultReturner({
+            url: requestUri,
+            headers: {
+              headers: {
+                "authorization": token
               }
-            })
-            .catch((error: BusinessError) => {
-              console.error(`error occurs when accessing file: ${JSON.stringify(error)}, ${error.message}`)
-            })
+            }
+          })
+          /*let httpRequest = http.createHttp()
+          httpRequest.request(
+              requestUri,
+              {
+                method: http.RequestMethod.GET,
+                header: {
+                  'authorization': token
+                }
+              },
+              (err: BusinessError, response: http.HttpResponse) => {
+                if (!err) {
+                  console.error(`response status code is ${response.responseCode}`)
+                  if (response.responseCode == 200) {
+                    resultReturner({
+                      url: requestUri,
+                      headers: {
+                        headers: {
+                          "authorization": token
+                        }
+                      }
+                    })
+                  } else if (response.responseCode == 302) {
+                    resultReturner({
+                      url: response.header['location']!,
+                      headers: {
+                        headers: {
+                          "authorization": token
+                        }
+                      }
+                    })
+                  }
+
+                  httpRequest.destroy();
+                } else {
+                  console.error(`error occurs when accessing file: ${JSON.stringify(err)}, ${err.message}`)
+                  httpRequest.destroy();
+                }
+              }
+            )*/
         })
     })
   }

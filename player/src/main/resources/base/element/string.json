@@ -323,6 +323,10 @@
     {
       "name": "webdav_dialog_placeholder_password",
       "value": "Password"
+    },
+    {
+      "name": "network_not_accessible",
+      "value": "Not accessible network resource"
     }
   ]
 }

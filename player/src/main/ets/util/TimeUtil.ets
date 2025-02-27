@@ -1,7 +1,7 @@
 import { divideAndFloor } from './MathUtil'
 
 export function convertNumberToDurationString(num: number): string {
-  if (num == 0) {
+  if (num == -1) {
     return "未知"
   }
   let left = num

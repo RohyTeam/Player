@@ -1,6 +1,8 @@
 export interface VirtualNode {
 
+  displayName: string
   name: string
+  size: number
   isDirectory: boolean
 
 }
@@ -8,7 +10,8 @@ export interface VirtualNode {
 export interface VirtualFileSystem {
 
   listFiles: (path: string) => Promise<VirtualNode[]>
-  onFileSelected: (path: string) => void
+  visibleFilter: (node: VirtualNode) => boolean
+  onFileSelected: (path: string, node: VirtualNode) => void
 
 }
 
@@ -32,27 +35,44 @@ export struct FileTreeView {
       List() {
         if (this.loaded) {
           ForEach(this.fileSystemCache, (virtualFile: VirtualNode) => {
-            ListItem() {
-              Text(virtualFile.name)
-                .margin(16)
-            }
-            .onAppear(() => {
-              console.error(`trying to show files`)
-            })
-            .onClick(() => {
-              console.error(`going to another directory`)
-              if (virtualFile.isDirectory) {
-                this.filePickerPageController.pushPath({
-                  name: this.path.length > 1 ? this.path + "/" + virtualFile.name : `/${virtualFile.name}`
-                })
-              } else {
-                this.fileSystem.onFileSelected(this.path.length > 1 ? this.path + "/" + virtualFile.name :
-                  `/${virtualFile.name}`)
+            if (this.fileSystem.visibleFilter(virtualFile)) {
+              ListItem() {
+                Row() {
+                  Image($r(virtualFile.isDirectory ? "app.media.hidisk_icon_folder" : "app.media.hidisk_icon_video"))
+                    .width(40)
+                    .height(40)
+                    .margin({
+                      left: 8,
+                      top: 8,
+                      bottom: 8
+                    })
+                  Text(virtualFile.name)
+                    .margin({
+                      left: 8,
+                      top: 16,
+                      bottom: 16
+                    })
+                }
+                .width("100%")
               }
-            })
-            .align(Alignment.Start)
-            .backgroundColor($r("app.color.rohy_settings_background"))
-            .width("90%")
+              .onAppear(() => {
+                console.error(`trying to show files`)
+              })
+              .onClick(() => {
+                console.error(`going to another directory`)
+                if (virtualFile.isDirectory) {
+                  this.filePickerPageController.pushPath({
+                    name: this.path.length > 1 ? this.path + "/" + virtualFile.name : `/${virtualFile.name}`
+                  })
+                } else {
+                  this.fileSystem.onFileSelected(this.path.length > 1 ? this.path + "/" + virtualFile.name :
+                    `/${virtualFile.name}`, virtualFile)
+                }
+              })
+              .align(Alignment.Start)
+              .backgroundColor($r("app.color.rohy_settings_background"))
+              .width("90%")
+            }
           })
         } else {
           ListItem() {

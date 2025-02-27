@@ -91,7 +91,7 @@ export class FontLibraryDatabase {
             return
           }
           if (resultSet.rowCount == 0) {
-            console.error("there are no data in database")
+            console.error("there are no data in fonts database")
             resultReturner(new Array())
           } else {
             let fonts = new Array<FontEntity>()

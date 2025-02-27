@@ -3,7 +3,9 @@ import { relationalStore } from '@kit.ArkData';
 import hilog from '@ohos.hilog';
 import { fileIo, fileShare, hash } from '@kit.CoreFileKit';
 import { FileUtil } from '@pura/harmony-utils';
-import { VideoEntity } from '../entity/VideoEntity';
+import { FileVideoSource,
+  LocalVideoSource,
+  PhotosVideoSource } from '../entity/VideoEntity';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { media } from '@kit.MediaKit';
 import { pixelMapToArrayBuffer } from '../util/ImageUtil';
@@ -64,7 +66,7 @@ export class VideoLibraryDatabase {
     })
   }
 
-  public static tryFetchByHash(context: common.Context, hashValue: string): Promise<VideoEntity | undefined> {
+  public static tryFetchByHash(context: common.Context, hashValue: string): Promise<LocalVideoSource | undefined> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -84,19 +86,35 @@ export class VideoLibraryDatabase {
             resultReturner(undefined)
           } else {
             resultSet.goToFirstRow()
-            let video: VideoEntity = {
-              uri: resultSet.getString(resultSet.getColumnIndex("LOCATION")),
-              title: resultSet.getString(resultSet.getColumnIndex("TITLE")),
-              addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
-              hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH")),
-              fileSource: resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase(),
-              played: resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
-              length: resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
-              width: resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
-              height: resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
-              cover: resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer
+            if (resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase() == "local_file") {
+              resultReturner(
+                new FileVideoSource(
+                  resultSet.getString(resultSet.getColumnIndex("LOCATION")),
+                  resultSet.getString(resultSet.getColumnIndex("TITLE")),
+                  resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
+                  resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
+                  resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
+                  resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
+                  resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
+                  resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer,
+                  resultSet.getString(resultSet.getColumnIndex("FILE_HASH"))
+                )
+              )
+            } else {
+              resultReturner(
+                new PhotosVideoSource(
+                  resultSet.getString(resultSet.getColumnIndex("LOCATION")),
+                  resultSet.getString(resultSet.getColumnIndex("TITLE")),
+                  resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
+                  resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
+                  resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
+                  resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
+                  resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
+                  resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer,
+                  resultSet.getString(resultSet.getColumnIndex("FILE_HASH"))
+                )
+              )
             }
-            resultReturner(video)
           }
         })
       })
@@ -104,7 +122,7 @@ export class VideoLibraryDatabase {
 
   }
 
-  public static addFromLocalFile(context: common.Context, uri: string): Promise<VideoEntity> {
+  public static addFromLocalFile(context: common.Context, uri: string): Promise<FileVideoSource> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -163,18 +181,17 @@ export class VideoLibraryDatabase {
                                         }
                                       ).then(() => {
                                         avMetadataExtractor.release()
-                                        resultReturner({
-                                          uri: uri,
-                                          title: FileUtil.getFileName(uri),
-                                          addedTime: Date.now(),
-                                          hash: hashValue,
-                                          fileSource: "local_file",
-                                          played: -1,
-                                          length: length,
-                                          width: width,
-                                          height: height,
-                                          cover: buffer
-                                        })
+                                        resultReturner(new FileVideoSource(
+                                          uri,
+                                          FileUtil.getFileName(uri),
+                                          Date.now(),
+                                          -1,
+                                          length,
+                                          width,
+                                          height,
+                                          buffer,
+                                          hashValue
+                                        ))
                                       })
                                         .catch((error: BusinessError) => {
                                           console.error(`error occurs when processing data (inserting to library), code: ${error.code}, message: ${error.message}`)
@@ -216,7 +233,7 @@ export class VideoLibraryDatabase {
   }
 
   public static addFromPhotos(context: common.Context, uri: string, displayName: string,
-    photoHash: string): Promise<VideoEntity> {
+    photoHash: string): Promise<PhotosVideoSource> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -263,18 +280,17 @@ export class VideoLibraryDatabase {
                               }
                             ).then(() => {
                               avMetadataExtractor.release()
-                              resultReturner({
-                                uri: uri,
-                                title: FileUtil.getFileName(uri),
-                                addedTime: Date.now(),
-                                hash: photoHash,
-                                fileSource: "photos",
-                                played: -1,
-                                length: length,
-                                width: width,
-                                height: height,
-                                cover: buffer
-                              })
+                              resultReturner(new PhotosVideoSource(
+                                uri,
+                                FileUtil.getFileName(uri),
+                                Date.now(),
+                                -1,
+                                length,
+                                width,
+                                height,
+                                buffer,
+                                photoHash
+                              ))
                             })
                           })
                       })
@@ -286,7 +302,7 @@ export class VideoLibraryDatabase {
     })
   }
 
-  public static unsafeList(context: common.Context): Promise<Array<VideoEntity>> {
+  public static unsafeList(context: common.Context): Promise<Array<LocalVideoSource>> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -303,22 +319,38 @@ export class VideoLibraryDatabase {
             console.error("there are no data in database")
             resultReturner(new Array())
           } else {
-            let videos = new Array<VideoEntity>()
+            let videos = new Array<LocalVideoSource>()
 
             while (resultSet.goToNextRow()) {
-              let video: VideoEntity = {
-                uri: resultSet.getString(resultSet.getColumnIndex("LOCATION")),
-                title: resultSet.getString(resultSet.getColumnIndex("TITLE")),
-                addedTime: resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
-                hash: resultSet.getString(resultSet.getColumnIndex("FILE_HASH")),
-                fileSource: resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase(),
-                played: resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
-                length: resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
-                width: resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
-                height: resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
-                cover: resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer
+              if (resultSet.getString(resultSet.getColumnIndex("FILE_SOURCE")).toLowerCase() == "local_file") {
+                videos.push(
+                  new FileVideoSource(
+                    resultSet.getString(resultSet.getColumnIndex("LOCATION")),
+                    resultSet.getString(resultSet.getColumnIndex("TITLE")),
+                    resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
+                    resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
+                    resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
+                    resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
+                    resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
+                    resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer,
+                    resultSet.getString(resultSet.getColumnIndex("FILE_HASH"))
+                  )
+                )
+              } else {
+                videos.push(
+                  new PhotosVideoSource(
+                    resultSet.getString(resultSet.getColumnIndex("LOCATION")),
+                    resultSet.getString(resultSet.getColumnIndex("TITLE")),
+                    resultSet.getLong(resultSet.getColumnIndex("ADDED_TIME")),
+                    resultSet.getLong(resultSet.getColumnIndex("PLAYED_LENGTH")),
+                    resultSet.getLong(resultSet.getColumnIndex("VIDEO_LENGTH")),
+                    resultSet.getLong(resultSet.getColumnIndex("VIDEO_WIDTH")),
+                    resultSet.getLong(resultSet.getColumnIndex("VIDEO_HEIGHT")),
+                    resultSet.getBlob(resultSet.getColumnIndex("VIDEO_COVER")).buffer as ArrayBuffer,
+                    resultSet.getString(resultSet.getColumnIndex("FILE_HASH"))
+                  )
+                )
               }
-              videos.push(video)
             }
 
             resultReturner(videos)

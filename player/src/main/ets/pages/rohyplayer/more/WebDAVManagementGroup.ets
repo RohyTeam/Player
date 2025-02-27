@@ -341,7 +341,7 @@ struct WebDAVRow {
                 }
                 this.deleted = true
                 this.webdav.died = true
-                WebDAVDatabase.deleteByUrl(getContext(this), this.webdav.url)
+                WebDAVDatabase.deleteWebdavByUrl(getContext(this), this.webdav.url)
               }
             },
             secondaryButton: {

@@ -1,10 +1,15 @@
-import { FileSources, FileStatus, VideoEntityV2, VideoEntityV2Array } from '../../../entity/VideoEntity'
+import { FileStatus,
+  VideoSourceType,
+  Videos,
+  VideoSource,
+  LocalVideoSource,
+  WebDAVVideoSource} from '../../../entity/VideoEntity'
 import common from '@ohos.app.ability.common'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { VideoDeleter } from './VideoLibraryPage'
 import { fileIo, fileShare, hash } from '@kit.CoreFileKit'
 import { convertNumberToDurationString } from '../../../util/TimeUtil'
-import { FileUtil } from '@pura/harmony-utils'
+import { Base64Util, FileUtil, StrUtil } from '@pura/harmony-utils'
 import { LengthMetrics } from '@kit.ArkUI'
 import { DialogHelper } from '@pura/harmony-dialog'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
@@ -13,6 +18,10 @@ import { showAlert } from '../../../util/AlertUtil'
 import { arrayBufferToPixelMap } from '../../../util/ImageUtil'
 import { Fonts } from '../../../entity/FontEntity'
 import SubtitleManager from 'librohy_subtitle.so'
+import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
+import { WebDAVs } from '../../../entity/WebDAVEntity'
+import { limitStringLength } from '../../../util/StringUtil'
+import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 
 @Component
 export struct GridView {
@@ -21,11 +30,15 @@ export struct GridView {
   @Prop
   searching: string
   @ObjectLink
-  videos: VideoEntityV2Array
+  videos: Videos
   @Prop
   deleter: VideoDeleter
   @Link
   covers: Record<string, PixelMap>
+  @Link
+  webdavs: WebDAVs
+  @Link
+  webdavClients: Record<string, WebDAVClient>
   @StorageLink('currentWidthBreakpoint')
   currentWidthBreakpoint: string = BreakpointConstants.BREAKPOINT_LG;
 
@@ -37,7 +50,7 @@ export struct GridView {
           regularSize: [1, 1]
         }
       ) {
-        ForEach(this.videos, (video: VideoEntityV2) => {
+        ForEach(this.videos, (video: VideoSource) => {
           if (this.searching.length == 0 ||
             video.title.indexOf(this.searching) >= 0 && video.status != FileStatus.Disappear) {
             GridItem() {
@@ -46,12 +59,14 @@ export struct GridView {
                 deleter: this.deleter,
                 covers: this.covers,
                 video: video,
+                webdavClients: this.webdavClients
               })
                 .onAppear(() => {
                   if (video.status == FileStatus.Authorized) {
                     this.convertCover(video)
                   } else if (video.status == FileStatus.None) {
-                    if (video.fileSource == FileSources.LOCAL_FILE) {
+                    this.convertCover(video)
+                    if (video.type == VideoSourceType.LOCAL) {
                       fileShare.activatePermission([{
                         uri: video.uri,
                         operationMode: 0b1
@@ -59,23 +74,21 @@ export struct GridView {
                         .then(() => {
                           hash.hash(FileUtil.getFilePath(video.uri), "sha256")
                             .then((fileHash) => {
-                              if (fileHash != video.hash) {
+                              if (fileHash != (video as LocalVideoSource).hash) {
                                 video.status = FileStatus.Disappear
                                 this.deleter.action(video)
                               } else {
                                 if (video.length == -1) {
                                   VideoLibraryDatabase.updateVersion3ByHash(
                                     getContext(this),
-                                    video.hash,
+                                    (video as LocalVideoSource).hash,
                                     video.uri
                                   )
                                     .then(() => {
                                       video.status = FileStatus.Authorized
-                                      this.convertCover(video)
                                     })
                                 } else {
                                   video.status = FileStatus.Authorized
-                                  this.convertCover(video)
                                 }
                               }
                             })
@@ -84,29 +97,57 @@ export struct GridView {
                           video.status = FileStatus.Disappear
                           this.deleter.action(video)
                         })
-                    } else if (video.fileSource == FileSources.PHOTOS) {
+                    } else if (video.type == VideoSourceType.PHOTOS) {
                       // 由于用户无法直接修改视频在相册里的名称（除非删除）所以只验证文件是否存在，而不验证是否对的上哈希值
                       fileIo.open(video.uri)
                         .then((file) => {
                           if (video.length == -1) {
                             VideoLibraryDatabase.updateVersion3ByHash(
                               getContext(this),
-                              video.hash,
+                              (video as LocalVideoSource).hash,
                               video.uri
                             )
                               .then(() => {
                                 video.status = FileStatus.Authorized
-                                this.convertCover(video)
                               })
                           } else {
                             video.status = FileStatus.Authorized
-                            this.convertCover(video)
                           }
                         })
                         .catch(() => {
                           video.status = FileStatus.Disappear
                           this.deleter.action(video)
                         })
+                    } else if (video.type == VideoSourceType.WEBDAV) {
+                      let webdavVideo = video as WebDAVVideoSource
+                      if (this.webdavClients[webdavVideo.serverUrl] == undefined) {
+                        let webdavIndex = this.webdavs.findIndex((auth) => auth.url == webdavVideo.serverUrl)
+                        if (webdavIndex < 0) {
+                          video.status = FileStatus.NetworkNotAccessible
+                          // 网络视频不进行删除处理，因为用户可能处于离线环境
+                          return
+                        }
+                        this.webdavClients[webdavVideo.serverUrl] = createClientByData(this.webdavs[webdavIndex])
+                      }
+                      let webdavClient = this.webdavClients[webdavVideo.serverUrl]
+                      if (webdavClient.getAuthorizationResult() == undefined) {
+                        webdavClient.authenticate()
+                          .then((result) => {
+                            if (result) {
+                              video.status = FileStatus.Authorized
+                            } else {
+                              video.status = FileStatus.NetworkNotAccessible
+                              // 网络视频不进行删除处理，因为用户可能处于离线环境
+                            }
+                          })
+                      } else {
+                        if (webdavClient.getAuthorizationResult()) {
+                          video.status = FileStatus.Authorized
+                        } else {
+                          video.status = FileStatus.NetworkNotAccessible
+                          // 网络视频不进行删除处理，因为用户可能处于离线环境
+                        }
+                      }
                     }
                   }
                 })
@@ -144,11 +185,11 @@ export struct GridView {
     .height("100%")
   }
 
-  private convertCover(video: VideoEntityV2) {
-    if (this.covers[video.hash] == undefined) {
+  private convertCover(video: VideoSource) {
+    if (this.covers[video.identity()] == undefined) {
       arrayBufferToPixelMap(video.cover)
         .then((pixelMap) => {
-          this.covers[video.hash] = pixelMap
+          this.covers[video.identity()] = pixelMap
         })
     }
   }
@@ -162,60 +203,42 @@ struct VideoRow {
   @Prop
   deleter: VideoDeleter
   @ObjectLink
-  video: VideoEntityV2
+  video: VideoSource
   @Link
   covers: Record<string, PixelMap>
+  @Link
+  webdavClients: Record<string, WebDAVClient>
 
   build() {
-    if (this.video.status == FileStatus.Authorized) {
-      Row() {
-        Button() {
-          Column() {
-            if (this.covers[this.video.hash] != undefined) {
-              Image(this.covers[this.video.hash])
+    if (!(this.video.status == FileStatus.Importing ||
+      (this.video instanceof WebDAVVideoSource && this.webdavClients[this.video.serverUrl] == undefined))) {
+      if (this.video.status == FileStatus.NetworkNotAccessible) {
+        Row() {
+          Button() {
+            Column() {
+              Image($r("app.media.network_not_accessible"))
                 .width("100%")
                 .aspectRatio(4 / 3)
                 .borderRadius(10)
-            }
-            Text(this.video.title)
-              .maxLines(1)
-              .textOverflow({
-                overflow: TextOverflow.Ellipsis
-              })
-              .fontSize(16)
-              .margin({
-                left: "8vp",
-                right: "8vp",
-                top: "4vp"
-              })
-            Text($r("app.string.duration",
-              `${convertNumberToDurationString(this.video.length)}`))
-              .fontSize(10)
-              .fontColor($r("app.color.font_secondary"))
-              .margin({
-                left: "8vp",
-                right: "8vp",
-              })
-            if (this.video.played == -1) {
-              Text($r("app.string.played_status_no"))
+              Text($r("app.string.network_not_accessible"))
+                .maxLines(1)
+                .textOverflow({
+                  overflow: TextOverflow.Ellipsis
+                })
+                .fontSize(16)
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                  top: "4vp"
+                })
+              Text($r("app.string.network_not_accessible"))
                 .fontSize(10)
                 .fontColor($r("app.color.font_secondary"))
                 .margin({
                   left: "8vp",
                   right: "8vp",
-                  bottom: "8vp"
                 })
-            } else if (this.video.played >= this.video.length) {
-              Text($r("app.string.played_status_all"))
-                .fontSize(10)
-                .fontColor($r("app.color.font_secondary"))
-                .margin({
-                  left: "8vp",
-                  right: "8vp",
-                  bottom: "8vp"
-                })
-            } else {
-              Text($r("app.string.played_status_playing", `${Math.ceil(this.video.played / this.video.length * 100)}`))
+              Text($r("app.string.network_not_accessible"))
                 .fontSize(10)
                 .fontColor($r("app.color.font_secondary"))
                 .margin({
@@ -224,42 +247,147 @@ struct VideoRow {
                   bottom: "8vp"
                 })
             }
+            .alignItems(HorizontalAlign.Start)
           }
-          .alignItems(HorizontalAlign.Start)
+          .bindContextMenu(this.contextMenu, ResponseType.LongPress)
+          .type(ButtonType.Normal)
+          .margin(4)
+          .borderRadius(10)
+          .backgroundColor($r("app.color.rohy_card"))
         }
-        .onClick(() => {
-          fileIo.open(this.video.uri)
-            .then(() => {
-              for (let font of this.fonts) {
-                if (font.on && font.status == FileStatus.Authorized) {
-                  let file = fileIo.openSync(font.uri)
-                  const arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size);
-                  fileIo.readSync(file.fd, arrayBuffer)
-                  SubtitleManager.Subtitle_AddMemoryFont(font.familyName, arrayBuffer)
-                }
+        .borderRadius(12)
+        .backgroundColor($r("app.color.rohy_card"))
+      } else {
+        Row() {
+          Button() {
+            Column() {
+              if (this.covers[this.video.identity()] != undefined) {
+                Image(this.covers[this.video.identity()])
+                  .width("100%")
+                  .aspectRatio(4 / 3)
+                  .borderRadius(10)
               }
-              if (this.video.played >= this.video.length) {
-                AppStorage.setOrCreate("videoPosition", 0)
+              Text(this.video.title)
+                .maxLines(1)
+                .textOverflow({
+                  overflow: TextOverflow.Ellipsis
+                })
+                .fontSize(16)
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                  top: "4vp"
+                })
+              Text($r("app.string.duration",
+                `${convertNumberToDurationString(this.video.length)}`))
+                .fontSize(10)
+                .fontColor($r("app.color.font_secondary"))
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                })
+              if (this.video.played == -1) {
+                Text($r("app.string.played_status_no"))
+                  .fontSize(10)
+                  .fontColor($r("app.color.font_secondary"))
+                  .margin({
+                    left: "8vp",
+                    right: "8vp",
+                    bottom: "8vp"
+                  })
+              } else if (this.video.played >= this.video.length) {
+                Text($r("app.string.played_status_all"))
+                  .fontSize(10)
+                  .fontColor($r("app.color.font_secondary"))
+                  .margin({
+                    left: "8vp",
+                    right: "8vp",
+                    bottom: "8vp"
+                  })
               } else {
-                AppStorage.setOrCreate("videoPosition", this.video.played)
+                Text($r("app.string.played_status_playing", `${Math.ceil(this.video.played / this.video.length * 100)}`))
+                  .fontSize(10)
+                  .fontColor($r("app.color.font_secondary"))
+                  .margin({
+                    left: "8vp",
+                    right: "8vp",
+                    bottom: "8vp"
+                  })
               }
-              openVideo(getContext(this) as common.UIAbilityContext, this.video.uri, this.video.title, this.video.hash)
-            })
-            .catch(() => {
-              this.video.status = FileStatus.Disappear
-              this.deleter.action(this.video)
-              showAlert(this.getUIContext(), $r("app.string.file_deleted"),
-                $r("app.string.file_deleted_desc"))
-            })
-        })
-        .bindContextMenu(this.contextMenu, ResponseType.LongPress)
-        .type(ButtonType.Normal)
-        .margin(4)
-        .borderRadius(10)
+            }
+            .alignItems(HorizontalAlign.Start)
+          }
+          .onClick(() => {
+            if (this.video instanceof LocalVideoSource) {
+              fileIo.open(this.video.uri)
+                .then(() => {
+                  for (let font of this.fonts) {
+                    if (font.on && font.status == FileStatus.Authorized) {
+                      let file = fileIo.openSync(font.uri)
+                      const arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size);
+                      fileIo.readSync(file.fd, arrayBuffer)
+                      SubtitleManager.Subtitle_AddMemoryFont(font.familyName, arrayBuffer)
+                    }
+                  }
+                  if (this.video.played >= this.video.length) {
+                    AppStorage.setOrCreate("videoPosition", 0)
+                  } else {
+                    AppStorage.setOrCreate("videoPosition", this.video.played)
+                  }
+                  openVideo(
+                    getContext(this) as common.UIAbilityContext,
+                    this.video.uri,
+                    this.video.title,
+                    limitStringLength(this.video.identity(), 100),
+                    {
+                      length: this.video.length,
+                      width: this.video.width,
+                      height: this.video.height
+                    }
+                  )
+                })
+                .catch(() => {
+                  this.video.status = FileStatus.Disappear
+                  this.deleter.action(this.video)
+                  showAlert(this.getUIContext(), $r("app.string.file_deleted"),
+                    $r("app.string.file_deleted_desc"))
+                })
+            } else if (this.video instanceof WebDAVVideoSource) {
+              let webdavClient = this.webdavClients[this.video.serverUrl]
+              if (webdavClient == undefined) {
+                return
+              }
+              webdavClient.authenticateFile(this.video.uri)
+                .then((fileResult) => {
+                  if (this.video.played >= this.video.length) {
+                    AppStorage.setOrCreate("videoPosition", 0)
+                  } else {
+                    AppStorage.setOrCreate("videoPosition", this.video.played)
+                  }
+                  openVideo(
+                    getContext(this) as common.UIAbilityContext,
+                    fileResult.url,
+                    this.video.title,
+                    limitStringLength(this.video.identity(),  100),
+                    {
+                      length: this.video.length,
+                      width: this.video.width,
+                      height: this.video.height
+                    },
+                    fileResult.headers
+                  )
+                })
+            }
+          })
+          .bindContextMenu(this.contextMenu, ResponseType.LongPress)
+          .type(ButtonType.Normal)
+          .margin(4)
+          .borderRadius(10)
+          .backgroundColor($r("app.color.rohy_card"))
+        }
+        .borderRadius(12)
         .backgroundColor($r("app.color.rohy_card"))
       }
-      .borderRadius(12)
-      .backgroundColor($r("app.color.rohy_card"))
     } else {
       Row() {
         Blank()
@@ -299,7 +427,20 @@ struct VideoRow {
                 DialogHelper.closeDialog(dialogId)
 
                 if (action == -1) {
-                  VideoLibraryDatabase.updateNameByHash(getContext(this), this.video.hash, value)
+                  if (this.video instanceof LocalVideoSource) {
+                    let hash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.video.identity())).split(":")[1]
+                    VideoLibraryDatabase.updateNameByHash(getContext(this), hash, value)
+                      .then(() => {
+                      })
+                  } else if (this.video instanceof WebDAVVideoSource) {
+                    let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.video.identity())).split(":")
+                    let serverUrl = splitData[0]
+                    let location = splitData[1]
+
+                    WebDAVDatabase.updateNameByLocationAndUrl(getContext(this), value, location, serverUrl)
+                      .then(() => {
+                      })
+                  }
                   this.deleter.renamer(this.video, value)
                 }
               },
