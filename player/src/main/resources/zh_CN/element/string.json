@@ -415,6 +415,18 @@
     {
       "name": "blurtype",
       "value": "模糊类型"
+    },
+    {
+      "name": "reason_keep_background_running",
+      "value": "在后台播放视音频"
+    },
+    {
+      "name": "surfaceFillingMode_4by3",
+      "value": "4：3"
+    },
+    {
+      "name": "surfaceFillingMode_16by9",
+      "value": "16：9"
     }
   ]
 }
