@@ -1,4 +1,4 @@
-import { DebugPage } from './debug/DebugPage';
+import { BlurTestPage, DebugPage, DebugToolbarCustomizer } from './settings/debug/DebugPage';
 import { RohyPlayerHome } from './rohyplayer/HomeScreen';
 
 @Entry
@@ -37,6 +37,10 @@ struct Index {
   PageControllerDestination(name: string) {
     if (name == "debugPage") {
       DebugPage()
+    } else if (name == "toolbarCustomizer") {
+      DebugToolbarCustomizer()
+    } else if (name == "blurTest") {
+      BlurTestPage()
     }
   }
 }

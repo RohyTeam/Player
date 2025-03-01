@@ -3,9 +3,7 @@ import { relationalStore } from '@kit.ArkData';
 import hilog from '@ohos.hilog';
 import { fileIo, fileShare, hash } from '@kit.CoreFileKit';
 import { FileUtil } from '@pura/harmony-utils';
-import { FileVideoSource,
-  LocalVideoSource,
-  PhotosVideoSource } from '../entity/VideoEntity';
+import { FileVideoSource, LocalVideoSource, PhotosVideoSource } from '../entity/VideoEntity';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { media } from '@kit.MediaKit';
 import { pixelMapToArrayBuffer } from '../util/ImageUtil';

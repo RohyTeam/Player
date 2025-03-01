@@ -311,6 +311,110 @@
     {
       "name": "network_not_accessible",
       "value": "无法访问的网络资源"
+    },
+    {
+      "name": "settings_toolbar",
+      "value": "调整控制器"
+    },
+    {
+      "name": "settings_toolbar_topbar",
+      "value": "顶栏"
+    },
+    {
+      "name": "settings_toolbar_bottombar",
+      "value": "底栏"
+    },
+    {
+      "name": "settings_toolbar_edit",
+      "value": "编辑"
+    },
+    {
+      "name": "settings_toolbar_option_adjustment",
+      "value": "调节"
+    },
+    {
+      "name": "settings_toolbar_option_mirror",
+      "value": "镜像"
+    },
+    {
+      "name": "settings_toolbar_option_repeat",
+      "value": "循环"
+    },
+    {
+      "name": "settings_toolbar_option_subtitles",
+      "value": "字幕"
+    },
+    {
+      "name": "settings_toolbar_option_audios",
+      "value": "音轨"
+    },
+    {
+      "name": "settings_toolbar_option_speed",
+      "value": "倍速"
+    },
+    {
+      "name": "settings_toolbar_option_fillingmode",
+      "value": "填充"
+    },
+    {
+      "name": "draggable_customization_tips",
+      "value": "长按并拖动进行修改与排序"
+    },
+    {
+      "name": "draggable_customization_selected",
+      "value": "已选择"
+    },
+    {
+      "name": "draggable_customization_unselected",
+      "value": "未选择"
+    },
+    {
+      "name": "settings_toolbar_appearance",
+      "value": "调整控制器外观"
+    },
+    {
+      "name": "controller_bar",
+      "value": "控制栏"
+    },
+    {
+      "name": "opacity",
+      "value": "不透明度"
+    },
+    {
+      "name": "blur",
+      "value": "模糊度"
+    },
+    {
+      "name": "toolbar_split_property",
+      "value": "顶底栏同步"
+    },
+    {
+      "name": "blurtype_none",
+      "value": "无"
+    },
+    {
+      "name": "blurtype_ultrathin",
+      "value": "超薄"
+    },
+    {
+      "name": "blurtype_thin",
+      "value": "薄"
+    },
+    {
+      "name": "blurtype_regular",
+      "value": "常规"
+    },
+    {
+      "name": "blurtype_thick",
+      "value": "厚"
+    },
+    {
+      "name": "blurtype_ultrathick",
+      "value": "超厚"
+    },
+    {
+      "name": "blurtype",
+      "value": "模糊类型"
     }
   ]
 }

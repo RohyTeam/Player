@@ -327,6 +327,110 @@
     {
       "name": "network_not_accessible",
       "value": "Not accessible network resource"
+    },
+    {
+      "name": "settings_toolbar",
+      "value": "Customize controller"
+    },
+    {
+      "name": "settings_toolbar_topbar",
+      "value": "Top bar"
+    },
+    {
+      "name": "settings_toolbar_bottombar",
+      "value": "Bottom bar"
+    },
+    {
+      "name": "settings_toolbar_edit",
+      "value": "Edit"
+    },
+    {
+      "name": "settings_toolbar_option_adjustment",
+      "value": "Adjustment"
+    },
+    {
+      "name": "settings_toolbar_option_mirror",
+      "value": "Mirror"
+    },
+    {
+      "name": "settings_toolbar_option_repeat",
+      "value": "Repeat"
+    },
+    {
+      "name": "settings_toolbar_option_subtitles",
+      "value": "Subtitles"
+    },
+    {
+      "name": "settings_toolbar_option_audios",
+      "value": "Audios"
+    },
+    {
+      "name": "settings_toolbar_option_speed",
+      "value": "Speed"
+    },
+    {
+      "name": "settings_toolbar_option_fillingmode",
+      "value": "Filling mode"
+    },
+    {
+      "name": "draggable_customization_tips",
+      "value": "Long press and drag to change and order"
+    },
+    {
+      "name": "draggable_customization_selected",
+      "value": "Selected"
+    },
+    {
+      "name": "draggable_customization_unselected",
+      "value": "Unselected"
+    },
+    {
+      "name": "settings_toolbar_appearance",
+      "value": "Adjust toolbar appearance"
+    },
+    {
+      "name": "controller_bar",
+      "value": "Controller bar"
+    },
+    {
+      "name": "opacity",
+      "value": "Opacity"
+    },
+    {
+      "name": "blur",
+      "value": "Blur"
+    },
+    {
+      "name": "toolbar_split_property",
+      "value": "Separate"
+    },
+    {
+      "name": "blurtype_none",
+      "value": "None"
+    },
+    {
+      "name": "blurtype_ultrathin",
+      "value": "Ultra thin"
+    },
+    {
+      "name": "blurtype_thin",
+      "value": "Thin"
+    },
+    {
+      "name": "blurtype_regular",
+      "value": "Regular"
+    },
+    {
+      "name": "blurtype_thick",
+      "value": "Thick"
+    },
+    {
+      "name": "blurtype_ultrathick",
+      "value": "Ultra thick"
+    },
+    {
+      "name": "blurtype",
+      "value": "Blur type"
     }
   ]
 }

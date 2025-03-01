@@ -5,7 +5,7 @@ import { convertNumberToDurationString } from '../../util/TimeUtil';
 import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
-import { Base64Util, FileUtil, StrUtil } from '@pura/harmony-utils';
+import { Base64Util, FileUtil, PreferencesUtil, StrUtil } from '@pura/harmony-utils';
 import { showAlert } from '../../util/AlertUtil';
 import { SubtitleEntity, Subtitles, SubtitleType } from '../../entity/SubtitleEntity';
 import { AudioEntity, Audios } from '../../entity/AudioEntity';
@@ -22,6 +22,9 @@ import { Want } from '@kit.AbilityKit';
 import { Headers } from '../../entity/Headers';
 import { WebDAVDatabase } from '../../database/WebDAVDatabase';
 import { PlayerMetadata } from '../../util/PlayerUtil';
+import { limitStringLength } from '../../util/StringUtil';
+import { ToolbarOptions } from '../../util/ToolbarCustomizationUtil';
+import { StyleConstants } from '../../common/constants/StyleConstants';
 
 @Observed
 export class VideoState {
@@ -51,7 +54,7 @@ export struct AVVideoPlayer {
   identity: string
   @Prop
   @Require
-  private metadata: PlayerMetadata
+  metadata: PlayerMetadata
   @Prop
   @Require
   videoHolder: string
@@ -61,7 +64,6 @@ export struct AVVideoPlayer {
   isContinuation: boolean
   @State
   private avPlayer: media.AVPlayer | undefined = undefined
-  private xComponentController = new XComponentController()
   private videoPlayerGestureModifier = new VideoPlayerGestureModifier(
     () => {
       if (this.avPlayer) {
@@ -180,6 +182,30 @@ export struct AVVideoPlayer {
   private shouldReallyDie: boolean = false
   @State
   private landscapeView: boolean = true
+  @State
+  private topBarSelected: number[] = []
+  @State
+  private bottomBarSelected: number[] = []
+  @State
+  private separate: boolean = false
+  @State
+  private syncBarBlur: number = 0
+  @State
+  private syncBarBlurType: number = 0
+  @State
+  private syncBarOpacity: number = 100
+  @State
+  private topBarBlur: number = 0
+  @State
+  private topBarBlurType: number = 0
+  @State
+  private topBarOpacity: number = 100
+  @State
+  private bottomBarBlur: number = 0
+  @State
+  private bottomBarBlurType: number = 0
+  @State
+  private bottomBarOpacity: number = 100
 
   shouldDieWatcher(changedPropertyName: string) {
     this.shouldReallyDie = this.videoAbility_shouldDie.indexOf(this.identity) >= 0
@@ -227,16 +253,35 @@ export struct AVVideoPlayer {
     Stack() {
       Column() {
         Column() {
-          if (this.settings$statusBar) {
-            this.statusBar()
+          Stack() {
+            Column() {
+              if (this.settings$statusBar) {
+                this.invisibleStatusBar()
+              }
+              this.invisibleTopBar()
+            }
+            .opacity(Math.min(Math.max(0.1, (this.separate ? this.topBarOpacity : this.syncBarOpacity) / 100), 1.0))
+            .foregroundBlurStyle(
+              StyleConstants.BLUR[this.separate ? this.topBarBlurType : this.syncBarBlurType],
+              {
+                scale: Math.max(0, Math.min(1, (this.separate ? this.topBarBlur : this.syncBarBlur) / 100))
+              }
+            )
+            .backgroundColor($r("app.color.comp_background_focus"))
+            .borderRadius({
+              bottomLeft: 16,
+              bottomRight: 16
+            })
+
+            Column() {
+              if (this.settings$statusBar) {
+                this.statusBar()
+              }
+              this.topBar()
+            }
           }
-          this.topBar()
         }
-        .borderRadius({
-          bottomLeft: 16,
-          bottomRight: 16
-        })
-        .backgroundColor($r("app.color.comp_background_focus"))
+        .backgroundColor(Color.Transparent)
         .visibility(this.showControls ? Visibility.Visible : Visibility.Hidden)
         .animation({
           curve: curves.springMotion()
@@ -250,17 +295,34 @@ export struct AVVideoPlayer {
 
         this.surfaceOverlay()
         Column() {
-          this.progressBar()
-          this.bottomBar()
+          Stack() {
+            Column() {
+              this.invisibleProgressBar()
+              this.invisibleBottomBar()
+            }
+            .opacity(Math.min(Math.max(0.1, (this.separate ? this.bottomBarOpacity : this.syncBarOpacity) / 100), 1.0))
+            .foregroundBlurStyle(
+              StyleConstants.BLUR[this.separate ? this.bottomBarBlurType : this.syncBarBlurType],
+              {
+                scale: Math.max(0, Math.min(1, (this.separate ? this.bottomBarBlur : this.syncBarBlur) / 100))
+              }
+            )
+            .backgroundColor($r("app.color.comp_background_focus"))
+            .borderRadius({
+              topLeft: 16,
+              topRight: 16
+            })
+
+            Column() {
+              this.progressBar()
+              this.bottomBar()
+            }
+          }
         }
-        .backgroundColor($r("app.color.comp_background_focus"))
+        .backgroundColor(Color.Transparent)
         .visibility(this.showControls ? Visibility.Visible : Visibility.Hidden)
         .animation({
           curve: curves.springMotion()
-        })
-        .borderRadius({
-          topLeft: 16,
-          topRight: 16
         })
         .transition(
           TransitionEffect.asymmetric(
@@ -488,9 +550,8 @@ export struct AVVideoPlayer {
 
       Stack() {
         XComponent({
-          id: `avvideoplayer_${this.url}`,
-          type: XComponentType.SURFACE,
-          controller: this.xComponentController
+          id: limitStringLength(`avvideoplayer_${this.identity}`, 128),
+          type: XComponentType.SURFACE
         })
           .height(this.calculateHeightPercent(this.surfaceFillingMode))
           .width(this.calculateWidthPercent(this.surfaceFillingMode))
@@ -574,7 +635,24 @@ export struct AVVideoPlayer {
       right: 16,
       top: 8
     })
-    .backgroundColor($r("app.color.comp_background_focus"))
+    .backgroundColor(Color.Transparent)
+    .alignItems(VerticalAlign.Center)
+    .width("100%")
+  }
+
+  @Builder
+  private invisibleStatusBar() {
+    Row() {
+      StatusBar({
+        statusBarBatteryPercent: this.statusBarBatteryPercent
+      })
+    }
+    .padding({
+      left: 16,
+      right: 16,
+      top: 8
+    })
+    .visibility(Visibility.Hidden)
     .alignItems(VerticalAlign.Center)
     .width("100%")
   }
@@ -626,30 +704,16 @@ export struct AVVideoPlayer {
         })
         .layoutWeight(2)
         .fontColor($r("app.color.font_primary"))
-      TopBar_RightAlignedCircleSwitch({
-        icon: $r("sys.symbol.repeat"),
-        switchValue: $repeatPlay,
+
+      ForEach(this.topBarSelected, (optionIndex: number) => {
+        if (optionIndex == ToolbarOptions.TOP_BAR.REPEAT) {
+          this.repeatButton()
+        } else if (optionIndex == ToolbarOptions.TOP_BAR.MIRROR) {
+          this.mirrorButton()
+        } else if (optionIndex == ToolbarOptions.TOP_BAR.ADJUSTMENT) {
+          this.adjustmentButton()
+        }
       })
-      TopBar_RightAlignedCircleSwitch({
-        icon: $r("sys.symbol.trapezoid_and_line_vertical"),
-        switchValue: $mirrorClip,
-      })
-      Button({
-        type: ButtonType.Circle
-      }) {
-        SymbolGlyph($r("sys.symbol.slider_horizontal_2"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-      }
-      .align(Alignment.Center)
-      .margin({
-        left: 12
-      })
-      .width(40)
-      .height(40)
-      .bindMenu(this.slidersMenus,
-        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))
     }
     .padding({
       left: 16,
@@ -657,14 +721,99 @@ export struct AVVideoPlayer {
       top: 12,
       bottom: 12
     })
-    .backgroundColor($r("app.color.comp_background_focus"))
+    .backgroundColor(Color.Transparent)
     .alignItems(VerticalAlign.Center)
-    //.height("15%")
     .width("100%")
     .borderRadius({
       bottomLeft: 16,
       bottomRight: 16
     })
+  }
+
+  @Builder
+  private invisibleTopBar() {
+    Row() {
+      this.leftAlignedCircleButton(
+        $r("sys.symbol.chevron_left"),
+        () => {
+          this.backTrigger = true
+          if (this.url.startsWith("dfs:")) {
+            disconnectDevice(this.videoHolder)
+              .then(() => {
+                VideoAbility.getContext().terminateSelf()
+                  .then(() => {
+                    let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                    let index = shouldDies.indexOf(this.identity)
+                    if (index >= 0) {
+                      shouldDies.slice(index, 1)
+                      AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                    }
+                  })
+              })
+          } else {
+            VideoAbility.getContext().terminateSelf()
+              .then(() => {
+                let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
+                let index = shouldDies.indexOf(this.identity)
+                if (index >= 0) {
+                  shouldDies.slice(index, 1)
+                  AppStorage.setOrCreate("videoAbility_shouldDie", shouldDies)
+                }
+              })
+          }
+        }
+      )
+    }
+    .padding({
+      left: 16,
+      right: 16,
+      top: 12,
+      bottom: 12
+    })
+    .visibility(Visibility.Hidden)
+    .backgroundColor(Color.Transparent)
+    .alignItems(VerticalAlign.Center)
+    .width("100%")
+    .borderRadius({
+      bottomLeft: 16,
+      bottomRight: 16
+    })
+  }
+
+  @Builder
+  private repeatButton() {
+    TopBar_RightAlignedCircleSwitch({
+      icon: $r("sys.symbol.repeat"),
+      switchValue: $repeatPlay,
+    })
+  }
+
+  @Builder
+  private mirrorButton() {
+    TopBar_RightAlignedCircleSwitch({
+      icon: $r("sys.symbol.trapezoid_and_line_vertical"),
+      switchValue: $mirrorClip,
+    })
+  }
+
+  @Builder
+  private adjustmentButton() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph($r("sys.symbol.slider_horizontal_2"))
+        .fontSize(24)
+        .fontColor([$r("app.color.icon_primary")])
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .bindMenu(this.slidersMenus,
+      { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+    .backgroundColor($r("app.color.comp_background_tertiary"))
   }
 
   /**
@@ -733,9 +882,44 @@ export struct AVVideoPlayer {
       topLeft: 16,
       topRight: 16
     })
+    .backgroundColor(Color.Transparent)
+    .alignItems(VerticalAlign.Center)
+    .width("100%")
+  }
+
+  @Builder
+  private invisibleProgressBar() {
+    Row() {
+      Text(`${convertNumberToDurationString(0)}`)
+        .margin({
+          left: 16,
+          right: 4
+        })
+        .fontColor($r("app.color.font_secondary"))
+      Slider({
+        min: 0,
+        max: 1,
+        step: 1,
+        value: 0
+      })
+        .onChange((value, mode: SliderChangeMode) => {
+        })
+        .layoutWeight(1)
+      Text(`${convertNumberToDurationString(10000)}`)
+        .margin({
+          left: 4,
+          right: 16
+        })
+        .fontColor($r("app.color.font_secondary"))
+    }
+    .borderRadius({
+      topLeft: 16,
+      topRight: 16
+    })
     .backgroundColor($r("app.color.comp_background_focus"))
     .alignItems(VerticalAlign.Center)
     .width("100%")
+    .visibility(Visibility.Hidden)
   }
 
   /**
@@ -797,73 +981,36 @@ export struct AVVideoPlayer {
       Blank()
         .layoutWeight(1)
 
-      Button({
-        type: ButtonType.Circle
-      }) {
-        SymbolGlyph($r("sys.symbol.rectangle"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-      }
-      .align(Alignment.Center)
-      .margin({
-        left: 12
+      ForEach(this.bottomBarSelected, (optionIndex: number) => {
+        if (optionIndex == ToolbarOptions.BOTTOM_BAR.FILLING_MODE) {
+          this.fillingModeButton()
+        } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SPEED) {
+          this.speedButton()
+        } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.AUDIOS) {
+          this.audiosButton()
+        } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SUBTITLES) {
+          this.subtitlesButton()
+        }
       })
-      .width(40)
-      .height(40)
-      .bindMenu(this.surfaceFillingModeMenus,
-        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))
+    }
+    .padding({
+      left: 16,
+      right: 16,
+      bottom: 12
+    })
+    .backgroundColor(Color.Transparent)
+    .alignItems(VerticalAlign.Center)
+    .width("100%")
+  }
 
-      Button({
-        type: ButtonType.Circle
-      }) {
-        SymbolGlyph($r("sys.symbol.timer"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-      }
-      .align(Alignment.Center)
-      .margin({
-        left: 12
-      })
-      .width(40)
-      .height(40)
-      .bindMenu(this.speedMenus,
-        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))
-
-      Button({
-        type: ButtonType.Circle
-      }) {
-        SymbolGlyph($r("sys.symbol.speaker_wave_3"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-      }
-      .align(Alignment.Center)
-      .margin({
-        left: 12
-      })
-      .width(40)
-      .height(40)
-      .bindMenu(this.audioMenus,
-        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))
-
-      Button({
-        type: ButtonType.Circle
-      }) {
-        SymbolGlyph($r("sys.symbol.textformat"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-      }
-      .align(Alignment.Center)
-      .margin({
-        left: 12
-      })
-      .width(40)
-      .height(40)
-      .bindMenu(this.subtitleMenus,
-        { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
-      .backgroundColor($r("app.color.comp_background_tertiary"))
+  @Builder
+  private invisibleBottomBar() {
+    Row() {
+      this.leftAlignedCircleButton(
+        $r("sys.symbol.gobackward_10"),
+        () => {
+        }
+      )
     }
     .padding({
       left: 16,
@@ -872,8 +1019,88 @@ export struct AVVideoPlayer {
     })
     .backgroundColor($r("app.color.comp_background_focus"))
     .alignItems(VerticalAlign.Center)
-    //.height("15%")
     .width("100%")
+    .visibility(Visibility.Hidden)
+  }
+
+  @Builder
+  private fillingModeButton() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph($r("sys.symbol.rectangle"))
+        .fontSize(24)
+        .fontColor([$r("app.color.icon_primary")])
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .bindMenu(this.surfaceFillingModeMenus,
+      { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+    .backgroundColor($r("app.color.comp_background_tertiary"))
+  }
+
+  @Builder
+  private speedButton() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph($r("sys.symbol.timer"))
+        .fontSize(24)
+        .fontColor([$r("app.color.icon_primary")])
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .bindMenu(this.speedMenus,
+      { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+    .backgroundColor($r("app.color.comp_background_tertiary"))
+  }
+
+  @Builder
+  private audiosButton() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph($r("sys.symbol.speaker_wave_3"))
+        .fontSize(24)
+        .fontColor([$r("app.color.icon_primary")])
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .bindMenu(this.audioMenus,
+      { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+    .backgroundColor($r("app.color.comp_background_tertiary"))
+  }
+
+  @Builder
+  private subtitlesButton() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph($r("sys.symbol.textformat"))
+        .fontSize(24)
+        .fontColor([$r("app.color.icon_primary")])
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .bindMenu(this.subtitleMenus,
+      { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+    .backgroundColor($r("app.color.comp_background_tertiary"))
   }
 
   @Builder
@@ -1424,19 +1651,60 @@ export struct AVVideoPlayer {
   }
 
   aboutToAppear(): void {
-    console.error(`received screen width & height: ${this.screenWidth}, ${this.screenHeight}`)
+    { // 顶栏
+      let selected = PreferencesUtil.getStringSync('toolbar_landscape_topbar', '')
+      if (selected.length > 0) {
+        if (selected.indexOf(',') > 0) {
+          this.topBarSelected = selected.split(',').map((value) => parseInt(value))
+        } else {
+          this.topBarSelected = [parseInt(selected)]
+        }
+      }
+      this.topBarBlur = PreferencesUtil.getNumberSync('toolbar_topbar_blur', 0)
+      this.topBarBlurType = PreferencesUtil.getNumberSync('toolbar_topbar_blurtype', 0)
+      if (this.topBarBlurType > 5) {
+        this.topBarBlurType = 0
+        PreferencesUtil.putSync('toolbar_topbar_blurtype', 0)
+      }
+      this.topBarOpacity = PreferencesUtil.getNumberSync('toolbar_topbar_opacity', 100)
+    }
+    { // 底栏
+      let selected = PreferencesUtil.getStringSync('toolbar_landscape_bottombar', '')
+      if (selected.length > 0) {
+        if (selected.indexOf(',') > 0) {
+          this.bottomBarSelected = selected.split(',').map((value) => parseInt(value))
+        } else {
+          this.bottomBarSelected = [parseInt(selected)]
+        }
+      }
+      this.bottomBarBlur = PreferencesUtil.getNumberSync('toolbar_bottombar_blur', 0)
+      this.bottomBarBlurType = PreferencesUtil.getNumberSync('toolbar_bottombar_blurtype', 0)
+      if (this.bottomBarBlurType > 5) {
+        this.bottomBarBlurType = 0
+        PreferencesUtil.putSync('toolbar_bottombar_blurtype', 0)
+      }
+      this.bottomBarOpacity = PreferencesUtil.getNumberSync('toolbar_bottombar_opacity', 100)
+    }
+    this.separate = PreferencesUtil.getBooleanSync('toolbar_separated', false)
+    this.syncBarBlur = PreferencesUtil.getNumberSync('toolbar_sync_blur', 0)
+    this.syncBarBlurType = PreferencesUtil.getNumberSync('toolbar_sync_blurtype', 0)
+    if (this.syncBarBlurType > 5) {
+      this.syncBarBlurType = 0
+      PreferencesUtil.putSync('toolbar_sync_blurtype', 0)
+    }
+    this.syncBarOpacity = PreferencesUtil.getNumberSync('toolbar_sync_opacity', 100)
   }
 
   aboutToDisappear(): void {
     if (!this.isContinuation) {
       if (this.url.startsWith("file://")) {
-        let hash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")[1]
+        let hash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split("|")[1]
         VideoLibraryDatabase.updatePlayedByHash(getContext(this), hash, this.currentPosition)
           .then(() => {
             AppStorage.setOrCreate("updateVideoTime", `local:${this.identity}`)
           })
       } else if (this.url.startsWith("http://") || this.url.startsWith("https://")) {
-        let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")
+        let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split("|")
         let serverUrl = splitData[0]
         let location = splitData[1]
         WebDAVDatabase.updatePlayedByLocationAndUrl(getContext(this), this.currentPosition, location, serverUrl)
@@ -1703,10 +1971,11 @@ export struct AVVideoPlayer {
 
           if (this.url.startsWith("http://") || this.url.startsWith("https://")) {
             if (this.metadata.width == -1 || this.metadata.height == -1) {
-              let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")
+              let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split("|")
               let serverUrl = splitData[0]
               let location = splitData[1]
-              WebDAVDatabase.updateWidthAndHeightByLocationAndUrl(getContext(this), this.surfaceWidth, this.surfaceHeight, location, serverUrl)
+              WebDAVDatabase.updateWidthAndHeightByLocationAndUrl(getContext(this), this.surfaceWidth,
+                this.surfaceHeight, location, serverUrl)
                 .then(() => {
                 })
             }
@@ -1747,7 +2016,7 @@ export struct AVVideoPlayer {
 
           if (this.url.startsWith("http://") || this.url.startsWith("https://")) {
             if (this.metadata.length == -1) {
-              let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split(":")
+              let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.identity)).split("|")
               let serverUrl = splitData[0]
               let location = splitData[1]
               WebDAVDatabase.updateLengthByLocationAndUrl(getContext(this), duration, location, serverUrl)
@@ -1783,7 +2052,7 @@ export struct AVVideoPlayer {
             avPlayer.pause()
           } else if (state == "initialized") {
             console.error("initialized")
-            avPlayer.surfaceId = this.xComponentController.getXComponentSurfaceId()
+            avPlayer.surfaceId = limitStringLength(`avvideoplayer_${this.identity}`, 128)
             avPlayer.prepare();
           } else if (state == "prepared") {
             console.error("prepared")

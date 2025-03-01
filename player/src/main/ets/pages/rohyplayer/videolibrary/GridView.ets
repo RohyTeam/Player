@@ -1,9 +1,11 @@
-import { FileStatus,
-  VideoSourceType,
+import {
+  FileStatus,
+  LocalVideoSource,
   Videos,
   VideoSource,
-  LocalVideoSource,
-  WebDAVVideoSource} from '../../../entity/VideoEntity'
+  VideoSourceType,
+  WebDAVVideoSource
+} from '../../../entity/VideoEntity'
 import common from '@ohos.app.ability.common'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { VideoDeleter } from './VideoLibraryPage'
@@ -20,7 +22,6 @@ import { Fonts } from '../../../entity/FontEntity'
 import SubtitleManager from 'librohy_subtitle.so'
 import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
 import { WebDAVs } from '../../../entity/WebDAVEntity'
-import { limitStringLength } from '../../../util/StringUtil'
 import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 
 @Component
@@ -305,7 +306,8 @@ struct VideoRow {
                     bottom: "8vp"
                   })
               } else {
-                Text($r("app.string.played_status_playing", `${Math.ceil(this.video.played / this.video.length * 100)}`))
+                Text($r("app.string.played_status_playing",
+                  `${Math.ceil(this.video.played / this.video.length * 100)}`))
                   .fontSize(10)
                   .fontColor($r("app.color.font_secondary"))
                   .margin({
@@ -338,7 +340,7 @@ struct VideoRow {
                     getContext(this) as common.UIAbilityContext,
                     this.video.uri,
                     this.video.title,
-                    limitStringLength(this.video.identity(), 100),
+                    this.video.identity(),
                     {
                       length: this.video.length,
                       width: this.video.width,
@@ -368,7 +370,7 @@ struct VideoRow {
                     getContext(this) as common.UIAbilityContext,
                     fileResult.url,
                     this.video.title,
-                    limitStringLength(this.video.identity(),  100),
+                    this.video.identity(),
                     {
                       length: this.video.length,
                       width: this.video.width,
@@ -428,12 +430,12 @@ struct VideoRow {
 
                 if (action == -1) {
                   if (this.video instanceof LocalVideoSource) {
-                    let hash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.video.identity())).split(":")[1]
+                    let hash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.video.identity())).split("|")[1]
                     VideoLibraryDatabase.updateNameByHash(getContext(this), hash, value)
                       .then(() => {
                       })
                   } else if (this.video instanceof WebDAVVideoSource) {
-                    let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.video.identity())).split(":")
+                    let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(this.video.identity())).split("|")
                     let serverUrl = splitData[0]
                     let location = splitData[1]
 

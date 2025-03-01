@@ -130,7 +130,7 @@ export struct MorePage {
                 }
               }
             ],
-            selectedButtons: [this.colorModes.indexOf(this.colorMode)]
+            selectedButton: this.colorModes.indexOf(this.colorMode)
           })
         }
 

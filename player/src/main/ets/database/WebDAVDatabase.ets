@@ -7,6 +7,8 @@ import { WebDAVVideoSource } from '../entity/VideoEntity';
 import { image } from '@kit.ImageKit';
 import { pixelMapToArrayBuffer } from '../util/ImageUtil';
 import resourceManager from '@ohos.resourceManager';
+import { VirtualNode } from '../pages/components/VirtualFilePicker';
+import { WebDAVClient } from '../lib/webdav_client/WebDAVClient';
 
 export class WebDAVDatabase {
   private static SQL_CREATE_WEBDAV_SERVER_TABLE = 'CREATE TABLE IF NOT EXISTS WebDAVServers (' +
@@ -49,7 +51,8 @@ export class WebDAVDatabase {
   }
 
 
-  public static tryFetchByLocationAndUrl(context: common.Context, location: string, url: string): Promise<WebDAVVideoSource | undefined> {
+  public static tryFetchByLocationAndUrl(context: common.Context, location: string,
+    url: string): Promise<WebDAVVideoSource | undefined> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -57,7 +60,9 @@ export class WebDAVDatabase {
           return;
         }
 
-        store.query(new relationalStore.RdbPredicates("VideoLibrary")
+        console.error(`fetching with url: ${url}, location: ${location}`)
+
+        store.query(new relationalStore.RdbPredicates("WebDAVVideoLibrary")
           .equalTo("FILE_SOURCE", url)
           .equalTo("LOCATION", location), async (err: BusinessError, resultSet) => {
           if (err) {
@@ -90,8 +95,8 @@ export class WebDAVDatabase {
 
   }
 
-  public static addVideo(context: common.Context, webdavUri: string, location: string,
-    name: string): Promise<WebDAVVideoSource> {
+  public static addVideo(context: common.Context, webdavClient: WebDAVClient, webdavUri: string, location: string,
+    node: VirtualNode): Promise<WebDAVVideoSource> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -110,11 +115,18 @@ export class WebDAVDatabase {
             }
             pixelMapToArrayBuffer(pixelMap)
               .then((buffer) => {
+                /* TODO：直接访问网络文件来获取到 metadata
+                media.createAVMetadataExtractor()
+                  .then((avMetadataExtractor: media.AVMetadataExtractor) => {
+                    avMetadataExtractor.dataSrc = {
+
+                    }
+                  })*/
                 store.insert(
                   "WebDAVVideoLibrary",
                   {
                     "LOCATION": location,
-                    "TITLE": name,
+                    "TITLE": node.displayName,
                     "ADDED_TIME": Date.now(),
                     "FILE_SOURCE": webdavUri,
                     "VIDEO_LENGTH": -1,
@@ -127,7 +139,7 @@ export class WebDAVDatabase {
                   console.error(`added webdav video`)
                   resultReturner(new WebDAVVideoSource(
                     location,
-                    name,
+                    node.displayName,
                     Date.now(),
                     -1,
                     -1,
@@ -252,7 +264,9 @@ export class WebDAVDatabase {
       })
     })
   }
-  public static updateNameByLocationAndUrl(context: common.Context, newTitle: string, location: string, url: string): Promise<void> {
+
+  public static updateNameByLocationAndUrl(context: common.Context, newTitle: string, location: string,
+    url: string): Promise<void> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -274,7 +288,8 @@ export class WebDAVDatabase {
     })
   }
 
-  public static updatePlayedByLocationAndUrl(context: common.Context, played: number, location: string, url: string): Promise<void> {
+  public static updatePlayedByLocationAndUrl(context: common.Context, played: number, location: string,
+    url: string): Promise<void> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -296,7 +311,8 @@ export class WebDAVDatabase {
     })
   }
 
-  public static updateWidthAndHeightByLocationAndUrl(context: common.Context, width: number, height: number, location: string, url: string): Promise<void> {
+  public static updateWidthAndHeightByLocationAndUrl(context: common.Context, width: number, height: number,
+    location: string, url: string): Promise<void> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -313,13 +329,15 @@ export class WebDAVDatabase {
             .equalTo("LOCATION", location)
         )
           .then((num: number) => {
+            console.error(`webdav updateWidthAndHeightByLocationAndUrl affected rows: ${num}`)
             resultReturner()
           })
       })
     })
   }
 
-  public static updateLengthByLocationAndUrl(context: common.Context, length: number, location: string, url: string): Promise<void> {
+  public static updateLengthByLocationAndUrl(context: common.Context, length: number, location: string,
+    url: string): Promise<void> {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
@@ -335,6 +353,7 @@ export class WebDAVDatabase {
             .equalTo("LOCATION", location)
         )
           .then((num: number) => {
+            console.error(`webdav updateLengthByLocationAndUrl affected rows: ${num}`)
             resultReturner()
           })
       })

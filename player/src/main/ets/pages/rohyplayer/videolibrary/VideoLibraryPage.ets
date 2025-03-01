@@ -1,38 +1,32 @@
-import { LengthMetrics, promptAction } from '@kit.ArkUI'
+import { LengthMetrics } from '@kit.ArkUI'
 import { fileIo, hash, picker } from '@kit.CoreFileKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
-import { FileStatus, LocalVideoSource,
-  VideoSourceType,
+import {
+  FileStatus,
+  FileVideoSource,
+  LocalVideoSource,
   Videos,
   VideoSource,
-  WebDAVVideoSource,
-  FileVideoSource} from '../../../entity/VideoEntity'
+  VideoSourceType,
+  WebDAVVideoSource
+} from '../../../entity/VideoEntity'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
 import { ListView } from './ListView'
 import { getIcon } from '../../../util/IconUtil'
 import { Base64Util, FileUtil, PreferencesUtil, StrUtil } from '@pura/harmony-utils'
-import { StringArray } from '../../../entity/Arrays'
 import { showAlert } from '../../../util/AlertUtil'
 import { GridView } from './GridView'
 import { BreakpointConstants } from '../../../common/constants/BreakpointConstants'
 import { dataSharePredicates } from '@kit.ArkData'
 import { hashByFd } from '../../../util/HashUtil'
-import {
-  SettingsDivider,
-  SettingsGroup,
-  SettingsPage,
-  SettingsRow,
-  SettingsSelection,
-  SettingsSwitch
-} from '../../components/SettingsPage'
-import { checkPermissionGrant, requestPermissionsFromUser } from '../../../util/PermissionUtils'
-import { abilityAccessCtrl, common, ConfigurationConstant } from '@kit.AbilityKit'
 import { Fonts } from '../../../entity/FontEntity'
 import { WebDAVAuthorization, WebDAVs } from '../../../entity/WebDAVEntity'
 import { VirtualFilePicker, VirtualNode } from '../../components/VirtualFilePicker'
 import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
 import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
+import { SettingsSheetView, SettingsSheetViewFunctions } from '../../settings/SettingsSheetView'
+import { VideoLibrarySettingsPage } from '../../settings/VideoLibrarySettingsPage'
 
 export interface VideoDeleter {
 
@@ -68,8 +62,6 @@ export struct VideoLibraryPage {
   private sortReversed: boolean = false
   @State
   searching: string = ""
-  @Consume('pageController')
-  pageController: NavPathStack
   @StorageLink(`updateVideoTime`)
   @Watch("videoUpdater")
   toBeUpdatedVideoIdentity: string = ""
@@ -78,7 +70,7 @@ export struct VideoLibraryPage {
     console.error(`changes detected, ready to update video`)
     if (this.toBeUpdatedVideoIdentity.startsWith("local:")) {
       let identity = this.toBeUpdatedVideoIdentity.substring(6)
-      let fileHash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(identity)).split(":")[1]
+      let fileHash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(identity)).split("|")[1]
       VideoLibraryDatabase.tryFetchByHash(getContext(this), fileHash)
         .then((updatedVideo) => {
           if (updatedVideo != undefined) {
@@ -95,7 +87,7 @@ export struct VideoLibraryPage {
         })
     } else if (this.toBeUpdatedVideoIdentity.startsWith("webdav:")) {
       let identity = this.toBeUpdatedVideoIdentity.substring(7)
-      let splitData = identity.split(":")
+      let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(identity)).split("|")
       let serverUrl = splitData[0]
       let location = splitData[1]
       WebDAVDatabase.tryFetchByLocationAndUrl(
@@ -104,9 +96,14 @@ export struct VideoLibraryPage {
         serverUrl
       ).then((updatedVideo) => {
         if (updatedVideo != undefined) {
-          let index = this.videos.findIndex((video) => video instanceof WebDAVVideoSource && video.identity() == identity)
+          let index =
+            this.videos.findIndex((video) => video instanceof WebDAVVideoSource && video.identity() == identity)
           if (index >= 0) {
             this.videos[index].played = updatedVideo.played
+            // 因为获取视频元数据的限制， webdav 视频可能会在第一次播放后才更新元数据，所以这里同时也更新一下元数据
+            this.videos[index].length = updatedVideo.length
+            this.videos[index].width = updatedVideo.width
+            this.videos[index].height = updatedVideo.height
             this.sort()
           } else {
             // FIXME: 理论上不会出现
@@ -449,7 +446,8 @@ export struct VideoLibraryPage {
                         })
                     } else if (video.type == VideoSourceType.WEBDAV) {
                       let webdavVideo = video as WebDAVVideoSource
-                      WebDAVDatabase.deleteVideoByLocationAndUrl(getContext(this), webdavVideo.uri, webdavVideo.serverUrl)
+                      WebDAVDatabase.deleteVideoByLocationAndUrl(getContext(this), webdavVideo.uri,
+                        webdavVideo.serverUrl)
                         .then(() => {
                           video.status = FileStatus.Disappear
                           let index = this.videos.indexOf(video)
@@ -495,7 +493,8 @@ export struct VideoLibraryPage {
                         })
                     } else if (video.type == VideoSourceType.WEBDAV) {
                       let webdavVideo = video as WebDAVVideoSource
-                      WebDAVDatabase.deleteVideoByLocationAndUrl(getContext(this), webdavVideo.uri, webdavVideo.serverUrl)
+                      WebDAVDatabase.deleteVideoByLocationAndUrl(getContext(this), webdavVideo.uri,
+                        webdavVideo.serverUrl)
                         .then(() => {
                           video.status = FileStatus.Disappear
                           let index = this.videos.indexOf(video)
@@ -696,303 +695,16 @@ export struct VideoLibraryPage {
   }
 
   @Builder
-  settingsTitle() {
-    Row() {
-      Text($r("app.string.settings"))
-        .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r("app.color.font_primary"))
-        .margin(16)
-      Blank()
-        .layoutWeight(1)
-
-      Button({
-        type: ButtonType.Circle
-      }) {
-        SymbolGlyph($r("sys.symbol.xmark"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-      }
-      .onClick(() => {
-        this.showSettings = false
-      })
-      .align(Alignment.Center)
-      .margin({
-        right: 12
-      })
-      .width(40)
-      .height(40)
-      .backgroundColor($r("app.color.comp_background_tertiary"))
-    }
-    .margin({
-      left: 12,
-      right: 12,
-      top: 12
-    })
-    .backgroundColor($r("app.color.rohy_settings_background"))
-  }
-
-  @StorageLink('appColorMode')
-  colorMode: string = "system";
-  @StorageLink('autoShutdown')
-  autoShutdown: boolean = false;
-  @StorageLink('statusBar')
-  statusBar: boolean = false;
-  @StorageLink('statusBarBatteryPercent')
-  statusBarBatteryPercent: boolean = false;
-  @State
-  settings$continuation: boolean = false
-  colorModes: string[] = ["system", "light", "dark"];
-  @StorageLink('preferFFmpeg')
-  preferFFmpeg: boolean = false;
-  @StorageLink('hardwareDecode')
-  hardwareDecode: boolean = false;
-  @StorageLink('lessCovering')
-  lessCovering: boolean = false;
-
-  @Builder
   settings() {
-    Column() {
-      this.settingsTitle()
-      Blank()
-        .height(12)
-        .width("100%")
-      SettingsPage() {
-        SettingsGroup() {
-          SettingsSelection({
-            settingsTitle: $r("app.string.color_mode"),
-            choices: [
-              {
-                title: $r("app.string.color_mode_system"),
-                onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode =
-                    ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
-                  AppStorage.setOrCreate("appColorMode", "system")
-                  PreferencesUtil.putSync("colorMode", "system")
-                }
-              },
-              {
-                title: $r("app.string.color_mode_light"),
-                onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode =
-                    ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
-                  AppStorage.setOrCreate("appColorMode", "light")
-                  PreferencesUtil.putSync("colorMode", "light")
-                }
-              },
-              {
-                title: $r("app.string.color_mode_dark"),
-                onSwitch: () => {
-                  (getContext(this) as common.UIAbilityContext).config.colorMode =
-                    ConfigurationConstant.ColorMode.COLOR_MODE_DARK
-                  AppStorage.setOrCreate("appColorMode", "dark")
-                  PreferencesUtil.putSync("colorMode", "dark")
-                }
-              }
-            ],
-            selectedButtons: [this.colorModes.indexOf(this.colorMode)]
-          })
+    SettingsSheetView({
+      title: $r("app.string.settings"),
+      functions: {
+        onClose: () => {
+          this.showSettings = false
         }
-
-        SettingsGroup() {
-          SettingsSwitch({
-            settingsTitle: $r("app.string.settings_continuation"),
-            settingsTips: $r("app.string.settings_continuation_tips"),
-            switchValue: this.settings$continuation,
-            switchEvent: {
-              action: (value: boolean) => {
-                if (this.settings$continuation) {
-                  PreferencesUtil.putSync("continuation", false)
-                  this.settings$continuation = false
-                } else {
-                  requestPermissionsFromUser(getContext(this) as common.UIAbilityContext,
-                    "ohos.permission.DISTRIBUTED_DATASYNC")
-                    .then((value: boolean) => {
-                      if (value) {
-                        PreferencesUtil.putSync("continuation", true)
-                        this.settings$continuation = true
-                      } else {
-                        PreferencesUtil.putSync("continuation", false)
-                        this.settings$continuation = false
-                      }
-                    })
-                }
-              }
-            }
-          })
-          SettingsDivider()
-          SettingsSwitch({
-            settingsTitle: $r("app.string.settings_auto_shutdown"),
-            settingsTips: $r("app.string.settings_auto_shutdown_tips"),
-            switchValue: this.autoShutdown,
-            switchEvent: {
-              action: (value: boolean) => {
-                if (this.autoShutdown) {
-                  AppStorage.setOrCreate("autoShutdown", false)
-                  PreferencesUtil.putSync("autoShutdown", false)
-                } else {
-                  AppStorage.setOrCreate("autoShutdown", true)
-                  PreferencesUtil.putSync("autoShutdown", true)
-                }
-              }
-            }
-          })
-        }
-
-        SettingsGroup() {
-          SettingsSwitch({
-            settingsTitle: $r("app.string.settings_less_covering"),
-            settingsTips: $r("app.string.settings_less_covering_tips"),
-            switchValue: this.lessCovering,
-            switchEvent: {
-              action: (value: boolean) => {
-                if (this.lessCovering) {
-                  AppStorage.setOrCreate("lessCovering", false)
-                  PreferencesUtil.putSync("lessCovering", false)
-                } else {
-                  AppStorage.setOrCreate("lessCovering", true)
-                  PreferencesUtil.putSync("lessCovering", true)
-                }
-              }
-            }
-          })
-          SettingsDivider()
-          SettingsSwitch({
-            settingsTitle: $r("app.string.settings_status_bar"),
-            settingsTips: $r("app.string.settings_status_bar_desc"),
-            switchValue: this.statusBar,
-            switchEvent: {
-              action: (value: boolean) => {
-                if (this.statusBar) {
-                  AppStorage.setOrCreate("statusBar", false)
-                  PreferencesUtil.putSync("statusBar", false)
-                } else {
-                  AppStorage.setOrCreate("statusBar", true)
-                  PreferencesUtil.putSync("statusBar", true)
-                }
-              }
-            }
-          })
-          if (this.statusBar) {
-            Column() {
-              SettingsDivider()
-              SettingsSwitch({
-                settingsTitle: $r("app.string.settings_status_bar_battery_percent"),
-                settingsTips: $r("app.string.settings_status_bar_battery_percent_tips"),
-                switchValue: this.statusBarBatteryPercent,
-                switchEvent: {
-                  action: (value: boolean) => {
-                    if (this.statusBarBatteryPercent) {
-                      AppStorage.setOrCreate("statusBarBatteryPercent", false)
-                      PreferencesUtil.putSync("statusBarBatteryPercent", false)
-                    } else {
-                      AppStorage.setOrCreate("statusBarBatteryPercent", true)
-                      PreferencesUtil.putSync("statusBarBatteryPercent", true)
-                    }
-                  }
-                }
-              })
-            }
-            .visibility(this.statusBar ? Visibility.Visible : Visibility.Hidden)
-          }
-        }
-
-        SettingsGroup() {
-          SettingsSelection({
-            settingsTitle: $r("app.string.settings_prefered_player"),
-            settingsTips: $r("app.string.settings_prefered_player_tips"),
-            blankSize: 3,
-            choices: [
-              {
-                title: "IJK",
-                onSwitch: () => {
-                  this.preferFFmpeg = true
-                  AppStorage.setOrCreate("preferFFmpeg", true)
-                  PreferencesUtil.putSync("preferFFmpeg", true)
-                }
-              },
-              {
-                title: "AV",
-                onSwitch: () => {
-                  this.preferFFmpeg = false
-                  AppStorage.setOrCreate("preferFFmpeg", false)
-                  PreferencesUtil.putSync("preferFFmpeg", false)
-                }
-              }
-            ],
-            selectedButtons: [this.preferFFmpeg ? 0 : 1]
-          })
-          if (this.preferFFmpeg) {
-            Column() {
-              SettingsDivider()
-              SettingsSwitch({
-                settingsTitle: $r("app.string.settings_hardware_decode"),
-                settingsTips: $r("app.string.settings_hardware_decode_tips"),
-                switchValue: this.hardwareDecode,
-                switchEvent: {
-                  action: (value: boolean) => {
-                    this.hardwareDecode = value
-                    AppStorage.setOrCreate("hardwareDecode", value)
-                    PreferencesUtil.putSync("hardwareDecode", value)
-                  }
-                }
-              })
-            }
-            .visibility(this.preferFFmpeg ? Visibility.Visible : Visibility.Hidden)
-          }
-        }
-
-        SettingsGroup() {
-          SettingsRow({
-            settingsTitle: $r("app.string.questions"),
-            clickEvent: {
-              action: () => {
-                promptAction.showToast({
-                  'message': $r("app.string.coming_soon")
-                })
-              }
-            }
-          })
-          SettingsDivider()
-          SettingsRow({
-            settingsTitle: $r("app.string.service_info"),
-            clickEvent: {
-              action: () => {
-                promptAction.showToast({
-                  'message': $r("app.string.coming_soon")
-                })
-              }
-            }
-          })
-          SettingsDivider()
-          SettingsRow({
-            settingsTitle: $r("app.string.about"),
-            clickEvent: {
-              action: () => {
-                promptAction.showToast({
-                  'message': $r("app.string.coming_soon")
-                })
-              }
-            }
-          })
-        }
-
-        SettingsGroup() {
-          SettingsRow({
-            settingsTitle: $r("app.string.settings_debug_page"),
-            clickEvent: {
-              action: () => {
-                this.pageController.pushPath({ name: "debugPage" })
-                this.showSettings = false
-              }
-            }
-          })
-        }
-      }
-    }
-    .backgroundColor($r("app.color.rohy_settings_background"))
-    .height("100%")
-    .width("100%")
+      },
+      mainView: wrapBuilder(settingsContent)
+    })
   }
 
   private showPhotosPicker() {
@@ -1143,18 +855,6 @@ export struct VideoLibraryPage {
       }
     }
   }
-
-  aboutToAppear(): void {
-    checkPermissionGrant("ohos.permission.DISTRIBUTED_DATASYNC")
-      .then((status: abilityAccessCtrl.GrantStatus) => {
-        if (status == abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
-          this.settings$continuation = true
-        }
-        if (!PreferencesUtil.getBooleanSync("continuation", false)) {
-          this.settings$continuation = false
-        }
-      })
-  }
 }
 
 interface WebDAVPickerRowFunctions {
@@ -1271,11 +971,11 @@ struct WebDAVPickerRow {
         onFileSelected: (path: string, node: VirtualNode) => {
           this.showVirtualPicker = false
           console.error(`which file was selected: ${path}`)
-          WebDAVDatabase.addVideo(getContext(this), this.webdav.url, path, node.displayName)
+          WebDAVDatabase.addVideo(getContext(this), this.webdavClient!, this.webdav.url, path, node)
             .then((video) => {
               if (this.videos.findIndex((savedVideo) => savedVideo instanceof WebDAVVideoSource &&
-              savedVideo.serverUrl == video.serverUrl &&
-              savedVideo.uri == video.uri)) {
+                savedVideo.serverUrl == video.serverUrl &&
+                savedVideo.uri == video.uri)) {
                 showAlert(this.getUIContext(), $r("app.string.duplicated_imports"),
                   $r("app.string.duplicated_imports_desc"))
               } else {
@@ -1287,4 +987,11 @@ struct WebDAVPickerRow {
       show: this.showVirtualPicker
     })
   }
+}
+
+@Builder
+function settingsContent(settingsPageController: NavPathStack, functions: SettingsSheetViewFunctions) {
+  VideoLibrarySettingsPage({
+    functions: functions
+  })
 }

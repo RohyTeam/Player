@@ -7,6 +7,12 @@ import { parseFiles, WebDAVFile } from './WebDAVFileSystem'
 import { Headers } from '../../entity/Headers'
 import { WebDAVAuthorization } from '../../entity/WebDAVEntity'
 
+export interface WebDAVFileStream {
+
+  read(buffer: ArrayBuffer, length: number, pos?: number): Promise<number>;
+
+}
+
 export interface WebDAVClient {
 
   getAuthorizationResult(): boolean | undefined
@@ -18,6 +24,8 @@ export interface WebDAVClient {
   authenticateFile(file: string): Promise<FileResult>
 
   listDirectory(path: string): Promise<Array<WebDAVFile>>
+
+  accessStream(path: string): Promise<WebDAVFileStream | undefined> // undefined 代表不支持选择范围
 
 }
 
@@ -40,6 +48,56 @@ interface AuthenticateMethod {
 
   use(uri: string): Promise<string>
 
+}
+
+class WebDAVFileStreamImpl implements WebDAVFileStream {
+  uri: string
+  token: string
+  size: number
+
+  constructor(
+    uri: string,
+    token: string,
+    size: number
+  ) {
+    this.uri = uri
+    this.token = token
+    this.size = size
+  }
+
+  read(buffer: ArrayBuffer, length: number, pos?: number | undefined): Promise<number> {
+    return new Promise((resultReturner) => {
+      let httpRequest = http.createHttp()
+      let from = pos || 0
+      let to = Math.min(from + length, this.size) - 1 // 右边是包含的，减一位
+      if (to < from) {
+        resultReturner(-1)
+      } else {
+        httpRequest.request(
+          this.uri,
+          {
+            method: http.RequestMethod.HEAD,
+            header: {
+              'authorization': this.token,
+              'range': `bytes=${from}-${to}`
+            }
+          },
+          (err: BusinessError, response: http.HttpResponse) => {
+            if (!err) {
+              let result = response.result as ArrayBuffer
+              httpRequest.destroy();
+              // TODO，将 result 数据写入 buffer
+              resultReturner(result.byteLength)
+            } else {
+              console.error(`error occurs when getting file stream: ${JSON.stringify(err)}, ${err.message}`)
+              httpRequest.destroy();
+              resultReturner(-1)
+            }
+          }
+        )
+      }
+    })
+  }
 }
 
 class BasicAuthenticateMethod implements AuthenticateMethod {
@@ -103,6 +161,63 @@ class WebDAVClientImpl implements WebDAVClient {
     this.options = options
   }
 
+  accessStream(file: string): Promise<WebDAVFileStream | undefined> {
+    return new Promise((resultReturner) => {
+      if (!file.startsWith("/")) {
+        file = `/${file}`
+      }
+      console.error(`ready to authenticate file`)
+      let requestUri = `${this.serverUri}${file}`
+      console.error(`request uri is ${requestUri}`)
+      requestUri = encodeURI(requestUri)
+      this.authenticateMethod?.use(requestUri)
+        .then((token) => {
+          console.error(`token good`)
+
+          let httpRequest = http.createHttp()
+          httpRequest.request(
+            requestUri,
+            {
+              method: http.RequestMethod.HEAD,
+              header: {
+                'authorization': token
+              }
+            },
+            (err: BusinessError, response: http.HttpResponse) => {
+              if (!err) {
+                console.error(`response status code is ${response.responseCode}`)
+                if (response.header['accept-ranges'] == undefined) {
+                  resultReturner(undefined)
+                } else {
+                  let size = parseInt(response.header['content-length']) || -1
+                  if (size == -1) {
+                    resultReturner(undefined)
+                  } else {
+                    if (response.header['accept-ranges'] == 'bytes') {
+                      resultReturner(
+                        new WebDAVFileStreamImpl(
+                          requestUri,
+                          token,
+                          size
+                        )
+                      )
+                    } else {
+                      resultReturner(undefined)
+                    }
+                  }
+                }
+                httpRequest.destroy();
+              } else {
+                console.error(`error occurs when getting file stream: ${JSON.stringify(err)}, ${err.message}`)
+                httpRequest.destroy();
+                resultReturner(undefined)
+              }
+            }
+          )
+        })
+    })
+  }
+
   getAuthorizationResult(): boolean | undefined {
     return this.authenticateResult
   }
@@ -131,45 +246,6 @@ class WebDAVClientImpl implements WebDAVClient {
               }
             }
           })
-          /*let httpRequest = http.createHttp()
-          httpRequest.request(
-              requestUri,
-              {
-                method: http.RequestMethod.GET,
-                header: {
-                  'authorization': token
-                }
-              },
-              (err: BusinessError, response: http.HttpResponse) => {
-                if (!err) {
-                  console.error(`response status code is ${response.responseCode}`)
-                  if (response.responseCode == 200) {
-                    resultReturner({
-                      url: requestUri,
-                      headers: {
-                        headers: {
-                          "authorization": token
-                        }
-                      }
-                    })
-                  } else if (response.responseCode == 302) {
-                    resultReturner({
-                      url: response.header['location']!,
-                      headers: {
-                        headers: {
-                          "authorization": token
-                        }
-                      }
-                    })
-                  }
-
-                  httpRequest.destroy();
-                } else {
-                  console.error(`error occurs when accessing file: ${JSON.stringify(err)}, ${err.message}`)
-                  httpRequest.destroy();
-                }
-              }
-            )*/
         })
     })
   }

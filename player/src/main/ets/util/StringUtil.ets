@@ -66,3 +66,11 @@ export function limitStringLength(value: string, maxLength: number): string {
   }
   return value
 }
+
+export function reverseString(value: string): string {
+  let result = ""
+  for (let i = value.length - 1; i >= 0; i--) {
+    result += value.charAt(i)
+  }
+  return result
+}

@@ -1,4 +1,4 @@
-import { Base64Util, StrUtil } from "@pura/harmony-utils"
+import { Base64Util, StrUtil } from '@pura/harmony-utils'
 
 export enum FileStatus {
 
@@ -54,11 +54,9 @@ export abstract class VideoSource {
   }
 
   public abstract identity(): string
-
 }
 
 export abstract class LocalVideoSource extends VideoSource {
-
   hash: string
   private identityCache: string | undefined = undefined
 
@@ -90,16 +88,14 @@ export abstract class LocalVideoSource extends VideoSource {
 
   public identity(): string {
     if (this.identityCache == undefined) {
-      this.identityCache = Base64Util.encodeToStrSync(StrUtil.strToUint8Array(`${this.uri}:${this.hash}`))
+      this.identityCache = Base64Util.encodeToStrSync(StrUtil.strToUint8Array(`${this.uri}|${this.hash}`))
     }
     return this.identityCache
   }
-
 }
 
 @Observed
 export class FileVideoSource extends LocalVideoSource {
-
   constructor(
     uri: string,
     title: string,
@@ -128,7 +124,6 @@ export class FileVideoSource extends LocalVideoSource {
 
 @Observed
 export class PhotosVideoSource extends LocalVideoSource {
-
   constructor(
     uri: string,
     title: string,
@@ -186,11 +181,10 @@ export class WebDAVVideoSource extends VideoSource {
 
   public identity(): string {
     if (this.identityCache == undefined) {
-      this.identityCache = Base64Util.encodeToStrSync(StrUtil.strToUint8Array(`${this.serverUrl}:${this.uri}`))
+      this.identityCache = Base64Util.encodeToStrSync(StrUtil.strToUint8Array(`${this.serverUrl}|${this.uri}`))
     }
     return this.identityCache
   }
-
 }
 
 @Observed

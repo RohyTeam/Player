@@ -1,9 +1,11 @@
-import { FileStatus,
-  VideoSourceType,
+import {
+  FileStatus,
+  LocalVideoSource,
   Videos,
   VideoSource,
-  LocalVideoSource,
-  WebDAVVideoSource} from '../../../entity/VideoEntity'
+  VideoSourceType,
+  WebDAVVideoSource
+} from '../../../entity/VideoEntity'
 import common from '@ohos.app.ability.common'
 import { DialogHelper } from '@pura/harmony-dialog'
 import { VideoDeleter } from './VideoLibraryPage'
@@ -19,7 +21,6 @@ import { Fonts } from '../../../entity/FontEntity'
 import SubtitleManager from 'librohy_subtitle.so'
 import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
 import { WebDAVs } from '../../../entity/WebDAVEntity'
-import { limitStringLength } from '../../../util/StringUtil'
 import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 
 @Component
@@ -452,7 +453,7 @@ struct VideoRow {
                     getContext(this) as common.UIAbilityContext,
                     this.video.uri,
                     this.video.title,
-                    limitStringLength(this.video.identity(), 100),
+                    this.video.identity(),
                     {
                       length: this.video.length,
                       width: this.video.width,
@@ -481,7 +482,7 @@ struct VideoRow {
                     getContext(this) as common.UIAbilityContext,
                     this.video.uri,
                     this.video.title,
-                    limitStringLength(this.video.identity(), 100),
+                    this.video.identity(),
                     {
                       length: this.video.length,
                       width: this.video.width,

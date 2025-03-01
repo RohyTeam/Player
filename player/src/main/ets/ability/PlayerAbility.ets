@@ -3,6 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { DatabaseManager } from '../database/DatabaseManager';
+import { ToolbarOptions } from '../util/ToolbarCustomizationUtil';
 
 export default class PlayerAbility extends UIAbility {
   private windowObj?: window.Window;
@@ -52,6 +53,14 @@ export default class PlayerAbility extends UIAbility {
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     AppUtil.init(this.context)
+
+    // 这边如果用户没有调整过工具栏且是第一次打开，默认将所有工具栏都选中
+    if (!PreferencesUtil.hasSync('toolbar_landscape_topbar')) {
+      PreferencesUtil.putSync('toolbar_landscape_topbar', ToolbarOptions.TOP_BAR.ALL_SELECTED)
+    }
+    if (!PreferencesUtil.hasSync('toolbar_landscape_bottombar')) {
+      PreferencesUtil.putSync('toolbar_landscape_bottombar', ToolbarOptions.BOTTOM_BAR.ALL_SELECTED)
+    }
 
     let colorMode = PreferencesUtil.getStringSync("colorMode", "system")
     AppStorage.setOrCreate("appColorMode", colorMode)
