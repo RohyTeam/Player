@@ -134,7 +134,7 @@ export struct DraggableCustomization {
                 return
               }
               if (this.max >= 0 && this.selected.length >= this.max) {
-                return
+                return // 对最大可选择数进行限制
               }
               let realIndex = this.unselected[-this.dragging!]
               this.selected.splice(insertIndex, 0, realIndex)
@@ -196,9 +196,6 @@ export struct DraggableCustomization {
           if (isSuccess) {
             if (this.dragging == undefined) {
               // 这意味着，用户将另一个 DraggableCustomization 的 option 拖进来了
-              return
-            }
-            if (this.max >= 0 && this.selected.length >= this.max) {
               return
             }
             if (itemIndex == -1) {
