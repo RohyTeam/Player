@@ -3,6 +3,7 @@ import { LengthMetrics, promptAction } from '@kit.ArkUI'
 import { DialogHelper } from '@pura/harmony-dialog'
 import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 import { createClient } from '../../../lib/webdav_client/WebDAVClient'
+import { LoadingOverlay } from '../../components/Overlays'
 
 @Component
 export struct WebDAVManagementGroup {
@@ -70,6 +71,24 @@ export struct WebDAVManagementGroup {
     },
     alignment: DialogAlignment.Center,
     gridCount: 4,
+    customStyle: false,
+    cornerRadius: 16,
+  })
+  private loadingOverlay: CustomDialogController | null = new CustomDialogController({
+    builder: LoadingOverlay(),
+    autoCancel: false,
+    onWillDismiss: (dismissDialogAction: DismissDialogAction) => {
+      console.info("reason=" + JSON.stringify(dismissDialogAction.reason))
+      console.log("dialog onWillDismiss")
+      if (dismissDialogAction.reason == DismissReason.PRESS_BACK) {
+        dismissDialogAction.dismiss()
+      }
+      if (dismissDialogAction.reason == DismissReason.TOUCH_OUTSIDE) {
+        dismissDialogAction.dismiss()
+      }
+    },
+    alignment: DialogAlignment.Center,
+    gridCount: 2,
     customStyle: false,
     cornerRadius: 16,
   })
@@ -144,7 +163,8 @@ export struct WebDAVManagementGroup {
         ForEach(this.webdavs, (webdav: WebDAVAuthorization) => {
           WebDAVRow({
             webdavs: this.webdavs,
-            webdav: webdav
+            webdav: webdav,
+            loadingOverlayController: this.loadingOverlay
           })
         })
       }
@@ -265,6 +285,7 @@ struct WebDAVAddDialog {
 struct WebDAVRow {
   @Link
   webdavs: WebDAVs
+  loadingOverlayController: CustomDialogController | null = null
   @Prop
   webdav: WebDAVAuthorization
   @State
@@ -287,14 +308,17 @@ struct WebDAVRow {
         }
         .backgroundColor(Color.Transparent)
         .onClick(() => {
+          this.loadingOverlayController?.open()
           let webDAVClient = createClient("", this.webdav.url, this.webdav.account)
           webDAVClient.authenticate()
             .then((result) => {
               if (result) {
+                this.loadingOverlayController?.close()
                 promptAction.showToast({
                   'message': $r("app.string.test_connection_success")
                 })
               } else {
+                this.loadingOverlayController?.close()
                 promptAction.showToast({
                   'message': $r("app.string.test_connection_failed")
                 })

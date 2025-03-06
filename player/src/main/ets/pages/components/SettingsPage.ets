@@ -68,6 +68,10 @@ export struct SettingsRow {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  settingsDesc: ResourceStr | undefined = undefined
+  @Prop
+  larger: boolean = false
+  @Prop
   showGoToIcon: boolean = false
   @Prop
   @Require
@@ -77,11 +81,23 @@ export struct SettingsRow {
     Row() {
       Button() {
         Row() {
-          Text(this.settingsTitle)
-            .margin({
-              left: 12
-            })
-            .fontColor($r("app.color.font_primary"))
+          Column() {
+            Text(this.settingsTitle)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r("app.color.font_primary"))
+            if (this.settingsDesc != undefined) {
+              Text(this.settingsDesc)
+                .fontSize(14)
+                .fontColor($r("app.color.font_secondary"))
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .margin({
+            left: 12,
+            top: 4,
+            bottom: 4
+          })
           Blank()
             .layoutWeight(1)
           if (this.showGoToIcon) {
@@ -104,7 +120,7 @@ export struct SettingsRow {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height("48vp")
+    .height(this.larger ? "56vp": "48vp")
     .width("100%")
   }
 }
@@ -115,7 +131,11 @@ export struct SettingsSwitch {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  settingsDesc: ResourceStr | undefined = undefined
+  @Prop
   settingsTips: ResourceStr | undefined = undefined
+  @Prop
+  larger: boolean = false
   @Prop
   @Require
   switchEvent: SwitchEvent
@@ -140,11 +160,23 @@ export struct SettingsSwitch {
     Row() {
       Button() {
         Row() {
-          Text(this.settingsTitle)
-            .margin({
-              left: 12
-            })
-            .fontColor($r("app.color.font_primary"))
+          Column() {
+            Text(this.settingsTitle)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r("app.color.font_primary"))
+            if (this.settingsDesc != undefined) {
+              Text(this.settingsDesc)
+                .fontSize(14)
+                .fontColor($r("app.color.font_secondary"))
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .margin({
+            left: 12,
+            top: 4,
+            bottom: 4
+          })
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -199,7 +231,7 @@ export struct SettingsSwitch {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height("48vp")
+    .height(this.larger ? "56vp": "48vp")
     .width("100%")
   }
 }
@@ -217,7 +249,11 @@ export struct SettingsSelection {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  settingsDesc: ResourceStr | undefined = undefined
+  @Prop
   settingsTips: ResourceStr | undefined = undefined
+  @Prop
+  larger: boolean = false
   @Prop
   blankSize: number = 2
   @Prop
@@ -275,11 +311,23 @@ export struct SettingsSelection {
     Row() {
       Button() {
         Row() {
-          Text(this.settingsTitle)
-            .margin({
-              left: 12
-            })
-            .fontColor($r("app.color.font_primary"))
+          Column() {
+            Text(this.settingsTitle)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r("app.color.font_primary"))
+            if (this.settingsDesc != undefined) {
+              Text(this.settingsDesc)
+                .fontSize(14)
+                .fontColor($r("app.color.font_secondary"))
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .margin({
+            left: 12,
+            top: 4,
+            bottom: 4
+          })
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -356,7 +404,7 @@ export struct SettingsSelection {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height("48vp")
+    .height(this.larger ? "56vp": "48vp")
     .width("100%")
   }
 }
@@ -367,7 +415,11 @@ export struct SettingsSelectionSpecificForToolbarCustomizer {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  settingsDesc: ResourceStr | undefined = undefined
+  @Prop
   settingsTips: ResourceStr | undefined = undefined
+  @Prop
+  larger: boolean = false
   @Link
   topBarBlurType: number
   @Link
@@ -440,11 +492,23 @@ export struct SettingsSelectionSpecificForToolbarCustomizer {
     Row() {
       Button() {
         Row() {
-          Text(this.settingsTitle)
-            .margin({
-              left: 12
-            })
-            .fontColor($r("app.color.font_primary"))
+          Column() {
+            Text(this.settingsTitle)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r("app.color.font_primary"))
+            if (this.settingsDesc != undefined) {
+              Text(this.settingsDesc)
+                .fontSize(14)
+                .fontColor($r("app.color.font_secondary"))
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .margin({
+            left: 12,
+            top: 4,
+            bottom: 4
+          })
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -496,7 +560,7 @@ export struct SettingsSelectionSpecificForToolbarCustomizer {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height("48vp")
+    .height(this.larger ? "56vp": "48vp")
     .width("100%")
   }
 }
@@ -507,7 +571,11 @@ export struct SettingsSlider {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  settingsDesc: ResourceStr | undefined = undefined
+  @Prop
   settingsTips: ResourceStr | undefined = undefined
+  @Prop
+  larger: boolean = false
   @Prop
   @Require
   sliderOptions: SliderOptions
@@ -535,11 +603,23 @@ export struct SettingsSlider {
     Row() {
       Button() {
         Row() {
-          Text(this.settingsTitle)
-            .margin({
-              left: 12
-            })
-            .fontColor($r("app.color.font_primary"))
+          Column() {
+            Text(this.settingsTitle)
+              .fontSize(16)
+              .fontWeight(FontWeight.Medium)
+              .fontColor($r("app.color.font_primary"))
+            if (this.settingsDesc != undefined) {
+              Text(this.settingsDesc)
+                .fontSize(14)
+                .fontColor($r("app.color.font_secondary"))
+            }
+          }
+          .alignItems(HorizontalAlign.Start)
+          .margin({
+            left: 12,
+            top: 4,
+            bottom: 4
+          })
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -587,7 +667,7 @@ export struct SettingsSlider {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height("48vp")
+    .height(this.larger ? "56vp": "48vp")
     .width("100%")
   }
 }

@@ -63,6 +63,7 @@ export default class PlayerAbility extends UIAbility {
     }
 
     let colorMode = PreferencesUtil.getStringSync("colorMode", "system")
+    AppStorage.setOrCreate("debugMode", false)
     AppStorage.setOrCreate("appColorMode", colorMode)
     AppStorage.setOrCreate("autoShutdown", PreferencesUtil.getBooleanSync("autoShutdown", false))
     AppStorage.setOrCreate("statusBar", PreferencesUtil.getBooleanSync("statusBar", false))

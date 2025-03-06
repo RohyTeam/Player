@@ -1,3 +1,4 @@
+import { AboutPage } from './information/AboutPage'
 import { ToolbarButtonsLandscapeCustomizer } from './ToolbarCustomizer'
 
 export interface SettingsSheetViewFunctions {
@@ -24,6 +25,8 @@ export struct SettingsSheetView {
   private settingsPage(name: string) {
     if (name == 'toolbarCustomization') {
       ToolbarButtonsLandscapeCustomizer()
+    } else if (name == 'about') {
+      AboutPage()
     }
   }
 

@@ -11,6 +11,7 @@ import {
   SettingsSlider,
   SettingsSwitch
 } from '../components/SettingsPage'
+import { curves } from '@kit.ArkUI'
 
 // TODO：横竖屏不同排布
 
@@ -349,34 +350,11 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
           Stack() {
             Row() {
               // 用于展示模糊效果
-              Column()
-                .backgroundColor(Color.Red)
-                .height("100%")
-                .layoutWeight(1)
-              Column()
-                .backgroundColor(Color.Orange)
-                .height("100%")
-                .layoutWeight(1)
-              Column()
-                .backgroundColor(Color.Yellow)
-                .height("100%")
-                .layoutWeight(1)
-              Column()
-                .backgroundColor(Color.Green)
-                .height("100%")
-                .layoutWeight(1)
-              Column()
-                .backgroundColor("#00ffff")
-                .height("100%")
-                .layoutWeight(1)
-              Column()
-                .backgroundColor(Color.Blue)
-                .height("100%")
-                .layoutWeight(1)
-              Column()
-                .backgroundColor("#ff00ff")
-                .height("100%")
-                .layoutWeight(1)
+              Image($r('app.media.display_test'))
+                .draggable(false)
+                .objectFit(ImageFit.Fill)
+                .width('100%')
+                .height('100%')
             }
             .clip(true)
             .borderRadius(16)
@@ -384,42 +362,60 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
             .width("100%")
 
             Column() {
-              if (this.topBar || !this.separate) {
-                Row() {
+              Row() {
 
-                }
-                .opacity(Math.min(Math.max(0.1, (this.separate ? this.topBarOpacity : this.syncBarOpacity) / 100), 1.0))
-                .foregroundBlurStyle(
-                  StyleConstants.BLUR[this.separate ? this.topBarBlurType : this.syncBarBlurType],
-                  {
-                    scale: Math.max(0, Math.min(1, (this.separate ? this.topBarBlur : this.syncBarBlur) / 100))
-                  }
-                )
-                .height('25%')
-                .width("100%")
-                .backgroundColor(Color.White)
-                .borderRadius(16)
               }
+              .opacity(Math.min(Math.max(0.1, (this.separate ? this.topBarOpacity : this.syncBarOpacity) / 100), 1.0))
+              .foregroundBlurStyle(
+                StyleConstants.BLUR[this.separate ? this.topBarBlurType : this.syncBarBlurType],
+                {
+                  scale: Math.max(0, Math.min(1, (this.separate ? this.topBarBlur : this.syncBarBlur) / 100))
+                }
+              )
+              .visibility(this.topBar || !this.separate ? Visibility.Visible : Visibility.Hidden)
+              .height('25%')
+              .width("100%")
+              .backgroundColor(Color.White)
+              .borderRadius(16)
+              .animation({
+                curve: curves.springMotion(),
+                duration: 500
+              })
+              .transition(
+                TransitionEffect.asymmetric(
+                  TransitionEffect.move(TransitionEdge.TOP),
+                  TransitionEffect.move(TransitionEdge.TOP)
+                )
+              )
               Blank()
                 .layoutWeight(1)
                 .backgroundColor(Color.Transparent)
-              if (!this.topBar || !this.separate) {
-                Row() {
+              Row() {
 
-                }
-                .opacity(Math.min(Math.max(0.1, (this.separate ? this.bottomBarOpacity : this.syncBarOpacity) / 100),
-                  1.0))
-                .foregroundBlurStyle(
-                  StyleConstants.BLUR[this.separate ? this.bottomBarBlurType : this.syncBarBlurType],
-                  {
-                    scale: Math.max(0, Math.min(1, (this.separate ? this.bottomBarBlur : this.syncBarBlur) / 100))
-                  }
-                )
-                .height('25%')
-                .width("100%")
-                .backgroundColor(Color.White)
-                .borderRadius(16)
               }
+              .opacity(Math.min(Math.max(0.1, (this.separate ? this.bottomBarOpacity : this.syncBarOpacity) / 100),
+                1.0))
+              .foregroundBlurStyle(
+                StyleConstants.BLUR[this.separate ? this.bottomBarBlurType : this.syncBarBlurType],
+                {
+                  scale: Math.max(0, Math.min(1, (this.separate ? this.bottomBarBlur : this.syncBarBlur) / 100))
+                }
+              )
+              .visibility(!this.topBar || !this.separate ? Visibility.Visible : Visibility.Hidden)
+              .height('25%')
+              .width("100%")
+              .backgroundColor(Color.White)
+              .borderRadius(16)
+              .animation({
+                curve: curves.springMotion(),
+                duration: 500
+              })
+              .transition(
+                TransitionEffect.asymmetric(
+                  TransitionEffect.move(TransitionEdge.BOTTOM),
+                  TransitionEffect.move(TransitionEdge.BOTTOM)
+                )
+              )
             }
             .backgroundColor(Color.Transparent)
             .height("100%")

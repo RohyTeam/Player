@@ -26,7 +26,8 @@ import { VirtualFilePicker, VirtualNode } from '../../components/VirtualFilePick
 import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
 import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 import { SettingsSheetView, SettingsSheetViewFunctions } from '../../settings/SettingsSheetView'
-import { VideoLibrarySettingsPage } from '../../settings/VideoLibrarySettingsPage'
+import { VideoLibrarySettingsPage } from '../../settings/pages/VideoLibrarySettingsPage'
+import { ProgressLoadingOverlay } from '../../components/Overlays'
 
 export interface VideoDeleter {
 
@@ -65,6 +66,34 @@ export struct VideoLibraryPage {
   @StorageLink(`updateVideoTime`)
   @Watch("videoUpdater")
   toBeUpdatedVideoIdentity: string = ""
+
+  // 这个是导入视频时使用的
+  @State
+  private videosLoading: number = 1
+  @State
+  private videosLoaded: number = 0
+
+  private loadingOverlay: CustomDialogController | null = new CustomDialogController({
+    builder: ProgressLoadingOverlay({
+      loading: this.videosLoading,
+      loaded: this.videosLoaded
+    }),
+    autoCancel: false,
+    onWillDismiss: (dismissDialogAction: DismissDialogAction) => {
+      console.info("reason=" + JSON.stringify(dismissDialogAction.reason))
+      console.log("dialog onWillDismiss")
+      if (dismissDialogAction.reason == DismissReason.PRESS_BACK) {
+        dismissDialogAction.dismiss()
+      }
+      if (dismissDialogAction.reason == DismissReason.TOUCH_OUTSIDE) {
+        dismissDialogAction.dismiss()
+      }
+    },
+    alignment: DialogAlignment.Center,
+    gridCount: 4,
+    customStyle: false,
+    cornerRadius: 16,
+  })
 
   videoUpdater(changedPropertyName: string) {
     console.error(`changes detected, ready to update video`)
@@ -719,6 +748,9 @@ export struct VideoLibraryPage {
         if (photoSelectResult.photoUris.length == 0) {
           return
         }
+        this.videosLoading = photoSelectResult.photoUris.length
+        this.videosLoaded = 0
+        this.loadingOverlay?.open()
 
         let accessor = photoAccessHelper.getPhotoAccessHelper(getContext(this))
 
@@ -746,15 +778,20 @@ export struct VideoLibraryPage {
                         .then((video) => {
                           video.status = FileStatus.Authorized
                           this.videos.push(video)
+                          this.videosLoaded += 1
+                          if (this.videosLoaded >= this.videosLoading) {
+                            this.loadingOverlay?.close()
+                          }
                         })
                     })
                 }
               })
           }
-          if (duplicated) {
-            showAlert(this.getUIContext(), $r("app.string.duplicated_imports"),
-              $r("app.string.duplicated_imports_desc"))
-          }
+        }
+
+        if (duplicated) {
+          showAlert(this.getUIContext(), $r("app.string.duplicated_imports"),
+            $r("app.string.duplicated_imports_desc"))
         }
       })
   }
@@ -770,6 +807,10 @@ export struct VideoLibraryPage {
         if (documentSelectResult.length == 0) {
           return
         }
+
+        this.videosLoading = documentSelectResult.length
+        this.videosLoaded = 0
+        this.loadingOverlay?.open()
 
         let duplicated = false
         let unsupported = false
@@ -811,6 +852,10 @@ export struct VideoLibraryPage {
                 videoSource.cover = video.cover
                 videoSource.status = FileStatus.Authorized
                 this.sort()
+                this.videosLoaded += 1
+                if (this.videosLoaded >= this.videosLoading) {
+                  this.loadingOverlay?.close()
+                }
               })
           }
         }

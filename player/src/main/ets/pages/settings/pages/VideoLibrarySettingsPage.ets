@@ -6,11 +6,11 @@ import {
   SettingsRow,
   SettingsSelection,
   SettingsSwitch
-} from '../components/SettingsPage'
+} from '../../components/SettingsPage'
 import { abilityAccessCtrl, common, ConfigurationConstant } from '@kit.AbilityKit'
-import { checkPermissionGrant, requestPermissionsFromUser } from '../../util/PermissionUtils'
+import { checkPermissionGrant, requestPermissionsFromUser } from '../../../util/PermissionUtils'
 import { promptAction } from '@kit.ArkUI'
-import { SettingsSheetViewFunctions } from './SettingsSheetView'
+import { SettingsSheetViewFunctions } from '../SettingsSheetView'
 
 @Component
 export struct VideoLibrarySettingsPage {
@@ -38,6 +38,9 @@ export struct VideoLibrarySettingsPage {
   hardwareDecode: boolean = false;
   @StorageLink('lessCovering')
   lessCovering: boolean = false;
+
+  @StorageLink("debugMode")
+  private debugMode: boolean = false
 
   aboutToAppear(): void {
     checkPermissionGrant("ohos.permission.DISTRIBUTED_DATASYNC")
@@ -276,24 +279,36 @@ export struct VideoLibrarySettingsPage {
           settingsTitle: $r("app.string.about"),
           clickEvent: {
             action: () => {
-              promptAction.showToast({
-                'message': $r("app.string.coming_soon")
+              this.settingsPageController.pushPath({
+                name: 'about'
               })
             }
           }
         })
       }
 
-      SettingsGroup() {
-        SettingsRow({
-          settingsTitle: $r("app.string.settings_debug_page"),
-          clickEvent: {
-            action: () => {
-              this.pageController.pushPath({ name: "debugPage" })
-              this.functions.onClose()
+      if (this.debugMode) {
+        SettingsGroup() {
+          SettingsSwitch({
+            settingsTitle: $r('app.string.debug_mode'),
+            switchValue: this.debugMode,
+            switchEvent: {
+              action: (value: boolean) => {
+                AppStorage.setOrCreate("debugMode", value)
+              }
             }
-          }
-        })
+          })
+          SettingsDivider()
+          SettingsRow({
+            settingsTitle: $r("app.string.settings_debug_page"),
+            clickEvent: {
+              action: () => {
+                this.pageController.pushPath({ name: "debugPage" })
+                this.functions.onClose()
+              }
+            }
+          })
+        }
       }
     }
   }

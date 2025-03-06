@@ -427,6 +427,22 @@
     {
       "name": "blurtype",
       "value": "Blur type"
+    },
+    {
+      "name": "version_info",
+      "value": "Version Info"
+    },
+    {
+      "name": "debug_mode_activate",
+      "value": "Debug mode activated"
+    },
+    {
+      "name": "importing",
+      "value": "Importing... (%d/%d)"
+    },
+    {
+      "name": "debug_mode",
+      "value": "Debug mode"
     }
   ]
 }

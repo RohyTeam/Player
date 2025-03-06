@@ -427,6 +427,22 @@
     {
       "name": "surfaceFillingMode_16by9",
       "value": "16：9"
+    },
+    {
+      "name": "version_info",
+      "value": "版本信息"
+    },
+    {
+      "name": "debug_mode_activate",
+      "value": "已开启调试模式"
+    },
+    {
+      "name": "importing",
+      "value": "加载中......（%d/%d）"
+    },
+    {
+      "name": "debug_mode",
+      "value": "调试模式"
     }
   ]
 }
