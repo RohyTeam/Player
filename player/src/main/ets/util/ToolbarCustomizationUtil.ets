@@ -41,15 +41,15 @@ export const bottomBarOptions: DraggableCustomizationOption[] = [
     name: $r('app.string.settings_toolbar_option_fillingmode'),
   },
   {
-    symbolIcon: $r('sys.symbol.textformat'),
-    name: $r('app.string.settings_toolbar_option_subtitles'),
-  },
-  {
     symbolIcon: $r('sys.symbol.timer'),
     name: $r('app.string.settings_toolbar_option_speed'),
   },
   {
     symbolIcon: $r('sys.symbol.speaker_wave_3'),
     name: $r('app.string.settings_toolbar_option_audios'),
+  },
+  {
+    symbolIcon: $r('sys.symbol.textformat'),
+    name: $r('app.string.settings_toolbar_option_subtitles'),
   }
 ]
