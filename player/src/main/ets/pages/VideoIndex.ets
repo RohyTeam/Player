@@ -1,9 +1,9 @@
 import { common, Want } from '@kit.AbilityKit';
 import { AVVideoPlayer } from './player/AVVideoPlayer';
 import { deviceInfo } from '@kit.BasicServicesKit';
-import { FileUtil } from '@pura/harmony-utils';
 import { IjkVideoPlayer } from './player/IjkVideoPlayer';
 import { PlayerMetadata } from '../util/PlayerUtil';
+import { Rlog } from '../log/Rlog';
 
 export class EventData {
   launchWant: Want | undefined = undefined
@@ -34,23 +34,34 @@ struct VideoIndex {
   preferFFmpeg: boolean = false;
 
   aboutToAppear(): void {
-    console.error("trying to play video")
+    Rlog.debug(`render: VideoIndex`)
+    Rlog.debug(`analysing provided want data`)
     let eventData = new EventData()
     getContext(this).eventHub.emit('getAbilityData', eventData)
     let want = eventData.launchWant!
     this.want = want
     if (want.parameters!['originalDevice'] != undefined) {
       this.isContinuation = true
-      console.error("find continue video")
       if (want.parameters!.originalDevice as string != deviceInfo.ODID) {
-        console.error(`is remote file, url is: ${FileUtil.getUriFromPath(`${getContext(this)
-          .distributedFilesDir}/${want.parameters!.hash}.vid`)}`)
-        this.url = `dfs:${getContext(this).distributedFilesDir}/${want.parameters!.hash}.vid`
+        let originalFileUri = want.parameters!.originalVidUri as string
+        if (originalFileUri.startsWith('file://')) {
+          Rlog.debug(`playing a video from continuation (file on another device)`)
+          this.url = `dfs:${getContext(this).distributedFilesDir}/${want.parameters!.hash}.vid`
+        } else {
+          Rlog.debug(`playing a video from continuation (file is on internet)`)
+          this.url = originalFileUri
+        }
         this.videoHolder = want.parameters!.videoHolder as string
       } else {
         this.url = want.parameters!.url as string
+        if (this.url.startsWith('file://')) {
+          Rlog.debug(`playing a video from continuation (file on this device)`)
+        } else {
+          Rlog.debug(`playing a video from continuation (file is on internet)`)
+        }
       }
     } else {
+      Rlog.debug(`playing a video saved in local database (local or network video is not clear at this stage)`)
       this.url = want.parameters!.url as string
     }
     this.title = want.parameters!.title as string

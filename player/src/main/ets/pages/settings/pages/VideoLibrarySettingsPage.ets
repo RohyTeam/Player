@@ -38,6 +38,8 @@ export struct VideoLibrarySettingsPage {
   hardwareDecode: boolean = false;
   @StorageLink('lessCovering')
   lessCovering: boolean = false;
+  @StorageLink('save5logsOnly')
+  save5logsOnly: boolean = false;
 
   @StorageLink("debugMode")
   private debugMode: boolean = false
@@ -265,11 +267,11 @@ export struct VideoLibrarySettingsPage {
         })
         SettingsDivider()
         SettingsRow({
-          settingsTitle: $r("app.string.service_info"),
+          settingsTitle: $r("app.string.privacy_policy"),
           clickEvent: {
             action: () => {
-              promptAction.showToast({
-                'message': $r("app.string.coming_soon")
+              this.settingsPageController.pushPath({
+                name: 'privacy'
               })
             }
           }
@@ -305,6 +307,27 @@ export struct VideoLibrarySettingsPage {
               action: () => {
                 this.pageController.pushPath({ name: "debugPage" })
                 this.functions.onClose()
+              }
+            }
+          })
+          SettingsDivider()
+          SettingsSwitch({
+            settingsTitle: $r('app.string.settings_save_5_logs_only'),
+            settingsTips: $r("app.string.settings_save_5_logs_only_tips"),
+            switchValue: this.save5logsOnly,
+            switchEvent: {
+              action: (value: boolean) => {
+                AppStorage.setOrCreate("save5logsOnly", value)
+                PreferencesUtil.putSync("save5logsOnly", value)
+              }
+            }
+          })
+          SettingsDivider()
+          SettingsRow({
+            settingsTitle: $r("app.string.log_export"),
+            clickEvent: {
+              action: () => {
+                this.settingsPageController.pushPath({ name: "logExport" })
               }
             }
           })

@@ -42,6 +42,31 @@ export struct SettingsPage {
 }
 
 @Component
+export struct SettingsHeader {
+  @Prop
+  @Require
+  title: ResourceStr
+  @BuilderParam
+  content: () => void
+
+  build() {
+    ListItem() {
+      Row() {
+        Column() {
+          Text(this.title)
+            .fontSize(18)
+        }
+      }
+      .padding(4)
+      .borderRadius(16)
+      .backgroundColor(Color.Transparent)
+      .width("90%")
+    }
+    .width("100%")
+  }
+}
+
+@Component
 export struct SettingsGroup {
   @BuilderParam
   content: () => void

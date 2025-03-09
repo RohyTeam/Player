@@ -169,10 +169,6 @@
       "value": "To play local videos across devices"
     },
     {
-      "name": "service_info",
-      "value": "Service Info"
-    },
-    {
       "name": "settings_continuation",
       "value": "Continuation"
     },
@@ -443,6 +439,30 @@
     {
       "name": "debug_mode",
       "value": "Debug mode"
+    },
+    {
+      "name": "log_export",
+      "value": "Log export"
+    },
+    {
+      "name": "log_export_success",
+      "value": "Successfully exported log file"
+    },
+    {
+      "name": "log_export_failed",
+      "value": "Failed to export log file"
+    },
+    {
+      "name": "privacy_policy",
+      "value": "Privacy policy"
+    },
+    {
+      "name": "settings_save_5_logs_only",
+      "value": "Only save 5 logs"
+    },
+    {
+      "name": "settings_save_5_logs_only_tips",
+      "value": "Enable this option will only save 5 logs."
     }
   ]
 }

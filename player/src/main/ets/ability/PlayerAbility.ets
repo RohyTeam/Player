@@ -1,9 +1,10 @@
 import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { display, window } from '@kit.ArkUI';
+import { display, ThemeControl, window } from '@kit.ArkUI';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { DatabaseManager } from '../database/DatabaseManager';
 import { ToolbarOptions } from '../util/ToolbarCustomizationUtil';
+import { Rlog } from '../log/Rlog';
 
 export default class PlayerAbility extends UIAbility {
   private windowObj?: window.Window;
@@ -54,6 +55,13 @@ export default class PlayerAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     AppUtil.init(this.context)
 
+    // 唯一一个在日志系统初始化前进行初始化的参数
+    AppStorage.setOrCreate("save5logsOnly", PreferencesUtil.getBooleanSync("save5logsOnly", true))
+
+    Rlog.startTracking(this.context)
+    AppStorage.setOrCreate("RohyLoggingSystemInitialized", true)
+    // 为了让直接从文件管理打开或者接续时也能保存日志，VideoAbility 也会添加日志初始化逻辑，但是为了保证只会初始化一次，添加存储变量
+
     // 这边如果用户没有调整过工具栏且是第一次打开，默认将所有工具栏都选中
     if (!PreferencesUtil.hasSync('toolbar_landscape_topbar')) {
       PreferencesUtil.putSync('toolbar_landscape_topbar', ToolbarOptions.TOP_BAR.ALL_SELECTED)
@@ -79,8 +87,6 @@ export default class PlayerAbility extends UIAbility {
     } else {
       this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET
     }
-
-    // runTest()
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
@@ -106,4 +112,5 @@ export default class PlayerAbility extends UIAbility {
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
     });
   }
+
 }

@@ -9,6 +9,7 @@ import { JSON } from '@kit.ArkTS';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { checkPermissionGrant } from '../util/PermissionUtils';
 import { StringArray } from '../entity/Arrays';
+import { Rlog } from '../log/Rlog';
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
@@ -49,8 +50,8 @@ export default class VideoAbility extends UIAbility {
    * 搞得人头疼。。。
    */
   onContinue(wantParam: Record<string, Object>): AbilityConstant.OnContinueResult | Promise<AbilityConstant.OnContinueResult> {
+    // TODO：添加接续版本，防止后续更新新内容导致接续功能爆炸
     return new Promise((resultReturner) => {
-      console.error("starting continue")
       let deviceManager = distributedDeviceManager.createDeviceManager("org.rohy.player")
       let eventData = new EventData()
       this.context.eventHub.emit('getAbilityData', eventData)
@@ -64,14 +65,19 @@ export default class VideoAbility extends UIAbility {
         console.error('not have original device')
         wantParam['originalDevice'] = deviceInfo.ODID
         wantParam['videoHolder'] = deviceManager.getLocalDeviceNetworkId()
-        console.error('starting copy')
-        copyFileToContinueDir(this.context, want.parameters!.url as string, want.parameters!.hash as string)
-          .then(() => {
-            console.error('done copy, go continue!')
-            resultReturner(AbilityConstant.OnContinueResult.AGREE)
-          })
+        let uri = want.parameters!.url as string
+        wantParam['originalVidUri'] = uri
+        if (uri.startsWith('file://')) {
+          copyFileToContinueDir(this.context, want.parameters!.url as string, want.parameters!.hash as string)
+            .then(() => {
+              resultReturner(AbilityConstant.OnContinueResult.AGREE)
+            })
+        } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
+          resultReturner(AbilityConstant.OnContinueResult.AGREE)
+        } else {
+          resultReturner(AbilityConstant.OnContinueResult.REJECT)
+        }
       } else {
-        console.error('do have original device')
         // 有这个参数说明这个视频被多次流转了，而且所有数据都已经填好，所以不进行任何改动
         wantParam['originalDevice'] = want.parameters!.originalDevice
         wantParam['videoHolder'] = want.parameters!.videoHolder
@@ -89,6 +95,13 @@ export default class VideoAbility extends UIAbility {
       // 这种情况一般是流转导致的，但是从文件预览打开也会导致这个情况
       console.error(`requires to reinit context`)
       AppUtil.init(this.context)
+    }
+
+    // 唯一一个在日志系统初始化前进行初始化的参数
+    AppStorage.setOrCreate("save5logsOnly", PreferencesUtil.getBooleanSync("save5logsOnly", true))
+
+    if (!(AppStorage.get('RohyLoggingSystemInitialized') || false)) {
+      Rlog.startTracking(this.context)
     }
 
     let colorMode = PreferencesUtil.getStringSync("colorMode", "system")

@@ -1,4 +1,6 @@
 import { AboutPage } from './information/AboutPage'
+import { PrivacyPage } from './information/Privacy'
+import { LogExportPage } from './log/LogExportPage'
 import { ToolbarButtonsLandscapeCustomizer } from './ToolbarCustomizer'
 
 export interface SettingsSheetViewFunctions {
@@ -27,6 +29,10 @@ export struct SettingsSheetView {
       ToolbarButtonsLandscapeCustomizer()
     } else if (name == 'about') {
       AboutPage()
+    } else if (name == 'logExport') {
+      LogExportPage()
+    } else if (name == 'privacy') {
+      PrivacyPage()
     }
   }
 

@@ -22,6 +22,8 @@ import SubtitleManager from 'librohy_subtitle.so'
 import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
 import { WebDAVs } from '../../../entity/WebDAVEntity'
 import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
+import { Rlog } from '../../../log/Rlog'
+import { BusinessError } from '@kit.BasicServicesKit'
 
 @Component
 export struct ListView {
@@ -460,7 +462,10 @@ struct VideoRow {
                       height: this.video.height
                     })
                 })
-                .catch(() => {
+                .catch((err: BusinessError) => {
+                  Rlog.fatal("failed to open video", {
+                    error: err
+                  })
                   this.video.status = FileStatus.Disappear
                   this.deleter.action(this.video)
                   showAlert(this.getUIContext(), $r("app.string.file_deleted"),

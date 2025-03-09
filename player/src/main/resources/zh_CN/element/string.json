@@ -153,10 +153,6 @@
       "value": "我们目前仅支持从本地文件及图库中导入。"
     },
     {
-      "name": "service_info",
-      "value": "服务信息与规则"
-    },
-    {
       "name": "reason_distributed_datasync",
       "value": "使用应用接续功能需使用此权限，否则将无法在其他设备上打开此设备上的视频"
     },
@@ -443,6 +439,30 @@
     {
       "name": "debug_mode",
       "value": "调试模式"
+    },
+    {
+      "name": "log_export",
+      "value": "日志导出"
+    },
+    {
+      "name": "log_export_success",
+      "value": "成功导出日志文件"
+    },
+    {
+      "name": "log_export_failed",
+      "value": "导出日志文件失败"
+    },
+    {
+      "name": "privacy_policy",
+      "value": "隐私条款"
+    },
+    {
+      "name": "settings_save_5_logs_only",
+      "value": "仅保留 5 条历史日志"
+    },
+    {
+      "name": "settings_save_5_logs_only_tips",
+      "value": "开启此选项后，仅保留 5 条历史日志；关闭后将保存所有的日志。"
     }
   ]
 }

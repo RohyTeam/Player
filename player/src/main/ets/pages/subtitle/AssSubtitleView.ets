@@ -54,13 +54,10 @@ export struct NativeAssSubtitleView {
         SubtitleManager.Subtitle_AddMemoryFont("HarmonyOS Sans SC", data.buffer)
         fileIo.open(this.path)
           .then((file) => {
-            console.error("SHIT: init")
             const arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size);
             fileIo.readSync(file.fd, arrayBuffer)
-            console.error("SHIT: read all bytes")
             SubtitleManager.Subtitle_Init(arrayBuffer)
             this.controller.initPositioner((position: number) => {
-              console.error("SHIT: render")
               this.images =
                 SubtitleManager.Subtitle_Render(position, this.actualWidth, this.actualHeight) as SubtitleImage[]
               if (this.ready) {
@@ -77,7 +74,6 @@ export struct NativeAssSubtitleView {
                     }
                   })
                   if (pixelMap) {
-                    console.error(`rendering image at ${subtitleImage.x}, ${subtitleImage.y}`)
                     // DeepSeek 老师竟然是对的，这玩意还真得用 canvas 绘制，不然字幕会整个被放大糊满整个屏幕
                     this.context.drawImage(pixelMap, subtitleImage.x, subtitleImage.y, subtitleImage.width,
                       subtitleImage.height);

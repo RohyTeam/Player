@@ -1,4 +1,4 @@
-import { BusinessError } from '@kit.BasicServicesKit';
+import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
 import { media } from '@kit.MediaKit';
 import { fileIo, hash, picker } from '@kit.CoreFileKit';
 import { convertNumberToDurationString } from '../../util/TimeUtil';
@@ -718,7 +718,7 @@ export struct AVVideoPlayer {
     .padding({
       left: 16,
       right: 16,
-      top: 12,
+      top: this.landscapeView ? 12 : (deviceInfo.deviceType == "phone" ? 36 : 12), // TODO：对于 13.2 等有刘海的平板进行额外优化
       bottom: 12
     })
     .backgroundColor(Color.Transparent)
@@ -767,7 +767,7 @@ export struct AVVideoPlayer {
     .padding({
       left: 16,
       right: 16,
-      top: 12,
+      top: this.landscapeView ? 12 : (deviceInfo.deviceType == "phone" ? 36 : 12), // TODO：对于 13.2 等有刘海的平板进行额外优化
       bottom: 12
     })
     .visibility(Visibility.Hidden)
@@ -822,22 +822,68 @@ export struct AVVideoPlayer {
   @Builder
   private surfaceOverlay() {
     Row() {
-      Row() {
-
+      Stack() {
+        Button({
+          type: ButtonType.Circle
+        }) {
+          SymbolGlyph($r("sys.symbol.arrow_clockwise"))
+            .fontSize(24)
+            .fontColor([Color.Transparent])
+        }
+        .align(Alignment.Center)
+        .margin({
+          left: this.landscapeView ? 36 : 12
+        })
+        .width(40)
+        .height(40)
+        .backgroundColor($r("app.color.comp_background_focus"))
+        Button({
+          type: ButtonType.Circle
+        }) {
+          SymbolGlyph($r("sys.symbol.arrow_clockwise"))
+            .fontSize(24)
+            .fontColor([$r("app.color.icon_primary")])
+        }
+        .align(Alignment.Center)
+        .margin({
+          left: this.landscapeView ? 36 : 12
+        })
+        .width(40)
+        .height(40)
+        .onClick(() => {
+          animateTo({
+            duration: 300
+          }, () => {
+            if (this.landscapeView) {
+              VideoAbility.getWindow().setPreferredOrientation(window.Orientation.PORTRAIT)
+              this.landscapeView = false
+            } else {
+              VideoAbility.getWindow().setPreferredOrientation(window.Orientation.AUTO_ROTATION_LANDSCAPE)
+              this.landscapeView = true
+            }
+          })
+        })
+        .backgroundColor($r("app.color.comp_background_tertiary"))
       }
-      .layoutWeight(1)
-
+      .animation({
+        curve: curves.springMotion()
+      })
+      .transition(
+        TransitionEffect.asymmetric(
+          TransitionEffect.move(TransitionEdge.START),
+          TransitionEffect.move(TransitionEdge.START)
+        )
+      )
+      .visibility(
+        this.showControls ? Visibility.Visible : Visibility.Hidden
+      )
       Row() {
-
       }
       .layoutWeight(1)
     }
     .alignItems(VerticalAlign.Center)
     .layoutWeight(1)
     .gestureModifier(this.videoPlayerGestureModifier)
-    .visibility(
-      this.showControls ? Visibility.Visible : Visibility.Hidden
-    )
   }
 
   /**

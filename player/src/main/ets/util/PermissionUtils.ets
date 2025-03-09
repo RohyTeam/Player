@@ -13,14 +13,12 @@ export async function checkPermissionGrant(permission: Permissions): Promise<abi
     tokenId = appInfo.accessTokenId;
   } catch (error) {
     const err: BusinessError = error as BusinessError;
-    console.error(`Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`);
   }
 
   try {
     grantStatus = await atManager.checkAccessToken(tokenId, permission);
   } catch (error) {
     const err: BusinessError = error as BusinessError;
-    console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
   }
 
   return grantStatus;

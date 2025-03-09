@@ -28,6 +28,7 @@ import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 import { SettingsSheetView, SettingsSheetViewFunctions } from '../../settings/SettingsSheetView'
 import { VideoLibrarySettingsPage } from '../../settings/pages/VideoLibrarySettingsPage'
 import { ProgressLoadingOverlay } from '../../components/Overlays'
+import { Rlog } from '../../../log/Rlog'
 
 export interface VideoDeleter {
 
@@ -469,8 +470,7 @@ export struct VideoLibraryPage {
                       VideoLibraryDatabase.deleteByHash(getContext(this), video.uri, localVideo.hash)
                         .then(() => {
                           video.status = FileStatus.Disappear
-                          let index = this.videos.indexOf(video)
-                          this.videos.splice(index, 1)
+                          // 不从 videos 里去掉这个实体了，不知道为什么总是删错，直接用 Disappear 状态停止渲染
                           this.sort()
                         })
                     } else if (video.type == VideoSourceType.WEBDAV) {
@@ -479,8 +479,6 @@ export struct VideoLibraryPage {
                         webdavVideo.serverUrl)
                         .then(() => {
                           video.status = FileStatus.Disappear
-                          let index = this.videos.indexOf(video)
-                          this.videos.splice(index, 1)
                           this.sort()
                         })
                     }
@@ -797,6 +795,8 @@ export struct VideoLibraryPage {
   }
 
   private showFileManagerPicker() {
+    Rlog.debug("start: invoke of VideoLibraryPage#showFileManagerPicker function")
+
     let documentViewPicker = new picker.DocumentViewPicker(this.getUIContext().getHostContext()!);
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = 10; // 太多了处理不过来
@@ -805,6 +805,8 @@ export struct VideoLibraryPage {
     documentViewPicker.select(documentSelectOptions)
       .then(async (documentSelectResult: Array<string>) => {
         if (documentSelectResult.length == 0) {
+          Rlog.debug(`no file selected`)
+          Rlog.debug("end: invoke of VideoLibraryPage#showFileManagerPicker function")
           return
         }
 
@@ -859,22 +861,31 @@ export struct VideoLibraryPage {
               })
           }
         }
+        Rlog.debug(`selected ${documentSelectResult.length} file${documentSelectResult.length > 1 ? "s" : ""} to import`)
 
         if (duplicated) {
+          Rlog.debug("duplicated file found")
           showAlert(this.getUIContext(), $r("app.string.duplicated_imports"), $r("app.string.duplicated_imports_desc"),
             () => {
               if (unsupported) {
+                Rlog.debug("unsupported file found")
                 showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"),
                   $r("app.string.import_unsupported_source_desc"))
               }
             })
         } else if (unsupported) {
+          Rlog.debug("unsupported file found")
           showAlert(this.getUIContext(), $r("app.string.import_unsupported_source"),
             $r("app.string.import_unsupported_source_desc"))
         }
-      }).catch((err: BusinessError) => {
-      console.error(`Invoke documentViewPicker.select failed, code is ${err.code}, message is ${err.message}`);
-    })
+        Rlog.debug("end: invoke of VideoLibraryPage#showFileManagerPicker function")
+      })
+      .catch((err: BusinessError) => {
+        Rlog.error(`failed to use picker`, {
+          error: err
+        })
+        Rlog.debug("end: invoke of VideoLibraryPage#showFileManagerPicker function")
+      })
   }
 
   private sort() {

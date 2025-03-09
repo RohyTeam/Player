@@ -23,6 +23,8 @@ import SubtitleManager from 'librohy_subtitle.so'
 import { createClientByData, WebDAVClient } from '../../../lib/webdav_client/WebDAVClient'
 import { WebDAVs } from '../../../entity/WebDAVEntity'
 import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
+import { BusinessError } from '@kit.BasicServicesKit'
+import { Rlog } from '../../../log/Rlog'
 
 @Component
 export struct GridView {
@@ -348,8 +350,10 @@ struct VideoRow {
                     }
                   )
                 })
-                .catch(() => {
-                  this.video.status = FileStatus.Disappear
+                .catch((err: BusinessError) => {
+                  Rlog.fatal("failed to open video", {
+                    error: err
+                  })
                   this.deleter.action(this.video)
                   showAlert(this.getUIContext(), $r("app.string.file_deleted"),
                     $r("app.string.file_deleted_desc"))

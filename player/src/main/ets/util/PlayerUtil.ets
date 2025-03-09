@@ -13,7 +13,6 @@ export interface PlayerMetadata {
 export function openVideo(context: common.UIAbilityContext, uri: string, title: string, hash: string,
   metadata: PlayerMetadata,
   headers?: Headers) {
-  console.error(`opening video ${uri}`)
   let want: Want
   if (headers == undefined) {
     want = {
