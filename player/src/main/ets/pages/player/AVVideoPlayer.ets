@@ -1739,6 +1739,11 @@ export struct AVVideoPlayer {
       PreferencesUtil.putSync('toolbar_sync_blurtype', 0)
     }
     this.syncBarOpacity = PreferencesUtil.getNumberSync('toolbar_sync_opacity', 100)
+
+    if (this.metadata.width > 0 && this.metadata.height > 0) {
+      this.landscapeView == this.metadata.width >= this.metadata.height
+      VideoAbility.getWindow().setPreferredOrientation(window.Orientation.PORTRAIT)
+    }
   }
 
   aboutToDisappear(): void {
