@@ -117,7 +117,10 @@ export struct GridView {
                             video.status = FileStatus.Authorized
                           }
                         })
-                        .catch(() => {
+                        .catch((err: BusinessError) => {
+                          Rlog.error(`video from photos not exists`, {
+                            error: err
+                          })
                           video.status = FileStatus.Disappear
                           this.deleter.action(video)
                         })

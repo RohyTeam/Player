@@ -75,7 +75,7 @@ export abstract class LocalVideoSource extends VideoSource {
     super(
       uri,
       title,
-      VideoSourceType.LOCAL,
+      type,
       addedTime,
       played,
       length,

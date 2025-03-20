@@ -10,6 +10,7 @@ import { DraggableCustomization, DraggableCustomizationOption } from '../../comp
 import { ProgressLoadingOverlay } from '../../components/Overlays'
 import { async } from '../../../util/AsyncUtil'
 import { SettingsDivider, SettingsGroup, SettingsPage, SettingsRow } from '../../components/SettingsPage'
+import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -140,6 +141,15 @@ export struct DebugPage {
                     .then(() => {
                       this.videosLoadedAdd()
                     })
+                }
+              }
+            })
+            SettingsDivider()
+            SettingsRow({
+              settingsTitle: "【危险】删除所有源于图库的视频",
+              clickEvent: {
+                action: () => {
+                  VideoLibraryDatabase.clearVideosFromPhotos(getContext(this))
                 }
               }
             })

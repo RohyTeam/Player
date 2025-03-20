@@ -752,6 +752,7 @@ export struct VideoLibraryPage {
 
         let accessor = photoAccessHelper.getPhotoAccessHelper(getContext(this))
 
+        // FIXME 重复文件不会自动关闭加载窗口
         let duplicated = false
         for (let photoUri of photoSelectResult.photoUris) {
           let photoFile = fileIo.openSync(photoUri)
@@ -814,6 +815,7 @@ export struct VideoLibraryPage {
         this.videosLoaded = 0
         this.loadingOverlay?.open()
 
+        // FIXME 重复文件不会自动关闭加载窗口
         let duplicated = false
         let unsupported = false
         for (let fileUrl of documentSelectResult) {

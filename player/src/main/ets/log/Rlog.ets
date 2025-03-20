@@ -219,6 +219,9 @@ export class Rlog { // 意为 Rohy Logger
                 if (reserve == undefined || reserve <= 0) {
                   Rlog.debug("all logs will be cleared", NO_FILE_OPTIONS)
                   for (let file of files) {
+                    if (file == Rlog.logfile) { // 防止删除当前的日志
+                      continue
+                    }
                     Rlog.debug(`clearing log file: ${file}`, NO_FILE_OPTIONS)
                     fileIo.unlinkSync(`${context.cacheDir}/logs/${file}`)
                     clearedFiles += 1
@@ -235,6 +238,9 @@ export class Rlog { // 意为 Rohy Logger
                     })
                     .sort((a, b) => b.mtime - a.mtime)
                   ) {
+                    if (file.file == Rlog.logfile) { // 防止删除当前的日志
+                      continue
+                    }
                     if (skipped < reserve) { // 将更近的文件保留
                       skipped += 1
                       continue
@@ -299,7 +305,7 @@ export class Rlog { // 意为 Rohy Logger
         if (exists) {
           fileIo.open(Rlog.logfile, fileIo.OpenMode.CREATE)
             .then((file) => {
-              Rlog.debug("logs directory exists, mkdir is not in need'", NO_FILE_OPTIONS)
+              Rlog.debug("logs directory exists, mkdir is not in need", NO_FILE_OPTIONS)
               fileIo.close(file)
                 .then(() => {
                   Rlog.debug("log file created", NO_FILE_OPTIONS)
@@ -353,7 +359,7 @@ export class Rlog { // 意为 Rohy Logger
     domain = domain || 0
     file = file == undefined ? true : file
     tag = tag || 'output'
-    let logMessage = error ? `${message}, Error: [${error.message}](${error.code})` : message
+    let logMessage = error ? `[Rlog][${tag}] ${message}, Error: [${error.message}](${error.code})` : `[Rlog][${tag}] ${message}`
 
     if (file != undefined && file) {
       let fileMessage: string
@@ -382,12 +388,12 @@ export class Rlog { // 意为 Rohy Logger
           })
           .catch((error: BusinessError) => {
             // 日志输出很重要，用 fatal 输出
-            Rlog.fatal(`failed to write to logfile!`, { file: false, error: error })
+            Rlog.fatal(`failed to write to logfile!`, { file: false, tag: tag, error: error })
           })
       })
         .catch((error: BusinessError) => {
           // 日志输出很重要，用 fatal 输出
-          Rlog.fatal(`failed to open logfile, cannot output to file!`, { file: false, error: error })
+          Rlog.fatal(`failed to open logfile, cannot output to file!`, { file: false, tag: tag, error: error })
         })
     }
     // 同时也输出在控制台中，方便调试时直接查看
