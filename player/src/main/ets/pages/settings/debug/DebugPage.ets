@@ -11,6 +11,8 @@ import { ProgressLoadingOverlay } from '../../components/Overlays'
 import { async } from '../../../util/AsyncUtil'
 import { SettingsDivider, SettingsGroup, SettingsPage, SettingsRow } from '../../components/SettingsPage'
 import { VideoLibraryDatabase } from '../../../database/VideoLibraryDatabase'
+import { DatabaseManager } from '../../../database/DatabaseManager'
+import { DialogHelper } from '@pura/harmony-dialog'
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -146,10 +148,43 @@ export struct DebugPage {
             })
             SettingsDivider()
             SettingsRow({
-              settingsTitle: "【危险】删除所有源于图库的视频",
+              settingsTitle: "删除所有源于图库的视频",
+              titleColor: $r('app.color.alert'),
               clickEvent: {
                 action: () => {
                   VideoLibraryDatabase.clearVideosFromPhotos(getContext(this))
+                }
+              }
+            })
+            SettingsDivider()
+            SettingsRow({
+              settingsTitle: "清除数据库",
+              titleColor: $r('app.color.warning'),
+              clickEvent: {
+                action: () => {
+                  DatabaseManager.clearAllDatabase(getContext(this))
+                    .then(() => {
+                      DialogHelper.showAlertDialog({
+                        primaryTitle: "清除完毕",
+                        content: "请重启应用，以确保数据完全清除",
+                        autoCancel: false,
+                        backCancel: false,
+                        actionCancel: false,
+                        primaryButton: {
+                          value: "关闭应用",
+                          fontColor: $r("app.color.font_primary"),
+                          action: () => {
+                            (getContext(this) as common.UIAbilityContext).terminateSelf()
+                          }
+                        },
+                        onAction: (action: number, dialogId: string): void => {
+                          DialogHelper.closeDialog(dialogId)
+                        },
+                        onWillDismiss: (): void => {
+                          (getContext(this) as common.UIAbilityContext).terminateSelf()
+                        },
+                      })
+                    })
                 }
               }
             })

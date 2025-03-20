@@ -270,6 +270,7 @@ struct VideoRow {
               if (this.covers[this.video.identity()] != undefined) {
                 Image(this.covers[this.video.identity()])
                   .width("100%")
+                  .objectFit(ImageFit.Fill)
                   .aspectRatio(4 / 3)
                   .borderRadius(10)
               }

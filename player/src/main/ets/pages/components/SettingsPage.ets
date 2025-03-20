@@ -149,6 +149,8 @@ export struct SettingsRow {
   @Require
   settingsTitle: ResourceStr
   @Prop
+  titleColor: ResourceColor | undefined = undefined
+  @Prop
   settingsDesc: ResourceStr | undefined = undefined
   @Prop
   larger: boolean = false
@@ -166,7 +168,7 @@ export struct SettingsRow {
             Text(this.settingsTitle)
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
-              .fontColor($r("app.color.font_primary"))
+              .fontColor(this.titleColor != undefined ? this.titleColor :$r("app.color.font_primary"))
             if (this.settingsDesc != undefined) {
               Text(this.settingsDesc)
                 .fontSize(14)

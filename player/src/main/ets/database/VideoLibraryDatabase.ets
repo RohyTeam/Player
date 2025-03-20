@@ -8,6 +8,7 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { media } from '@kit.MediaKit';
 import { pixelMapToArrayBuffer } from '../util/ImageUtil';
 import { Rlog } from '../log/Rlog';
+import { videoLibraryDatabase_tryFetchCover } from '../util/DatabaseUtil';
 
 export class VideoLibraryDatabase {
   private static SQL_CREATE_TABLE = 'CREATE TABLE IF NOT EXISTS VideoLibrary (' +
@@ -185,78 +186,63 @@ export class VideoLibraryDatabase {
               .then((hashValue) => {
                 fileIo.open(uri)
                   .then((file) => {
-                    media.createAVImageGenerator().then((avImageGenerator: media.AVImageGenerator) => {
-                      avImageGenerator.fdSrc = { fd: file.fd }
-                      let timeUs = 0
-                      let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
-                      let param: media.PixelMapParams = {
-                        width: 720,
-                        height: 540
-                      }
-                      avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
-                        .then((pixelMap) => {
-                          pixelMapToArrayBuffer(pixelMap)
-                            .then((buffer) => {
-                              avImageGenerator.release()
+                    media.createAVMetadataExtractor()
+                      .then((avMetadataExtractor: media.AVMetadataExtractor) => {
+                        avMetadataExtractor.fdSrc = { fd: file.fd }
 
-                              media.createAVMetadataExtractor()
-                                .then((avMetadataExtractor: media.AVMetadataExtractor) => {
-                                  avMetadataExtractor.fdSrc = { fd: file.fd }
-                                  avMetadataExtractor.fetchMetadata()
-                                    .then((metadata) => {
-                                      let length = parseInt(metadata.duration!) || 0
-                                      let width = parseInt(metadata.videoWidth!) || 0
-                                      let height = parseInt(metadata.videoHeight!) || 0
-                                      store.insert(
-                                        "VideoLibrary",
-                                        {
-                                          "LOCATION": uri,
-                                          "TITLE": FileUtil.getFileName(uri),
-                                          "ADDED_TIME": Date.now(),
-                                          "FILE_HASH": hashValue,
-                                          "FILE_SOURCE": "LOCAL_FILE",
-                                          "VIDEO_LENGTH": length,
-                                          "VIDEO_WIDTH": width,
-                                          "VIDEO_HEIGHT": height,
-                                          "PLAYED_LENGTH": -1,
-                                          "VIDEO_COVER": new Uint8Array(buffer)
-                                        }
-                                      ).then(() => {
-                                        avMetadataExtractor.release()
-                                        resultReturner(new FileVideoSource(
-                                          uri,
-                                          FileUtil.getFileName(uri),
-                                          Date.now(),
-                                          -1,
-                                          length,
-                                          width,
-                                          height,
-                                          buffer,
-                                          hashValue
-                                        ))
+                        videoLibraryDatabase_tryFetchCover(context, file, avMetadataExtractor)
+                          .then((pixelMap) => {
+                            pixelMapToArrayBuffer(pixelMap)
+                              .then((buffer) => {
+                                avMetadataExtractor.fetchMetadata()
+                                  .then((metadata) => {
+                                    let length = parseInt(metadata.duration!) || 0
+                                    let width = parseInt(metadata.videoWidth!) || 0
+                                    let height = parseInt(metadata.videoHeight!) || 0
+
+                                    store.insert(
+                                      "VideoLibrary",
+                                      {
+                                        "LOCATION": uri,
+                                        "TITLE": FileUtil.getFileName(uri),
+                                        "ADDED_TIME": Date.now(),
+                                        "FILE_HASH": hashValue,
+                                        "FILE_SOURCE": "LOCAL_FILE",
+                                        "VIDEO_LENGTH": length,
+                                        "VIDEO_WIDTH": width,
+                                        "VIDEO_HEIGHT": height,
+                                        "PLAYED_LENGTH": -1,
+                                        "VIDEO_COVER": new Uint8Array(buffer)
+                                      }
+                                    ).then(() => {
+                                      avMetadataExtractor.release()
+                                      resultReturner(new FileVideoSource(
+                                        uri,
+                                        FileUtil.getFileName(uri),
+                                        Date.now(),
+                                        -1,
+                                        length,
+                                        width,
+                                        height,
+                                        buffer,
+                                        hashValue
+                                      ))
+                                    })
+                                      .catch((error: BusinessError) => {
+                                        console.error(`error occurs when processing data (inserting to library), code: ${error.code}, message: ${error.message}`)
                                       })
-                                        .catch((error: BusinessError) => {
-                                          console.error(`error occurs when processing data (inserting to library), code: ${error.code}, message: ${error.message}`)
-                                        })
-                                    })
-                                    .catch((error: BusinessError) => {
-                                      console.error(`error occurs when processing data (getting metadata), code: ${error.code}, message: ${error.message}`)
-                                    })
-                                })
-                                .catch((error: BusinessError) => {
-                                  console.error(`error occurs when processing data (initing metadata fetcher), code: ${error.code}, message: ${error.message}`)
-                                })
-                            })
-                            .catch((error: BusinessError) => {
-                              console.error(`error occurs when processing data (converting cover data), code: ${error.code}, message: ${error.message}`)
-                            })
-                        })
-                        .catch((error: BusinessError) => {
-                          console.error(`error occurs when processing data (generating cover), code: ${error.code}, message: ${error.message}`)
-                        })
-                    })
+                                  })
+                                  .catch((error: BusinessError) => {
+                                    console.error(`error occurs when processing data (getting metadata), code: ${error.code}, message: ${error.message}`)
+                                  })
+                              })
+                              .catch((error: BusinessError) => {
+                                console.error(`error occurs when processing data (converting cover data), code: ${error.code}, message: ${error.message}`)
+                              })
+                          })
+                      })
                       .catch((error: BusinessError) => {
-                        console.error(`error occurs when processing data (initing cover generator), code: ${error.code}, message: ${error.message}`)
+                        console.error(`error occurs when processing data (initing metadata fetcher), code: ${error.code}, message: ${error.message}`)
                       })
                   })
                   .catch((error: BusinessError) => {
