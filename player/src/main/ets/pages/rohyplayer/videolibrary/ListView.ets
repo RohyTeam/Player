@@ -184,7 +184,7 @@ export struct ListView {
           }
         })
       }
-      .edgeEffect(EdgeEffect.Spring)
+      .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: true })
       .expandSafeArea([SafeAreaType.SYSTEM],
         this.currentWidthBreakpoint === BreakpointConstants.BREAKPOINT_LG ? [SafeAreaEdge.BOTTOM] : [])
       .borderRadius(12)

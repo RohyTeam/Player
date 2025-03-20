@@ -34,6 +34,7 @@ export struct SettingsPage {
         }
       }
     }
+    .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: true })
     .scrollBar(BarState.Off)
     .backgroundColor($r("app.color.rohy_settings_background"))
     .height("100%")
@@ -60,6 +61,61 @@ export struct SettingsHeader {
       .padding(4)
       .borderRadius(16)
       .backgroundColor(Color.Transparent)
+      .width("90%")
+    }
+    .width("100%")
+  }
+}
+
+@Component
+export struct SettingsTabs {
+  @Prop
+  @Require
+  choices: SelectChoice[]
+  @Prop
+  @Require
+  selectedButton: number = 0
+  @State
+  selectedButtons: number[] = [this.selectedButton]
+  @State
+  segmentOptions: SegmentButtonOptions | undefined = undefined
+
+  aboutToAppear(): void {
+    let buttonItems: SegmentButtonTextItem[] = []
+    for (let choice of this.choices) {
+      let buttonItem: SegmentButtonTextItem = {
+        text: choice.title,
+      }
+      buttonItems.push(buttonItem)
+    }
+    this.segmentOptions = SegmentButtonOptions.capsule({
+      buttons: buttonItems as SegmentButtonItemTuple,
+      multiply: false,
+      backgroundBlurStyle: BlurStyle.BACKGROUND_THICK,
+    })
+  }
+
+  build() {
+    ListItem() {
+      Row() {
+        SegmentButton({
+          options: this.segmentOptions,
+          selectedIndexes: this.selectedButtons,
+          onItemClicked: (index) => {
+            animateTo({
+              duration: 200,
+              curve: Curve.Linear,
+              playMode: PlayMode.Normal
+            }, () => {
+              this.choices[index].onSwitch()
+            })
+          },
+        })
+          .layoutWeight(1)
+          .margin({
+            right: 12
+          })
+      }
       .width("90%")
     }
     .width("100%")

@@ -2,6 +2,7 @@ import { DraggableCustomizationOption } from '../pages/components/DraggableCusto
 
 export class TopBarOptions {
   ALL_SELECTED: string = "0,1,2"
+  PORTRAIT_DEFAULT_SELECTED: string = "0,1"
   REPEAT: number = 0
   MIRROR: number = 1
   ADJUSTMENT: number = 2
@@ -9,6 +10,7 @@ export class TopBarOptions {
 
 export class BottomBarOptions {
   ALL_SELECTED: string = "0,1,2,3"
+  PORTRAIT_DEFAULT_SELECTED: string = "1,3"
   FILLING_MODE: number = 0
   SPEED: number = 1
   AUDIOS: number = 2

@@ -1,7 +1,7 @@
 import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
 import { fileIo, hash, picker } from '@kit.CoreFileKit';
 import { convertNumberToDurationString } from '../../util/TimeUtil';
-import { curves, display, LengthMetrics, window } from '@kit.ArkUI';
+import { curves, display, LengthMetrics, SymbolGlyphModifier, window } from '@kit.ArkUI';
 import { StringArray } from '../../entity/Arrays';
 import { SubtitleLibraryDatabase } from '../../database/SubtitleLibraryDatabase';
 import { Base64Util, FileUtil, PreferencesUtil, StrUtil } from '@pura/harmony-utils';
@@ -25,6 +25,7 @@ import { PlayerMetadata } from '../../util/PlayerUtil';
 import { limitStringLength } from '../../util/StringUtil';
 import { ToolbarOptions } from '../../util/ToolbarCustomizationUtil';
 import { StyleConstants } from '../../common/constants/StyleConstants';
+import { exclude } from '../../util/ArrayUtil';
 
 @Observed
 export class VideoState {
@@ -198,9 +199,13 @@ export struct IjkVideoPlayer {
   @State
   private landscapeView: boolean = true
   @State
-  private topBarSelected: number[] = []
+  private topBarLandscapeSelected: number[] = []
   @State
-  private bottomBarSelected: number[] = []
+  private bottomBarLandscapeSelected: number[] = []
+  @State
+  private topBarPortraitSelected: number[] = []
+  @State
+  private bottomBarPortraitSelected: number[] = []
   @State
   private separate: boolean = false
   @State
@@ -221,6 +226,7 @@ export struct IjkVideoPlayer {
   private bottomBarBlurType: number = 0
   @State
   private bottomBarOpacity: number = 100
+  private xComponentController: XComponentController = new XComponentController()
 
   shouldDieWatcher(changedPropertyName: string) {
     this.shouldReallyDie = this.videoAbility_shouldDie.indexOf(this.identity) >= 0
@@ -738,15 +744,23 @@ export struct IjkVideoPlayer {
         })
         .layoutWeight(2)
         .fontColor($r("app.color.font_primary"))
-      ForEach(this.topBarSelected, (optionIndex: number) => {
-        if (optionIndex == ToolbarOptions.TOP_BAR.REPEAT) {
-          this.repeatButton()
-        } else if (optionIndex == ToolbarOptions.TOP_BAR.MIRROR) {
-          this.mirrorButton()
-        } else if (optionIndex == ToolbarOptions.TOP_BAR.ADJUSTMENT) {
-          this.adjustmentButton()
+      if (this.landscapeView) {
+        ForEach(this.topBarLandscapeSelected,
+          (optionIndex: number) => {
+            if (optionIndex == ToolbarOptions.TOP_BAR.REPEAT) {
+              this.repeatButton()
+            } else if (optionIndex == ToolbarOptions.TOP_BAR.MIRROR) {
+              this.mirrorButton()
+            } else if (optionIndex == ToolbarOptions.TOP_BAR.ADJUSTMENT) {
+              this.adjustmentButton()
+            }
+          })
+        if (this.topBarLandscapeSelected.length < 3) {
+          this.topBarMoreButton()
         }
-      })
+      } else {
+        this.topBarMoreButton()
+      }
     }
     .padding({
       left: 16,
@@ -850,6 +864,149 @@ export struct IjkVideoPlayer {
     .backgroundColor($r("app.color.comp_background_tertiary"))
   }
 
+  @Builder
+  private topBarMoreButton() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph($r("sys.symbol.dot_grid_2x2"))
+        .fontSize(24)
+        .fontColor([$r("app.color.icon_primary")])
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .bindMenu(this.topBarMoreMenu,
+      { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+    .backgroundColor($r("app.color.comp_background_tertiary"))
+  }
+
+  @Builder
+  private repeatMenuItem(index: number, length: number) {
+    MenuItem({
+      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.repeat")),
+      content: $r("app.string.settings_toolbar_option_repeat"),
+      symbolEndIcon: this.repeatPlay ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+    })
+      .onClick(() => {
+        this.repeatPlay = !this.repeatPlay
+      })
+      .margin(
+        index == 0 ? (
+          length == 1 ? {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4
+          } : {
+            top: 4,
+            left: 4,
+            right: 4
+          }
+        ) : (index == length - 1 ? {
+          bottom: 4,
+          left: 4,
+          right: 4
+        } : {
+          left: 4,
+          right: 4
+        })
+      )
+  }
+
+  @Builder
+  private mirrorMenuItem(index: number, length: number) {
+    MenuItem({
+      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.trapezoid_and_line_vertical")),
+      content: $r("app.string.settings_toolbar_option_mirror"),
+      symbolEndIcon: this.mirrorClip ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+    })
+      .onClick(() => {
+        this.mirrorClip = !this.mirrorClip
+      })
+      .margin(
+        index == 0 ? (
+          length == 1 ? {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4
+          } : {
+            top: 4,
+            left: 4,
+            right: 4
+          }
+        ) : (index == length - 1 ? {
+          bottom: 4,
+          left: 4,
+          right: 4
+        } : {
+          left: 4,
+          right: 4
+        })
+      )
+  }
+
+  @Builder
+  private adjustmentMenuItem(index: number, length: number) {
+    MenuItem({
+      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.slider_horizontal_2")),
+      content: $r("app.string.settings_toolbar_option_adjustment"),
+      builder: () => {
+        this.slidersMenus()
+      }
+    })
+      .margin(
+        index == 0 ? (
+          length == 1 ? {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4
+          } : {
+            top: 4,
+            left: 4,
+            right: 4
+          }
+        ) : (index == length - 1 ? {
+          bottom: 4,
+          left: 4,
+          right: 4
+        } : {
+          left: 4,
+          right: 4
+        })
+      )
+  }
+
+  @Builder
+  private topBarMoreMenu() {
+    Menu() {
+      MenuItemGroup() {
+        ForEach(this.landscapeView ? exclude([0, 1, 2], this.topBarLandscapeSelected) : [0, 1, 2],
+          (optionIndex: number, index: number) => {
+            if (optionIndex == ToolbarOptions.TOP_BAR.REPEAT) {
+              this.repeatMenuItem(index, 3 - (this.landscapeView ? this.topBarLandscapeSelected.length : 0))
+            } else if (optionIndex == ToolbarOptions.TOP_BAR.MIRROR) {
+              this.mirrorMenuItem(index, 3 - (this.landscapeView ? this.topBarLandscapeSelected.length : 0))
+            } else if (optionIndex == ToolbarOptions.TOP_BAR.ADJUSTMENT) {
+              this.adjustmentMenuItem(index, 3 - (this.landscapeView ? this.topBarLandscapeSelected.length : 0))
+            }
+          })
+      }
+      .backgroundColor($r("app.color.menus_background"))
+    }
+    .menuItemDivider({
+      color: $r("app.color.comp_background_tertiary"),
+      strokeWidth: LengthMetrics.vp(1),
+    })
+    .padding(0)
+    .backgroundColor($r("app.color.menus_background"))
+  }
+
   /**
    * 播放器控制器中间留空显示未被遮挡视频内容的部分
    */
@@ -871,10 +1028,13 @@ export struct IjkVideoPlayer {
         .width(40)
         .height(40)
         .backgroundColor($r("app.color.comp_background_focus"))
+
         Button({
           type: ButtonType.Circle
         }) {
-          SymbolGlyph($r("sys.symbol.arrow_clockwise"))
+          SymbolGlyph(
+            this.landscapeView ? $r("sys.symbol.rectangle_portrait_rotate") : $r("sys.symbol.rectangle_rotate")
+          )
             .fontSize(24)
             .fontColor([$r("app.color.icon_primary")])
         }
@@ -1062,17 +1222,26 @@ export struct IjkVideoPlayer {
       Blank()
         .layoutWeight(1)
 
-      ForEach(this.bottomBarSelected, (optionIndex: number) => {
-        if (optionIndex == ToolbarOptions.BOTTOM_BAR.FILLING_MODE) {
-          this.fillingModeButton()
-        } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SPEED) {
-          this.speedButton()
-        } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.AUDIOS) {
-          this.audiosButton()
-        } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SUBTITLES) {
-          this.subtitlesButton()
+      if (this.landscapeView) {
+        ForEach(this.bottomBarLandscapeSelected,
+          (optionIndex: number) => {
+            if (optionIndex == ToolbarOptions.BOTTOM_BAR.FILLING_MODE) {
+              this.fillingModeButton()
+            } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SPEED) {
+              this.speedButton()
+            } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.AUDIOS) {
+              this.audiosButton()
+            } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SUBTITLES) {
+              this.subtitlesButton()
+            }
+          })
+        if (this.bottomBarLandscapeSelected.length < 4) {
+          this.bottomBarMoreButton()
         }
-      })
+      } else {
+        this.bottomBarMoreButton()
+      }
+
     }
     .padding({
       left: 16,
@@ -1185,6 +1354,181 @@ export struct IjkVideoPlayer {
   }
 
   @Builder
+  private bottomBarMoreButton() {
+    Button({
+      type: ButtonType.Circle
+    }) {
+      SymbolGlyph($r("sys.symbol.dot_grid_2x2"))
+        .fontSize(24)
+        .fontColor([$r("app.color.icon_primary")])
+    }
+    .align(Alignment.Center)
+    .margin({
+      left: 12
+    })
+    .width(40)
+    .height(40)
+    .bindMenu(this.bottomBarMoreMenu,
+      { backgroundColor: $r("app.color.menus_background"), backgroundBlurStyle: BlurStyle.NONE })
+    .backgroundColor($r("app.color.comp_background_tertiary"))
+  }
+
+  @Builder
+  private surfaceFillingModeMenuItem(index: number, length: number) {
+    MenuItem({
+      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.rectangle")),
+      content: $r("app.string.settings_toolbar_option_fillingmode"),
+      builder: () => {
+        this.surfaceFillingModeMenus()
+      }
+    })
+      .margin(
+        index == 0 ? (
+          length == 1 ? {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4
+          } : {
+            top: 4,
+            left: 4,
+            right: 4
+          }
+        ) : (index == length - 1 ? {
+          bottom: 4,
+          left: 4,
+          right: 4
+        } : {
+          left: 4,
+          right: 4
+        })
+      )
+  }
+
+  @Builder
+  private speedMenuItem(index: number, length: number) {
+    MenuItem({
+      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.timer")),
+      content: $r("app.string.settings_toolbar_option_speed"),
+      builder: () => {
+        this.speedMenus()
+      }
+    })
+      .margin(
+        index == 0 ? (
+          length == 1 ? {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4
+          } : {
+            top: 4,
+            left: 4,
+            right: 4
+          }
+        ) : (index == length - 1 ? {
+          bottom: 4,
+          left: 4,
+          right: 4
+        } : {
+          left: 4,
+          right: 4
+        })
+      )
+  }
+
+  @Builder
+  private audiosMenuItem(index: number, length: number) {
+    MenuItem({
+      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.speaker_wave_3")),
+      content: $r("app.string.settings_toolbar_option_audios"),
+      builder: () => {
+        this.audioMenus()
+      }
+    })
+      .margin(
+        index == 0 ? (
+          length == 1 ? {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4
+          } : {
+            top: 4,
+            left: 4,
+            right: 4
+          }
+        ) : (index == length - 1 ? {
+          bottom: 4,
+          left: 4,
+          right: 4
+        } : {
+          left: 4,
+          right: 4
+        })
+      )
+  }
+
+  @Builder
+  private subtitlesMenuItem(index: number, length: number) {
+    MenuItem({
+      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.textformat")),
+      content: $r("app.string.settings_toolbar_option_subtitles"),
+      builder: () => {
+        this.subtitleMenus()
+      }
+    })
+      .margin(
+        index == 0 ? (
+          length == 1 ? {
+            top: 4,
+            bottom: 4,
+            left: 4,
+            right: 4
+          } : {
+            top: 4,
+            left: 4,
+            right: 4
+          }
+        ) : (index == length - 1 ? {
+          bottom: 4,
+          left: 4,
+          right: 4
+        } : {
+          left: 4,
+          right: 4
+        })
+      )
+  }
+
+  @Builder
+  private bottomBarMoreMenu() {
+    Menu() {
+      MenuItemGroup() {
+        ForEach(this.landscapeView ? exclude([0, 1, 2, 3], this.bottomBarLandscapeSelected) : [0, 1, 2, 3],
+          (optionIndex: number, index: number) => {
+            if (optionIndex == ToolbarOptions.BOTTOM_BAR.FILLING_MODE) {
+              this.surfaceFillingModeMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
+            } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SPEED) {
+              this.speedMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
+            } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.AUDIOS) {
+              this.audiosMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
+            } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SUBTITLES) {
+              this.subtitlesMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
+            }
+          })
+      }
+      .backgroundColor($r("app.color.menus_background"))
+    }
+    .menuItemDivider({
+      color: $r("app.color.comp_background_tertiary"),
+      strokeWidth: LengthMetrics.vp(1),
+    })
+    .padding(0)
+    .backgroundColor($r("app.color.menus_background"))
+  }
+
+  @Builder
   private leftAlignedCircleButton(
     icon: Resource,
     onClick: () => void
@@ -1239,56 +1583,61 @@ export struct IjkVideoPlayer {
 
   @Builder
   slidersMenus() {
-    Column() {
-      Row() {
-        SymbolGlyph($r("sys.symbol.sun_max"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-          .margin({
-            left: 12
-          })
-        Slider({
-          min: 0,
-          max: 100,
-          step: 1,
-          style: SliderStyle.InSet,
-          value: this.surfaceBrightness,
-        })
-          .onChange((value: number) => {
-            this.surfaceBrightness = value
-            VideoAbility.getWindow().setWindowBrightness(value / 100)
-          })
-          .width("192vp")
-          .margin({
-            right: 8
-          })
-      }
+    Menu() {
+      MenuItem() {
+        Column() {
+          Row() {
+            SymbolGlyph($r("sys.symbol.sun_max"))
+              .fontSize(24)
+              .fontColor([$r("app.color.icon_primary")])
+              .margin({
+                left: 12
+              })
+            Slider({
+              min: 0,
+              max: 100,
+              step: 1,
+              style: SliderStyle.InSet,
+              value: this.surfaceBrightness,
+            })
+              .onChange((value: number) => {
+                this.surfaceBrightness = value
+                VideoAbility.getWindow().setWindowBrightness(value / 100)
+              })
+              .width("192vp")
+              .margin({
+                right: 8
+              })
+          }
 
-      Row() {
-        SymbolGlyph($r("sys.symbol.speaker_wave_3"))
-          .fontSize(24)
-          .fontColor([$r("app.color.icon_primary")])
-          .margin({
-            left: 12
-          })
-        Slider({
-          min: 0,
-          max: 100,
-          step: 1,
-          style: SliderStyle.InSet,
-          value: this.surfaceVolume,
-        })
-          .onChange((value: number) => {
-            this.surfaceVolume = value
-            let volume = `${value / 100}f`
-            this.ijkPlayer?.setVolume(volume, volume)
-          })
-          .width("192vp")
-          .margin({
-            right: 8
-          })
+          Row() {
+            SymbolGlyph($r("sys.symbol.speaker_wave_3"))
+              .fontSize(24)
+              .fontColor([$r("app.color.icon_primary")])
+              .margin({
+                left: 12
+              })
+            Slider({
+              min: 0,
+              max: 100,
+              step: 1,
+              style: SliderStyle.InSet,
+              value: this.surfaceVolume,
+            })
+              .onChange((value: number) => {
+                this.surfaceVolume = value
+                let volume = `${value / 100}f`
+                this.ijkPlayer?.setVolume(volume, volume)
+              })
+              .width("192vp")
+              .margin({
+                right: 8
+              })
+          }
+        }
       }
     }
+    .backgroundColor($r("app.color.menus_background"))
   }
 
   @Builder
@@ -1364,6 +1713,7 @@ export struct IjkVideoPlayer {
           })
       }
     }
+    .backgroundColor($r("app.color.menus_background"))
     .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
@@ -1437,6 +1787,7 @@ export struct IjkVideoPlayer {
         })
       }
     }
+    .backgroundColor($r("app.color.menus_background"))
     .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
@@ -1547,6 +1898,7 @@ export struct IjkVideoPlayer {
         })
       }
     }
+    .backgroundColor($r("app.color.menus_background"))
     .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
@@ -1723,6 +2075,7 @@ export struct IjkVideoPlayer {
         })
       }
     }
+    .backgroundColor($r("app.color.menus_background"))
     .width("33%")
     .menuItemDivider({
       color: $r("app.color.comp_background_tertiary"),
@@ -1736,9 +2089,17 @@ export struct IjkVideoPlayer {
       let selected = PreferencesUtil.getStringSync('toolbar_landscape_topbar', '')
       if (selected.length > 0) {
         if (selected.indexOf(',') > 0) {
-          this.topBarSelected = selected.split(',').map((value) => parseInt(value))
+          this.topBarLandscapeSelected = selected.split(',').map((value) => parseInt(value))
         } else {
-          this.topBarSelected = [parseInt(selected)]
+          this.topBarLandscapeSelected = [parseInt(selected)]
+        }
+      }
+      selected = PreferencesUtil.getStringSync('toolbar_portrait_topbar', '')
+      if (selected.length > 0) {
+        if (selected.indexOf(',') > 0) {
+          this.topBarPortraitSelected = selected.split(',').map((value) => parseInt(value))
+        } else {
+          this.topBarPortraitSelected = [parseInt(selected)]
         }
       }
       this.topBarBlur = PreferencesUtil.getNumberSync('toolbar_topbar_blur', 0)
@@ -1753,9 +2114,17 @@ export struct IjkVideoPlayer {
       let selected = PreferencesUtil.getStringSync('toolbar_landscape_bottombar', '')
       if (selected.length > 0) {
         if (selected.indexOf(',') > 0) {
-          this.bottomBarSelected = selected.split(',').map((value) => parseInt(value))
+          this.bottomBarLandscapeSelected = selected.split(',').map((value) => parseInt(value))
         } else {
-          this.bottomBarSelected = [parseInt(selected)]
+          this.bottomBarLandscapeSelected = [parseInt(selected)]
+        }
+      }
+      selected = PreferencesUtil.getStringSync('toolbar_portrait_bottombar', '')
+      if (selected.length > 0) {
+        if (selected.indexOf(',') > 0) {
+          this.bottomBarPortraitSelected = selected.split(',').map((value) => parseInt(value))
+        } else {
+          this.bottomBarPortraitSelected = [parseInt(selected)]
         }
       }
       this.bottomBarBlur = PreferencesUtil.getNumberSync('toolbar_bottombar_blur', 0)
@@ -1777,7 +2146,9 @@ export struct IjkVideoPlayer {
 
     if (this.metadata.width > 0 && this.metadata.height > 0) {
       this.landscapeView == this.metadata.width >= this.metadata.height
-      VideoAbility.getWindow().setPreferredOrientation(window.Orientation.PORTRAIT)
+      if (!this.landscapeView) { // 如果并非横屏，切换到横屏
+        VideoAbility.getWindow().setPreferredOrientation(window.Orientation.PORTRAIT)
+      }
     }
   }
 

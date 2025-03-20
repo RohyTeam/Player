@@ -38,6 +38,7 @@ export struct DraggableCustomization {
   // 保存的是 index
   // 允许传入参数作为默认选择的，或者不传，直接全部都当作未选择
   @Prop
+  @Watch("selectedWatcher")
   selected: number[] = []
   @Prop
   unselected: number[] = []
@@ -49,6 +50,23 @@ export struct DraggableCustomization {
   dragging: number | undefined = undefined // 如果是负数说明是从 unselect 中拖出来的
   @StorageLink('currentWidthBreakpoint')
   currentWidthBreakpoint: string = BreakpointConstants.BREAKPOINT_LG;
+
+  selectedWatcher(changedPropertyName: string) {
+    let newUnselected: number[] = []
+    for (let i = 0; i < this.options.length; i++) {
+      if (this.selected.indexOf(i) < 0) {
+        newUnselected.push(i)
+      }
+    }
+    animateTo({
+      duration: 200,
+      curve: Curve.Linear,
+      playMode: PlayMode.Normal
+    }, () => {
+      this.unselected = newUnselected
+      this.recalculateHeight()
+    })
+  }
 
   aboutToAppear(): void {
     for (let i = 0; i < this.options.length; i++) {
@@ -272,6 +290,7 @@ export struct DraggableCustomization {
     this.unselectedHeight =
       unselectedLines == 0 ? 48 : unselectedLines * ITEM_HEIGHT + ((unselectedLines - 1) * 8) // 尾部是为间隔预留的空间
   }
+
 }
 
 @Component

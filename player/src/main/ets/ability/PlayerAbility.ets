@@ -62,12 +62,20 @@ export default class PlayerAbility extends UIAbility {
     AppStorage.setOrCreate("RohyLoggingSystemInitialized", true)
     // 为了让直接从文件管理打开或者接续时也能保存日志，VideoAbility 也会添加日志初始化逻辑，但是为了保证只会初始化一次，添加存储变量
 
-    // 这边如果用户没有调整过工具栏且是第一次打开，默认将所有工具栏都选中
+    // 这边如果用户没有调整过工具栏且是第一次打开，默认将所有工具栏都选中，同时因为横屏空间大，没有折叠功能，未选中的按钮直接隐藏
     if (!PreferencesUtil.hasSync('toolbar_landscape_topbar')) {
       PreferencesUtil.putSync('toolbar_landscape_topbar', ToolbarOptions.TOP_BAR.ALL_SELECTED)
     }
     if (!PreferencesUtil.hasSync('toolbar_landscape_bottombar')) {
       PreferencesUtil.putSync('toolbar_landscape_bottombar', ToolbarOptions.BOTTOM_BAR.ALL_SELECTED)
+    }
+
+    // 竖屏由于工具栏大小有限，仅允许选择 2 个外部按钮，剩下的全做折叠处理
+    if (!PreferencesUtil.hasSync('toolbar_portrait_topbar')) {
+      PreferencesUtil.putSync('toolbar_portrait_topbar', ToolbarOptions.TOP_BAR.PORTRAIT_DEFAULT_SELECTED)
+    }
+    if (!PreferencesUtil.hasSync('toolbar_portrait_bottombar')) {
+      PreferencesUtil.putSync('toolbar_portrait_bottombar', ToolbarOptions.BOTTOM_BAR.PORTRAIT_DEFAULT_SELECTED)
     }
 
     let colorMode = PreferencesUtil.getStringSync("colorMode", "system")

@@ -463,6 +463,14 @@
     {
       "name": "settings_save_5_logs_only_tips",
       "value": "开启此选项后，仅保留 5 条历史日志；关闭后将保存所有的日志。"
+    },
+    {
+      "name": "landscape",
+      "value": "横屏"
+    },
+    {
+      "name": "portrait",
+      "value": "竖屏"
     }
   ]
 }

@@ -170,7 +170,7 @@ export struct GridView {
           )
         )
       )
-      .edgeEffect(EdgeEffect.Spring)
+      .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: true })
       .expandSafeArea([SafeAreaType.SYSTEM],
         this.currentWidthBreakpoint === BreakpointConstants.BREAKPOINT_LG ? [SafeAreaEdge.BOTTOM] : [])
       .rowsGap(8)
@@ -395,18 +395,64 @@ struct VideoRow {
         .backgroundColor($r("app.color.rohy_card"))
       }
     } else {
+      // 目的：让加载中的控件大小和加载后的大小一致，保持 ui 美观性
       Row() {
-        Blank()
-          .layoutWeight(1)
-        LoadingProgress()
-          .enableLoading(true)
-          .color($r("app.color.icon_secondary"))
-          .width(64)
-          .height(64)
-        Blank()
-          .layoutWeight(1)
+        Button() {
+          Stack() {
+            Column() {
+              Image($r("app.media.network_not_accessible"))
+                .width("100%")
+                .aspectRatio(4 / 3)
+                .borderRadius(10)
+              Text(" ")
+                .maxLines(1)
+                .textOverflow({
+                  overflow: TextOverflow.Ellipsis
+                })
+                .fontSize(16)
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                  top: "4vp"
+                })
+              Text(" ")
+                .fontSize(10)
+                .fontColor($r("app.color.font_secondary"))
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                })
+              Text(" ")
+                .fontSize(10)
+                .fontColor($r("app.color.font_secondary"))
+                .margin({
+                  left: "8vp",
+                  right: "8vp",
+                  bottom: "8vp"
+                })
+            }
+            .visibility(Visibility.Hidden)
+            .alignItems(HorizontalAlign.Start)
+
+            Row() {
+              Blank()
+                .layoutWeight(1)
+              LoadingProgress()
+                .enableLoading(true)
+                .color($r("app.color.icon_secondary"))
+                .width(64)
+                .height(64)
+              Blank()
+                .layoutWeight(1)
+            }
+          }
+        }
+        .bindContextMenu(this.contextMenu, ResponseType.LongPress)
+        .type(ButtonType.Normal)
+        .margin(4)
+        .borderRadius(10)
+        .backgroundColor($r("app.color.rohy_card"))
       }
-      .alignItems(VerticalAlign.Center)
       .borderRadius(12)
       .backgroundColor($r("app.color.rohy_card"))
     }

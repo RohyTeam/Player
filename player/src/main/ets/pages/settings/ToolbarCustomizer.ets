@@ -9,7 +9,8 @@ import {
   SettingsSelection,
   SettingsSelectionSpecificForToolbarCustomizer,
   SettingsSlider,
-  SettingsSwitch
+  SettingsSwitch,
+  SettingsTabs
 } from '../components/SettingsPage'
 import { curves } from '@kit.ArkUI'
 
@@ -21,9 +22,15 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
   @Consume('settingsPageController')
   settingsPageController: NavPathStack
   @State
-  private topBarSelected: number[] = []
+  editingLandscape: boolean = true
   @State
-  private bottomBarSelected: number[] = []
+  private topBarLandscapeSelected: number[] = []
+  @State
+  private bottomBarLandscapeSelected: number[] = []
+  @State
+  private topBarPortraitSelected: number[] = []
+  @State
+  private bottomBarPortraitSelected: number[] = []
   @State
   private topBar: boolean = true
   @State
@@ -158,9 +165,17 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
       let selected = PreferencesUtil.getStringSync('toolbar_landscape_topbar', '')
       if (selected.length > 0) {
         if (selected.indexOf(',') > 0) {
-          this.topBarSelected = selected.split(',').map((value) => parseInt(value))
+          this.topBarLandscapeSelected = selected.split(',').map((value) => parseInt(value))
         } else {
-          this.topBarSelected = [parseInt(selected)]
+          this.topBarLandscapeSelected = [parseInt(selected)]
+        }
+      }
+      selected = PreferencesUtil.getStringSync('toolbar_portrait_topbar', '')
+      if (selected.length > 0) {
+        if (selected.indexOf(',') > 0) {
+          this.topBarPortraitSelected = selected.split(',').map((value) => parseInt(value))
+        } else {
+          this.topBarPortraitSelected = [parseInt(selected)]
         }
       }
       this.topBarBlur = PreferencesUtil.getNumberSync('toolbar_topbar_blur', 0)
@@ -175,9 +190,17 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
       let selected = PreferencesUtil.getStringSync('toolbar_landscape_bottombar', '')
       if (selected.length > 0) {
         if (selected.indexOf(',') > 0) {
-          this.bottomBarSelected = selected.split(',').map((value) => parseInt(value))
+          this.bottomBarLandscapeSelected = selected.split(',').map((value) => parseInt(value))
         } else {
-          this.bottomBarSelected = [parseInt(selected)]
+          this.bottomBarLandscapeSelected = [parseInt(selected)]
+        }
+      }
+      selected = PreferencesUtil.getStringSync('toolbar_portrait_bottombar', '')
+      if (selected.length > 0) {
+        if (selected.indexOf(',') > 0) {
+          this.bottomBarPortraitSelected = selected.split(',').map((value) => parseInt(value))
+        } else {
+          this.bottomBarPortraitSelected = [parseInt(selected)]
         }
       }
       this.bottomBarBlur = PreferencesUtil.getNumberSync('toolbar_bottombar_blur', 0)
@@ -429,18 +452,48 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
         .width("100%")
 
         this.options()
+
+        /* TODO: 暂时隐藏，由于我目前认为竖屏状态下所有按钮都应该折叠，所以目前先不做竖屏自定义，但未来不确定，先做隐藏处理
+        SettingsTabs({
+          choices: [
+            {
+              title: $r('app.string.landscape'),
+              onSwitch: () => {
+                this.editingLandscape = true
+              }
+            },
+            {
+              title: $r('app.string.portrait'),
+              onSwitch: () => {
+                this.editingLandscape = false
+              }
+            }
+          ],
+          selectedButton: 0
+        })*/
+
         ListItem() {
           DraggableCustomization({
             title: $r('app.string.settings_toolbar_topbar'),
             options: topBarOptions,
-            selected: this.topBarSelected,
+            selected: this.editingLandscape ? this.topBarLandscapeSelected : this.topBarPortraitSelected,
+            max: this.editingLandscape ? -1 : 2,
             functions: {
               onChange: (selected: number[], unselected: number[]) => {
-                this.topBarSelected = selected
-                if (selected.length > 0) {
-                  PreferencesUtil.putSync('toolbar_landscape_topbar', selected.join(','))
+                if (this.editingLandscape) {
+                  this.topBarLandscapeSelected = selected
+                  if (selected.length > 0) {
+                    PreferencesUtil.putSync('toolbar_landscape_topbar', selected.join(','))
+                  } else {
+                    PreferencesUtil.putSync('toolbar_landscape_topbar', '')
+                  }
                 } else {
-                  PreferencesUtil.putSync('toolbar_landscape_topbar', '')
+                  this.topBarPortraitSelected = selected
+                  if (selected.length > 0) {
+                    PreferencesUtil.putSync('toolbar_portrait_topbar', selected.join(','))
+                  } else {
+                    PreferencesUtil.putSync('toolbar_portrait_topbar', '')
+                  }
                 }
               }
             }
@@ -451,14 +504,24 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
           DraggableCustomization({
             title: $r('app.string.settings_toolbar_bottombar'),
             options: bottomBarOptions,
-            selected: this.bottomBarSelected,
+            selected: this.editingLandscape ? this.bottomBarLandscapeSelected : this.bottomBarPortraitSelected,
+            max: this.editingLandscape ? -1 : 2,
             functions: {
               onChange: (selected: number[], unselected: number[]) => {
-                this.bottomBarSelected = selected
-                if (selected.length > 0) {
-                  PreferencesUtil.putSync('toolbar_landscape_bottombar', selected.join(','))
+                if (this.editingLandscape) {
+                  this.bottomBarLandscapeSelected = selected
+                  if (selected.length > 0) {
+                    PreferencesUtil.putSync('toolbar_landscape_bottombar', selected.join(','))
+                  } else {
+                    PreferencesUtil.putSync('toolbar_landscape_bottombar', '')
+                  }
                 } else {
-                  PreferencesUtil.putSync('toolbar_landscape_bottombar', '')
+                  this.bottomBarPortraitSelected = selected
+                  if (selected.length > 0) {
+                    PreferencesUtil.putSync('toolbar_portrait_bottombar', selected.join(','))
+                  } else {
+                    PreferencesUtil.putSync('toolbar_portrait_bottombar', '')
+                  }
                 }
               }
             }

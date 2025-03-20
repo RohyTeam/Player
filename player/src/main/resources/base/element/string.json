@@ -463,6 +463,14 @@
     {
       "name": "settings_save_5_logs_only_tips",
       "value": "Enable this option will only save 5 logs."
+    },
+    {
+      "name": "landscape",
+      "value": "Landscape"
+    },
+    {
+      "name": "portrait",
+      "value": "Portrait"
     }
   ]
 }
