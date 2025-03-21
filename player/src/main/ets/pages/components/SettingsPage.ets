@@ -168,7 +168,7 @@ export struct SettingsRow {
             Text(this.settingsTitle)
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
-              .fontColor(this.titleColor != undefined ? this.titleColor :$r("app.color.font_primary"))
+              .fontColor(this.titleColor != undefined ? this.titleColor : $r("app.color.font_primary"))
             if (this.settingsDesc != undefined) {
               Text(this.settingsDesc)
                 .fontSize(14)
@@ -181,6 +181,7 @@ export struct SettingsRow {
             top: 4,
             bottom: 4
           })
+
           Blank()
             .layoutWeight(1)
           if (this.showGoToIcon) {
@@ -203,7 +204,7 @@ export struct SettingsRow {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height(this.larger ? "56vp": "48vp")
+    .height(this.larger ? "56vp" : "48vp")
     .width("100%")
   }
 }
@@ -260,6 +261,7 @@ export struct SettingsSwitch {
             top: 4,
             bottom: 4
           })
+
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -314,7 +316,7 @@ export struct SettingsSwitch {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height(this.larger ? "56vp": "48vp")
+    .height(this.larger ? "56vp" : "48vp")
     .width("100%")
   }
 }
@@ -411,6 +413,7 @@ export struct SettingsSelection {
             top: 4,
             bottom: 4
           })
+
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -487,7 +490,7 @@ export struct SettingsSelection {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height(this.larger ? "56vp": "48vp")
+    .height(this.larger ? "56vp" : "48vp")
     .width("100%")
   }
 }
@@ -592,6 +595,7 @@ export struct SettingsSelectionSpecificForToolbarCustomizer {
             top: 4,
             bottom: 4
           })
+
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -643,7 +647,7 @@ export struct SettingsSelectionSpecificForToolbarCustomizer {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height(this.larger ? "56vp": "48vp")
+    .height(this.larger ? "56vp" : "48vp")
     .width("100%")
   }
 }
@@ -703,6 +707,7 @@ export struct SettingsSlider {
             top: 4,
             bottom: 4
           })
+
           if (this.settingsTips != undefined) {
             SymbolGlyph($r('sys.symbol.questionmark_circle'))
               .fontSize(20)
@@ -750,7 +755,7 @@ export struct SettingsSlider {
       .type(ButtonType.Normal)
       .backgroundColor($r("app.color.rohy_settings_card"))
     }
-    .height(this.larger ? "56vp": "48vp")
+    .height(this.larger ? "56vp" : "48vp")
     .width("100%")
   }
 }

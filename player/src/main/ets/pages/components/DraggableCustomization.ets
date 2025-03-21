@@ -290,7 +290,6 @@ export struct DraggableCustomization {
     this.unselectedHeight =
       unselectedLines == 0 ? 48 : unselectedLines * ITEM_HEIGHT + ((unselectedLines - 1) * 8) // 尾部是为间隔预留的空间
   }
-
 }
 
 @Component

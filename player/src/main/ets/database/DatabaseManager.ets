@@ -7,7 +7,6 @@ import { Rlog } from '../log/Rlog';
 import { relationalStore } from '@kit.ArkData';
 
 export class DatabaseManager {
-
   public static init(context: common.Context) {
     Rlog.debug("start: invoke of DatabaseManager#init function")
     VideoLibraryDatabase.init(context)
@@ -38,5 +37,4 @@ export class DatabaseManager {
         })
     })
   }
-
 }

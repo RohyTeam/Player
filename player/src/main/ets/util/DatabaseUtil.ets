@@ -1,10 +1,11 @@
-import { common } from "@kit.AbilityKit";
-import { media } from "@kit.MediaKit";
-import { BusinessError } from "@kit.BasicServicesKit";
-import { Rlog } from "../log/Rlog";
-import { fileIo } from "@kit.CoreFileKit";
+import { common } from '@kit.AbilityKit';
+import { media } from '@kit.MediaKit';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { Rlog } from '../log/Rlog';
+import { fileIo } from '@kit.CoreFileKit';
 
-export function videoLibraryDatabase_tryFetchCover(context: common.Context, file: fileIo.File, avMetadataExtractor: media.AVMetadataExtractor): Promise<PixelMap> {
+export function videoLibraryDatabase_tryFetchCover(context: common.Context, file: fileIo.File,
+  avMetadataExtractor: media.AVMetadataExtractor): Promise<PixelMap> {
   return new Promise((resultReturner) => {
     avMetadataExtractor.fetchAlbumCover()
       .then((pixelMap: PixelMap) => {

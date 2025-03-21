@@ -40,7 +40,6 @@ export struct VideoLibrarySettingsPage {
   lessCovering: boolean = false;
   @StorageLink('save5logsOnly')
   save5logsOnly: boolean = false;
-
   @StorageLink("debugMode")
   private debugMode: boolean = false
 

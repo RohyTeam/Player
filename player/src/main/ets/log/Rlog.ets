@@ -23,6 +23,7 @@ interface FileWithStat {
   file: string
   mtime: number
 }
+
 // 日志系统仅输出业务内容，请勿在 aboutToAppear 或 aboutToDisappear 中输出控件渲染信息导致滥用
 export class Rlog { // 意为 Rohy Logger
 
@@ -359,7 +360,8 @@ export class Rlog { // 意为 Rohy Logger
     domain = domain || 0
     file = file == undefined ? true : file
     tag = tag || 'output'
-    let logMessage = error ? `[Rlog][${tag}] ${message}, Error: [${error.message}](${error.code})` : `[Rlog][${tag}] ${message}`
+    let logMessage =
+      error ? `[Rlog][${tag}] ${message}, Error: [${error.message}](${error.code})` : `[Rlog][${tag}] ${message}`
 
     if (file != undefined && file) {
       let fileMessage: string

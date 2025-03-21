@@ -67,13 +67,11 @@ export struct VideoLibraryPage {
   @StorageLink(`updateVideoTime`)
   @Watch("videoUpdater")
   toBeUpdatedVideoIdentity: string = ""
-
   // 这个是导入视频时使用的
   @State
   private videosLoading: number = 1
   @State
   private videosLoaded: number = 0
-
   private loadingOverlay: CustomDialogController | null = new CustomDialogController({
     builder: ProgressLoadingOverlay({
       loading: this.videosLoading,
@@ -863,7 +861,8 @@ export struct VideoLibraryPage {
               })
           }
         }
-        Rlog.debug(`selected ${documentSelectResult.length} file${documentSelectResult.length > 1 ? "s" : ""} to import`)
+        Rlog.debug(`selected ${documentSelectResult.length} file${documentSelectResult.length > 1 ? "s" :
+          ""} to import`)
 
         if (duplicated) {
           Rlog.debug("duplicated file found")

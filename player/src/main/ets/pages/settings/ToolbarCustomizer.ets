@@ -9,8 +9,7 @@ import {
   SettingsSelection,
   SettingsSelectionSpecificForToolbarCustomizer,
   SettingsSlider,
-  SettingsSwitch,
-  SettingsTabs
+  SettingsSwitch
 } from '../components/SettingsPage'
 import { curves } from '@kit.ArkUI'
 
@@ -410,6 +409,7 @@ export struct ToolbarButtonsLandscapeCustomizer { // 横屏使用
                   TransitionEffect.move(TransitionEdge.TOP)
                 )
               )
+
               Blank()
                 .layoutWeight(1)
                 .backgroundColor(Color.Transparent)

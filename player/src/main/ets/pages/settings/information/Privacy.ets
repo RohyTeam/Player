@@ -1,14 +1,12 @@
-import { StrUtil } from "@pura/harmony-utils"
-import { Markdown } from "@lidary/markdown"
+import { StrUtil } from '@pura/harmony-utils';
+import { Markdown } from '@lidary/markdown';
 
 @Component
 export struct PrivacyPage {
-
   @Consume('settingsPageController')
   settingsPageController: NavPathStack
   @StorageLink('appColorMode')
   colorMode: string = "system";
-
   @State
   private privacy: string | undefined = undefined
 
@@ -81,6 +79,7 @@ export struct PrivacyPage {
               })
             }
             .width("90%")
+
             ListItem() {
               Column() {
                 Blank()
@@ -115,5 +114,4 @@ export struct PrivacyPage {
     .height("100%")
     .backgroundColor($r("app.color.rohy_settings_background"))
   }
-
 }

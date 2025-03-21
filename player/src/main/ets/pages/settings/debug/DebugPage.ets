@@ -1,6 +1,3 @@
-import { createClient } from '../../../lib/webdav_client/WebDAVClient'
-import { Secrets } from '../../../Secrets'
-import { openVideo } from '../../../util/PlayerUtil'
 import { common } from '@kit.AbilityKit'
 import { BusinessError } from '@kit.BasicServicesKit'
 import { picker } from '@kit.CoreFileKit'
@@ -24,12 +21,10 @@ export struct DebugPage {
   private showVirtualPicker: boolean = false
   @Consume('pageController')
   pageController: NavPathStack
-
   @State
   private videosLoading: number = 1
   @State
   private videosLoaded: number = 0
-
   private loadingOverlay: CustomDialogController | null = new CustomDialogController({
     builder: ProgressLoadingOverlay({
       loading: this.videosLoading,
@@ -68,7 +63,8 @@ export struct DebugPage {
                   let documentViewPicker = new picker.DocumentViewPicker(this.getUIContext().getHostContext()!);
                   const documentSelectOptions = new picker.DocumentSelectOptions();
                   documentSelectOptions.maxSelectNumber = 100;
-                  documentSelectOptions.fileSuffixFilters = ['mp4 视频文件|.mp4', 'mkv 视频文件|.mkv', 'avi 视频文件|.avi'];
+                  documentSelectOptions.fileSuffixFilters =
+                    ['mp4 视频文件|.mp4', 'mkv 视频文件|.mkv', 'avi 视频文件|.avi'];
 
                   documentViewPicker.select(documentSelectOptions)
                     .then(async (documentSelectResult: Array<string>) => {

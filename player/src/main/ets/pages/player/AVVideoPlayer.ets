@@ -212,7 +212,6 @@ export struct AVVideoPlayer {
   private bottomBarBlurType: number = 0
   @State
   private bottomBarOpacity: number = 100
-
   private xComponentController: XComponentController = new XComponentController()
 
   shouldDieWatcher(changedPropertyName: string) {
@@ -997,6 +996,7 @@ export struct AVVideoPlayer {
         .width(40)
         .height(40)
         .backgroundColor($r("app.color.comp_background_focus"))
+
         Button({
           type: ButtonType.Circle
         }) {
@@ -1039,6 +1039,7 @@ export struct AVVideoPlayer {
       .visibility(
         this.showControls ? Visibility.Visible : Visibility.Hidden
       )
+
       Row() {
       }
       .layoutWeight(1)
@@ -1474,7 +1475,8 @@ export struct AVVideoPlayer {
         ForEach(this.landscapeView ? exclude([0, 1, 2, 3], this.bottomBarLandscapeSelected) : [0, 1, 2, 3],
           (optionIndex: number, index: number) => {
             if (optionIndex == ToolbarOptions.BOTTOM_BAR.FILLING_MODE) {
-              this.surfaceFillingModeMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
+              this.surfaceFillingModeMenuItem(optionIndex,
+                4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
             } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SPEED) {
               this.speedMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
             } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.AUDIOS) {
@@ -2484,7 +2486,8 @@ export struct AVVideoPlayer {
             avPlayer.pause()
           } else if (state == "initialized") {
             console.error("initialized")
-            avPlayer.surfaceId = this.xComponentController.getXComponentSurfaceId() // limitStringLength(`avvideoplayer_${this.identity}`, 128)
+            avPlayer.surfaceId =
+              this.xComponentController.getXComponentSurfaceId() // limitStringLength(`avvideoplayer_${this.identity}`, 128)
             avPlayer.prepare();
           } else if (state == "prepared") {
             console.error("prepared")

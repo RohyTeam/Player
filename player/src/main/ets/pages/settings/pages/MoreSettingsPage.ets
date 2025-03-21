@@ -25,7 +25,6 @@ export struct MoreSettingsPage {
   colorModes: string[] = ["system", "light", "dark"];
   @StorageLink('save5logsOnly')
   save5logsOnly: boolean = false;
-
   @StorageLink("debugMode")
   private debugMode: boolean = false
 

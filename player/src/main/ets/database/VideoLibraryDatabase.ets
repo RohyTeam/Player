@@ -266,10 +266,10 @@ export class VideoLibraryDatabase {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
-        Rlog.error(`failed to get RdbStore`, {
-          error: err,
-          tag: 'VideoLibrary'
-        })
+          Rlog.error(`failed to get RdbStore`, {
+            error: err,
+            tag: 'VideoLibrary'
+          })
           return;
         }
 
@@ -279,94 +279,94 @@ export class VideoLibraryDatabase {
             media.createAVImageGenerator()
               .then((avImageGenerator: media.AVImageGenerator) => {
                 Rlog.debug("created av image generator")
-              avImageGenerator.fdSrc = { fd: file.fd }
-              let timeUs = 0
-              let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
-              let param: media.PixelMapParams = {
-                width: 720,
-                height: 540
-              }
-              avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
-                .then((pixelMap) => {
-                  Rlog.debug("frame fetched")
-                  pixelMapToArrayBuffer(pixelMap)
-                    .then((buffer) => {
-                      Rlog.debug("converted pixelmap to array buffer")
-                      avImageGenerator.release()
-                      media.createAVMetadataExtractor()
-                        .then((avMetadataExtractor: media.AVMetadataExtractor) => {
-                          Rlog.debug("created av metadata extractor")
-                        avMetadataExtractor.fdSrc = { fd: file.fd }
-                        avMetadataExtractor.fetchMetadata()
-                          .then((metadata) => {
-                            Rlog.debug("fetched metadata")
-                            let length = parseInt(metadata.duration!) || 0
-                            let width = parseInt(metadata.videoWidth!) || 0
-                            let height = parseInt(metadata.videoHeight!) || 0
-                            store.insert(
-                              "VideoLibrary",
-                              {
-                                "LOCATION": uri,
-                                "TITLE": displayName,
-                                "ADDED_TIME": Date.now(),
-                                "FILE_HASH": photoHash,
-                                "FILE_SOURCE": "PHOTOS",
-                                "VIDEO_LENGTH": length,
-                                "VIDEO_WIDTH": width,
-                                "VIDEO_HEIGHT": height,
-                                "PLAYED_LENGTH": -1,
-                                "VIDEO_COVER": new Uint8Array(buffer)
-                              }
-                            ).then(() => {
-                              Rlog.debug("data inserted")
-                              avMetadataExtractor.release()
-                              resultReturner(new PhotosVideoSource(
-                                uri,
-                                FileUtil.getFileName(uri),
-                                Date.now(),
-                                -1,
-                                length,
-                                width,
-                                height,
-                                buffer,
-                                photoHash
-                              ))
-                            })
+                avImageGenerator.fdSrc = { fd: file.fd }
+                let timeUs = 0
+                let queryOption = media.AVImageQueryOptions.AV_IMAGE_QUERY_NEXT_SYNC
+                let param: media.PixelMapParams = {
+                  width: 720,
+                  height: 540
+                }
+                avImageGenerator.fetchFrameByTime(timeUs, queryOption, param)
+                  .then((pixelMap) => {
+                    Rlog.debug("frame fetched")
+                    pixelMapToArrayBuffer(pixelMap)
+                      .then((buffer) => {
+                        Rlog.debug("converted pixelmap to array buffer")
+                        avImageGenerator.release()
+                        media.createAVMetadataExtractor()
+                          .then((avMetadataExtractor: media.AVMetadataExtractor) => {
+                            Rlog.debug("created av metadata extractor")
+                            avMetadataExtractor.fdSrc = { fd: file.fd }
+                            avMetadataExtractor.fetchMetadata()
+                              .then((metadata) => {
+                                Rlog.debug("fetched metadata")
+                                let length = parseInt(metadata.duration!) || 0
+                                let width = parseInt(metadata.videoWidth!) || 0
+                                let height = parseInt(metadata.videoHeight!) || 0
+                                store.insert(
+                                  "VideoLibrary",
+                                  {
+                                    "LOCATION": uri,
+                                    "TITLE": displayName,
+                                    "ADDED_TIME": Date.now(),
+                                    "FILE_HASH": photoHash,
+                                    "FILE_SOURCE": "PHOTOS",
+                                    "VIDEO_LENGTH": length,
+                                    "VIDEO_WIDTH": width,
+                                    "VIDEO_HEIGHT": height,
+                                    "PLAYED_LENGTH": -1,
+                                    "VIDEO_COVER": new Uint8Array(buffer)
+                                  }
+                                ).then(() => {
+                                  Rlog.debug("data inserted")
+                                  avMetadataExtractor.release()
+                                  resultReturner(new PhotosVideoSource(
+                                    uri,
+                                    FileUtil.getFileName(uri),
+                                    Date.now(),
+                                    -1,
+                                    length,
+                                    width,
+                                    height,
+                                    buffer,
+                                    photoHash
+                                  ))
+                                })
+                                  .catch((err: BusinessError) => {
+                                    Rlog.error(`error occurs when inserting data`, {
+                                      error: err,
+                                      tag: 'VideoLibraryDatabase#addFromPhotos'
+                                    })
+                                  })
+                              })
                               .catch((err: BusinessError) => {
-                                Rlog.error(`error occurs when inserting data`, {
+                                Rlog.error(`error occurs when executing AVMetadataExtractor#fetchMetadata`, {
                                   error: err,
                                   tag: 'VideoLibraryDatabase#addFromPhotos'
                                 })
                               })
                           })
                           .catch((err: BusinessError) => {
-                            Rlog.error(`error occurs when executing AVMetadataExtractor#fetchMetadata`, {
+                            Rlog.error(`error occurs when executing media#createAVMetadataExtractor`, {
                               error: err,
                               tag: 'VideoLibraryDatabase#addFromPhotos'
                             })
                           })
                       })
-                        .catch((err: BusinessError) => {
-                          Rlog.error(`error occurs when executing media#createAVMetadataExtractor`, {
-                            error: err,
-                            tag: 'VideoLibraryDatabase#addFromPhotos'
-                          })
+                      .catch((err: BusinessError) => {
+                        Rlog.error(`error occurs when executing pixelMapToArrayBuffer`, {
+                          error: err,
+                          tag: 'VideoLibraryDatabase#addFromPhotos'
                         })
-                    })
-                    .catch((err: BusinessError) => {
-                      Rlog.error(`error occurs when executing pixelMapToArrayBuffer`, {
-                        error: err,
-                        tag: 'VideoLibraryDatabase#addFromPhotos'
                       })
-                    })
-                })
-                .catch((err: BusinessError) => {
-                  Rlog.error(`error occurs when executing AVImageGenerator#fetchFrameByTime`, {
-                    error: err,
-                    tag: 'VideoLibraryDatabase#addFromPhotos'
                   })
-                })
-            })
+                  .catch((err: BusinessError) => {
+                    Rlog.error(`error occurs when executing AVImageGenerator#fetchFrameByTime`, {
+                      error: err,
+                      tag: 'VideoLibraryDatabase#addFromPhotos'
+                    })
+                  })
+              })
               .catch((err: BusinessError) => {
                 Rlog.error(`error occurs when executing media#createAVImageGenerator`, {
                   error: err,
@@ -389,10 +389,10 @@ export class VideoLibraryDatabase {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
-        Rlog.error(`failed to get RdbStore`, {
-          error: err,
-          tag: 'VideoLibrary'
-        })
+          Rlog.error(`failed to get RdbStore`, {
+            error: err,
+            tag: 'VideoLibrary'
+          })
           return;
         }
         store.query(new relationalStore.RdbPredicates("VideoLibrary"), async (err: BusinessError, resultSet) => {
@@ -443,7 +443,8 @@ export class VideoLibraryDatabase {
                 )
               }
             }
-            Rlog.debug(`unsafely listed ${videos.length} video${videos.length <= 1 ? "" : "s"} from local files database`)
+            Rlog.debug(`unsafely listed ${videos.length} video${videos.length <= 1 ? "" :
+              "s"} from local files database`)
             Rlog.debug("end: invoke of VideoLibraryDatabase#unsafeList function")
             resultReturner(videos)
           }
@@ -456,10 +457,10 @@ export class VideoLibraryDatabase {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
-        Rlog.error(`failed to get RdbStore`, {
-          error: err,
-          tag: 'VideoLibrary'
-        })
+          Rlog.error(`failed to get RdbStore`, {
+            error: err,
+            tag: 'VideoLibrary'
+          })
           return;
         }
         fileShare.revokePermission([// 移除持久化授权，保护用户文件安全
@@ -484,10 +485,10 @@ export class VideoLibraryDatabase {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
-        Rlog.error(`failed to get RdbStore`, {
-          error: err,
-          tag: 'VideoLibrary'
-        })
+          Rlog.error(`failed to get RdbStore`, {
+            error: err,
+            tag: 'VideoLibrary'
+          })
           return;
         }
         store.update(
@@ -508,10 +509,10 @@ export class VideoLibraryDatabase {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
-        Rlog.error(`failed to get RdbStore`, {
-          error: err,
-          tag: 'VideoLibrary'
-        })
+          Rlog.error(`failed to get RdbStore`, {
+            error: err,
+            tag: 'VideoLibrary'
+          })
           return;
         }
         store.update(
@@ -532,10 +533,10 @@ export class VideoLibraryDatabase {
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, VideoLibraryDatabase.databaseConfig, (err, store) => {
         if (err) {
-        Rlog.error(`failed to get RdbStore`, {
-          error: err,
-          tag: 'VideoLibrary'
-        })
+          Rlog.error(`failed to get RdbStore`, {
+            error: err,
+            tag: 'VideoLibrary'
+          })
           return;
         }
 

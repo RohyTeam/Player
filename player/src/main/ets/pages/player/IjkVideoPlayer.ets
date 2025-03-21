@@ -1072,6 +1072,7 @@ export struct IjkVideoPlayer {
       .visibility(
         this.showControls ? Visibility.Visible : Visibility.Hidden
       )
+
       Row() {
       }
       .layoutWeight(1)
@@ -1508,7 +1509,8 @@ export struct IjkVideoPlayer {
         ForEach(this.landscapeView ? exclude([0, 1, 2, 3], this.bottomBarLandscapeSelected) : [0, 1, 2, 3],
           (optionIndex: number, index: number) => {
             if (optionIndex == ToolbarOptions.BOTTOM_BAR.FILLING_MODE) {
-              this.surfaceFillingModeMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
+              this.surfaceFillingModeMenuItem(optionIndex,
+                4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
             } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.SPEED) {
               this.speedMenuItem(optionIndex, 4 - (this.landscapeView ? this.bottomBarLandscapeSelected.length : 0))
             } else if (optionIndex == ToolbarOptions.BOTTOM_BAR.AUDIOS) {

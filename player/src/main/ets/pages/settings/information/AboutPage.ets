@@ -1,17 +1,14 @@
-import BuildProfile from "BuildProfile"
-import { getIcon } from "../../../util/IconUtil"
-import { SettingsGroup, SettingsPage, SettingsRow } from "../../components/SettingsPage"
-import { promptAction } from "@kit.ArkUI"
+import BuildProfile from 'BuildProfile'
+import { getIcon } from '../../../util/IconUtil'
+import { SettingsGroup, SettingsPage, SettingsRow } from '../../components/SettingsPage'
+import { promptAction } from '@kit.ArkUI'
 
 @Component
 export struct AboutPage {
-
   @Consume('settingsPageController')
   settingsPageController: NavPathStack
-
   @StorageLink("debugMode")
   private debugMode: boolean = false
-
   @State
   private counter: number = 0
 
@@ -111,5 +108,4 @@ export struct AboutPage {
     .height("100%")
     .backgroundColor($r("app.color.rohy_settings_background"))
   }
-
 }

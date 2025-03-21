@@ -1,8 +1,6 @@
-
 @CustomDialog
 @Component
 export struct LoadingOverlay {
-
   controller?: CustomDialogController
 
   build() {
@@ -16,13 +14,11 @@ export struct LoadingOverlay {
     }
     .borderRadius(16)
   }
-
 }
 
 @CustomDialog
 @Component
 export struct ProgressLoadingOverlay {
-
   @Link
   loading: number
   @Link
@@ -52,5 +48,4 @@ export struct ProgressLoadingOverlay {
     .alignItems(HorizontalAlign.Start)
     .borderRadius(16)
   }
-
 }

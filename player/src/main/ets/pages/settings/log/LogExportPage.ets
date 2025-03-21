@@ -1,15 +1,18 @@
-import { Rlog } from "../../../log/Rlog"
-import { SettingsDivider, SettingsGroup,
+import { Rlog } from '../../../log/Rlog'
+import {
+  SettingsDivider,
+  SettingsGroup,
   SettingsHeader,
-  SettingsPage, SettingsRow } from "../../components/SettingsPage"
-import { curves, promptAction } from "@kit.ArkUI"
+  SettingsPage,
+  SettingsRow
+} from '../../components/SettingsPage'
+import { curves, promptAction } from '@kit.ArkUI'
+rkUI"
 
 @Component
 export struct LogExportPage {
-
   @Consume('settingsPageController')
   settingsPageController: NavPathStack
-
   @State
   private groupedLogs: Record<string, string[]> | undefined = undefined
 
@@ -135,5 +138,4 @@ export struct LogExportPage {
     .height("100%")
     .backgroundColor($r("app.color.rohy_settings_background"))
   }
-
 }

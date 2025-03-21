@@ -1,6 +1,6 @@
 import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { display, ThemeControl, window } from '@kit.ArkUI';
+import { display, window } from '@kit.ArkUI';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { DatabaseManager } from '../database/DatabaseManager';
 import { ToolbarOptions } from '../util/ToolbarCustomizationUtil';
@@ -120,5 +120,4 @@ export default class PlayerAbility extends UIAbility {
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
     });
   }
-
 }
