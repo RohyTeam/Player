@@ -1,7 +1,7 @@
 {
-  "modelVersion": "5.0.2",
+  "modelVersion": "5.0.3",
   "dependencies": {
-    "@ohos/cangjie-build-support": "file:cangjie-build-support-3.1.119.tgz"
+    "@ohos/cangjie-build-support": "file:cangjie-build-support-3.1.122.tgz"
   },
   "execution": {
   },

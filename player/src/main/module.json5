@@ -20,7 +20,7 @@
         "description": "$string:PlayerAbility_desc",
         "icon": "$media:drawable",
         "label": "$string:PlayerAbility_label",
-        "startWindowIcon": "$media:app_icon",
+        "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
         "skills": [
@@ -40,7 +40,7 @@
         "description": "Used for playing videos",
         "icon": "$media:drawable",
         "label": "$string:VideoAbility_label",
-        "startWindowIcon": "$media:app_icon",
+        "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
         "orientation": "auto_rotation_landscape",
         "launchType": "specified",
