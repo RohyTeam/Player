@@ -24,6 +24,60 @@ interface FileWithStat {
   mtime: number
 }
 
+export class RLogger {
+
+  private name: string
+
+  private constructor(name: string) {
+    this.name = name
+  }
+
+  public debug(message: string, extra?: LogOptions) {
+    let options: LogOptions = extra == undefined ? {} : extra
+    if (options.tag == undefined) {
+      options.tag = this.name
+    }
+    Rlog.debug(message, options)
+  }
+
+  public info(message: string, extra?: LogOptions) {
+    let options: LogOptions = extra == undefined ? {} : extra
+    if (options.tag == undefined) {
+      options.tag = this.name
+    }
+    Rlog.info(message, options)
+  }
+
+  public warn(message: string, extra?: LogOptions) {
+    let options: LogOptions = extra == undefined ? {} : extra
+    if (options.tag == undefined) {
+      options.tag = this.name
+    }
+    Rlog.warn(message, options)
+  }
+
+  public error(message: string, extra?: LogOptions) {
+    let options: LogOptions = extra == undefined ? {} : extra
+    if (options.tag == undefined) {
+      options.tag = this.name
+    }
+    Rlog.error(message, options)
+  }
+
+  public fatal(message: string, extra?: LogOptions) {
+    let options: LogOptions = extra == undefined ? {} : extra
+    if (options.tag == undefined) {
+      options.tag = this.name
+    }
+    Rlog.fatal(message, options)
+  }
+
+  public static of(name: string): RLogger {
+    return new RLogger(name)
+  }
+
+}
+
 // 日志系统仅输出业务内容，请勿在 aboutToAppear 或 aboutToDisappear 中输出控件渲染信息导致滥用
 export class Rlog { // 意为 Rohy Logger
 

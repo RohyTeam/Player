@@ -28,7 +28,7 @@ import { WebDAVDatabase } from '../../../database/WebDAVDatabase'
 import { SettingsSheetView, SettingsSheetViewFunctions } from '../../settings/SettingsSheetView'
 import { VideoLibrarySettingsPage } from '../../settings/pages/VideoLibrarySettingsPage'
 import { ProgressLoadingOverlay } from '../../components/Overlays'
-import { Rlog } from '../../../log/Rlog'
+import { Rlog, RLogger } from '../../../log/Rlog'
 
 export interface VideoDeleter {
 
@@ -37,6 +37,8 @@ export interface VideoDeleter {
   updater: (video: VideoSource, played: number) => void
 
 }
+
+let LOGGER = RLogger.of('VideoLibraryPage')
 
 @Component
 export struct VideoLibraryPage {
@@ -95,25 +97,37 @@ export struct VideoLibraryPage {
   })
 
   videoUpdater(changedPropertyName: string) {
-    console.error(`changes detected, ready to update video`)
+    LOGGER.debug(`video data is about to be updated`)
     if (this.toBeUpdatedVideoIdentity.startsWith("local:")) {
+      LOGGER.debug(`ready to update local video data`)
       let identity = this.toBeUpdatedVideoIdentity.substring(6)
       let fileHash = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(identity)).split("|")[1]
       VideoLibraryDatabase.tryFetchByHash(getContext(this), fileHash)
         .then((updatedVideo) => {
           if (updatedVideo != undefined) {
+            LOGGER.debug(`sucessfully fetched updated video data from database`)
             let index = this.videos.findIndex((video) => video instanceof LocalVideoSource && video.hash == fileHash)
             if (index >= 0) {
+              LOGGER.debug(`updated video data for "${this.videos[index].title}"`)
               this.videos[index].played = updatedVideo.played
               this.sort()
             } else { // 说明通过别的办法添加了新的视频
               // this.videos.push(VideoEntityV2.fromV1(updatedVideo))
               // TODO: 这个逻辑目前碰不到
+              LOGGER.warn(`video to be updated not exists which shouldn't happen`)
               this.sort()
             }
+          } else {
+            LOGGER.warn(`failed to fetch updated video data from database`)
           }
         })
+        .catch((err: BusinessError) => {
+          LOGGER.error(`failed to fetch updated video data from database`, {
+            error: err
+          })
+        })
     } else if (this.toBeUpdatedVideoIdentity.startsWith("webdav:")) {
+      LOGGER.debug(`ready to update webdav video data`)
       let identity = this.toBeUpdatedVideoIdentity.substring(7)
       let splitData = StrUtil.unit8ArrayToStr(Base64Util.decodeSync(identity)).split("|")
       let serverUrl = splitData[0]
@@ -124,9 +138,11 @@ export struct VideoLibraryPage {
         serverUrl
       ).then((updatedVideo) => {
         if (updatedVideo != undefined) {
+          LOGGER.debug(`sucessfully fetched updated video data from database`)
           let index =
             this.videos.findIndex((video) => video instanceof WebDAVVideoSource && video.identity() == identity)
           if (index >= 0) {
+            LOGGER.debug(`updated video data for "${this.videos[index].title}"`)
             this.videos[index].played = updatedVideo.played
             // 因为获取视频元数据的限制， webdav 视频可能会在第一次播放后才更新元数据，所以这里同时也更新一下元数据
             this.videos[index].length = updatedVideo.length
@@ -135,10 +151,18 @@ export struct VideoLibraryPage {
             this.sort()
           } else {
             // FIXME: 理论上不会出现
+            LOGGER.warn(`video to be updated not exists which shouldn't happen`)
             this.sort()
           }
+        } else {
+          LOGGER.warn(`failed to fetch updated video data from database`)
         }
       })
+        .catch((err: BusinessError) => {
+          LOGGER.error(`failed to fetch updated video data from database`, {
+            error: err
+          })
+        })
     }
   }
 
@@ -164,6 +188,8 @@ export struct VideoLibraryPage {
         .onClick(() => {
           this.gridOrList = false
           PreferencesUtil.putSync("gridOrList", false)
+
+          LOGGER.debug(`changing video library view to "grid" view`)
         })
         .margin({
           left: 4,
@@ -189,6 +215,8 @@ export struct VideoLibraryPage {
         .onClick(() => {
           this.gridOrList = true
           PreferencesUtil.putSync("gridOrList", true)
+
+          LOGGER.debug(`changing video library view to "list" view`)
         })
         .margin({
           left: 4,

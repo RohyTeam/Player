@@ -1,5 +1,5 @@
 import { BreakpointConstants } from '../../common/constants/BreakpointConstants';
-import { deviceInfo } from '@kit.BasicServicesKit';
+import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
 import { CommonConstants } from '../../common/constants/CommonConstants';
 import { VideoLibraryPage } from './videolibrary/VideoLibraryPage';
 import { MorePage } from './more/MorePage';
@@ -10,6 +10,9 @@ import { fileShare, hash } from '@kit.CoreFileKit';
 import { FileUtil } from '@pura/harmony-utils';
 import { WebDAVs } from '../../entity/WebDAVEntity';
 import { WebDAVDatabase } from '../../database/WebDAVDatabase';
+import { RLogger } from '../../log/Rlog';
+
+let LOGGER = RLogger.of('HomeScreen')
 
 export class FooterTab {
   private name: Resource;
@@ -30,7 +33,7 @@ export class FooterTab {
 }
 
 @Component
-export struct RohyPlayerHome {
+export struct HomeScreen {
   @State
   currentBottomIndex: number = 0;
   @StorageLink('currentWidthBreakpoint')
@@ -59,7 +62,10 @@ export struct RohyPlayerHome {
   webdavs: WebDAVs = []
 
   aboutToAppear(): void {
-    FontLibraryDatabase.unsafeList(getContext(this)).then((fonts) => {
+    FontLibraryDatabase.unsafeList(getContext(this))
+      .then((fonts) => {
+      LOGGER.debug(`fetched ${fonts.length} fonts from database by unsafely listing`)
+
       this.fonts.push(...fonts.map((v1) => FontEntityV2.fromV1(v1)))
 
       for (let font of this.fonts) {
@@ -78,8 +84,16 @@ export struct RohyPlayerHome {
                     font.status = FileStatus.Authorized
                   }
                 })
+                .catch((err: BusinessError) => { // 对于循环操作，仅输出报错内容，防止日志太多
+                  LOGGER.error(`failed to hash and verify font "${font.familyName}", deleting it`, {
+                    error: err
+                  })
+                })
             })
-            .catch(() => {
+            .catch((err: BusinessError) => {
+              LOGGER.error(`failed to activate permission for font "${font.familyName}", deleting it`, {
+                error: err
+              })
               font.status = FileStatus.Disappear
               font.on = false
               FontLibraryDatabase.deleteByFontHash(getContext(this), font.hash)
@@ -87,9 +101,20 @@ export struct RohyPlayerHome {
         }
       }
     })
+      .catch((err: BusinessError) => {
+        LOGGER.error(`failed to invoke FontLibraryDatabase#unsafeList`, {
+          error: err
+        })
+      })
     WebDAVDatabase.unsafeListWebDAV(getContext(this))
       .then((webdavs) => {
+        LOGGER.debug(`fetched ${webdavs.length} webdavs from database by unsafely listing`)
         this.webdavs.push(...webdavs)
+      })
+      .catch((err: BusinessError) => {
+        LOGGER.error(`failed to invoke WebDAVDatabase#unsafeListWebDAV`, {
+          error: err
+        })
       })
   }
 
@@ -137,6 +162,7 @@ export struct RohyPlayerHome {
         .tabBar(this.BottomTabBuilder(this.tabs[0], 0))
 
         /*
+        TODO: 正在考虑取消音频支持
         TabContent() {
           AudioLibraryPage()
         }

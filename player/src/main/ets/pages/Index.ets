@@ -1,5 +1,5 @@
 import { BlurTestPage, DebugPage, DebugToolbarCustomizer } from './settings/debug/DebugPage';
-import { RohyPlayerHome } from './rohyplayer/HomeScreen';
+import { HomeScreen } from './rohyplayer/HomeScreen';
 
 @Entry
 @Component
@@ -16,7 +16,7 @@ struct Index {
     }) {
       RelativeContainer() {
         Navigation(this.pageController) {
-          RohyPlayerHome()
+          HomeScreen()
         }
         .navDestination(this.PageControllerDestination)
         .backgroundColor($r("app.color.comp_background_focus"))

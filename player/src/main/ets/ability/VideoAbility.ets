@@ -1,5 +1,5 @@
 import { AbilityConstant, common, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
-import { display, window } from '@kit.ArkUI';
+import { display, promptAction, window } from '@kit.ArkUI';
 import hilog from '@ohos.hilog';
 import { BusinessError, deviceInfo } from '@kit.BasicServicesKit';
 import { EventData } from '../pages/VideoIndex';
@@ -9,7 +9,11 @@ import { JSON } from '@kit.ArkTS';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { checkPermissionGrant } from '../util/PermissionUtils';
 import { StringArray } from '../entity/Arrays';
-import { Rlog } from '../log/Rlog';
+import { Rlog, RLogger } from '../log/Rlog';
+import BuildProfile from 'BuildProfile';
+import { getBottomBarButtons, getTopBarButtons } from '../util/ToolbarCustomizationUtil';
+
+let LOGGER = RLogger.of('VideoAbility')
 
 /**
  * 此 Ability 为视频播放器的 Ability，仅支持横屏
@@ -28,7 +32,10 @@ export default class VideoAbility extends UIAbility {
   }
 
   private calculateWindowSize() {
+    LOGGER.debug(`start: invoke of VideoAbility#calculateWindowSize function`)
     if (VideoAbility.windowObj === undefined) {
+      LOGGER.warn(`window object is not initialized`)
+      LOGGER.debug(`end: invoke of VideoAbility#calculateWindowSize function`)
       return;
     }
     let mainWindow: window.WindowProperties = VideoAbility.windowObj.getWindowProperties();
@@ -37,12 +44,20 @@ export default class VideoAbility extends UIAbility {
     let windowWidthVp = windowWidth / display.getDefaultDisplaySync().densityPixels;
     let windowHeightVp = windowHeight / display.getDefaultDisplaySync().densityPixels;
 
-    console.error(`screen width & height: ${windowWidth}, ${windowHeight}`)
-
-    AppStorage.setOrCreate("screenWidth", mainWindow.windowRect.width)
-    AppStorage.setOrCreate("screenHeight", mainWindow.windowRect.height)
+    AppStorage.setOrCreate("screenWidth", windowWidth)
+    AppStorage.setOrCreate("screenHeight", windowHeight)
     AppStorage.setOrCreate("screenHeightVp", windowHeightVp)
     AppStorage.setOrCreate("screenWidthVp", windowWidthVp)
+
+    LOGGER.debug(`
+    -------- Window Size Info --------
+    window width: ${windowWidth}
+    window height: ${windowHeight}
+    window width vp: ${windowWidthVp}
+    window height vp: ${windowHeightVp}
+    ----------------------------------`)
+
+    LOGGER.debug(`end: invoke of VideoAbility#calculateWindowSize function`)
   }
 
   /**
@@ -50,37 +65,63 @@ export default class VideoAbility extends UIAbility {
    * 搞得人头疼。。。
    */
   onContinue(wantParam: Record<string, Object>): AbilityConstant.OnContinueResult | Promise<AbilityConstant.OnContinueResult> {
-    // TODO：添加接续版本，防止后续更新新内容导致接续功能爆炸
+    LOGGER.debug(`start: invoke of VideoAbility#onContinue function`)
     return new Promise((resultReturner) => {
+      if (wantParam.version != BuildProfile.VERSION_CODE) {
+        promptAction.showToast({
+          message: $r('app.string.continue_failed_version'),
+          duration: 2000
+        })
+        LOGGER.debug(`end: invoke of VideoAbility#onContinue function`)
+        resultReturner(AbilityConstant.OnContinueResult.MISMATCH)
+        return
+      }
       let deviceManager = distributedDeviceManager.createDeviceManager("org.rohy.player")
       let eventData = new EventData()
+
       this.context.eventHub.emit('getAbilityData', eventData)
+
       let want = eventData.launchWant!
-      wantParam['url'] = want.parameters!.url as string
+      let uri = want.parameters!.url as string
+
+      wantParam['url'] = uri
       wantParam['title'] = want.parameters!.title as string
       wantParam['hash'] = want.parameters!.hash as string
       wantParam['videoPosition'] = AppStorage.get('videoPosition') || 0
       wantParam['videoPaused'] = AppStorage.get('videoPaused') || false
+
       if (want.parameters!['originalDevice'] == undefined) {
-        console.error('not have original device')
+        LOGGER.debug(`original device is not defined, this is the origin device, checking and preparing the continued video file source`)
+
         wantParam['originalDevice'] = deviceInfo.ODID
         wantParam['videoHolder'] = deviceManager.getLocalDeviceNetworkId()
-        let uri = want.parameters!.url as string
         wantParam['originalVidUri'] = uri
+
         if (uri.startsWith('file://')) {
+          LOGGER.debug(`trying to continue a local file, copying video file to distributed directory`)
           copyFileToContinueDir(this.context, want.parameters!.url as string, want.parameters!.hash as string)
             .then(() => {
+              LOGGER.debug(`file copied successfully, ready to continue`)
+              LOGGER.debug(`end: invoke of VideoAbility#onContinue function`)
               resultReturner(AbilityConstant.OnContinueResult.AGREE)
             })
         } else if (uri.startsWith('http://') || uri.startsWith('https://')) {
+          LOGGER.debug(`trying to continue a remote file`)
+          LOGGER.debug(`end: invoke of VideoAbility#onContinue function`)
           resultReturner(AbilityConstant.OnContinueResult.AGREE)
         } else {
+          LOGGER.error(`trying to continue a video from unknown source, reject to continue`)
+          LOGGER.debug(`end: invoke of VideoAbility#onContinue function`)
           resultReturner(AbilityConstant.OnContinueResult.REJECT)
         }
       } else {
+        LOGGER.debug(`original device is defined, this video is continued multiple times, video file preparation is not in need`)
+
         // 有这个参数说明这个视频被多次流转了，而且所有数据都已经填好，所以不进行任何改动
         wantParam['originalDevice'] = want.parameters!.originalDevice
         wantParam['videoHolder'] = want.parameters!.videoHolder
+
+        LOGGER.debug(`end: invoke of VideoAbility#onContinue function`)
         resultReturner(AbilityConstant.OnContinueResult.AGREE)
       }
     })
@@ -93,7 +134,6 @@ export default class VideoAbility extends UIAbility {
     VideoAbility.context = this.context
     if (!appUtilInited()) {
       // 这种情况一般是流转导致的，但是从文件预览打开也会导致这个情况
-      console.error(`requires to reinit context`)
       AppUtil.init(this.context)
     }
 
@@ -113,6 +153,20 @@ export default class VideoAbility extends UIAbility {
     AppStorage.setOrCreate("hardwareDecode", PreferencesUtil.getBooleanSync("hardwareDecode", false))
     AppStorage.setOrCreate("lessCovering", PreferencesUtil.getBooleanSync("lessCovering", false))
 
+    LOGGER.debug(`
+      ------- Preference -------
+      app color mode: ${AppStorage.get("appColorMode")}
+      auto shutdown when video player unfocused: ${AppStorage.get("autoShutdown")}
+      show status bar when controllers  : ${AppStorage.get("statusBar")}
+      show battery percent in status bar (only when status bar enabled): ${AppStorage.get("statusBarBatteryPercent")}
+      used video player: ${(AppStorage.get("preferFFmpeg") || false) ? "IJKPlayer" : "AVPlayer"}
+      using hardware decode (only when using IJKPlayer): ${AppStorage.get("hardwareDecode")}
+      surface covering less area: ${AppStorage.get("lessCovering")}
+      landscape top bar unfolded buttons: ${getTopBarButtons()}
+      landscape bottom bar unfolded buttons: ${getBottomBarButtons()}
+      --------------------------
+    `)
+
     if (colorMode == "light") {
       this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
     } else if (colorMode == "dark") {
@@ -128,6 +182,7 @@ export default class VideoAbility extends UIAbility {
      */
     AppStorage.setOrCreate("comesFromApp", false)
     if (want.uri) {
+      LOGGER.debug(`opening a video from file preview`)
       /* 由于权限问题，此功能暂时无效，所以先做屏蔽处理
       // 把视频导入到视频库里
       if (want.uri.startsWith("file://media")) { // 媒体库
@@ -164,7 +219,7 @@ export default class VideoAbility extends UIAbility {
       // 为了防止问题，未导入播放器的不进行接续支持
       // 关闭接续
       this.context.setMissionContinueState(AbilityConstant.ContinueState.INACTIVE, (result) => {
-        console.info(`setMissionContinueState: ${JSON.stringify(result)}`);
+        LOGGER.debug(`disabled continuation to prevent premission problem`)
       });
       this.context.eventHub.on('getAbilityData', (data: EventData): void => {
         data.launchWant = {
@@ -177,13 +232,13 @@ export default class VideoAbility extends UIAbility {
         }
       })
     } else if (want.parameters) { // 如果是打开软件后通过 picker 打开视频
+      LOGGER.debug(`opening a video selected from app`)
       VideoAbility.receivedWant = want
       AppStorage.setOrCreate("comesFromApp", true)
       // 如果用户没有授权分布式文件权限或者关闭了接续，关闭接续功能
       if (!checkPermissionGrant("ohos.permission.DISTRIBUTED_DATASYNC") || !tryGetPreference("continuation")) {
-        console.error("user didnt turn on continuation")
         this.context.setMissionContinueState(AbilityConstant.ContinueState.INACTIVE, (result) => {
-          console.info(`setMissionContinueState: ${JSON.stringify(result)}`);
+          LOGGER.debug(`disabled continuation because user disabled continuation or permission not granted`)
         });
       }
       if (want.parameters!['videoPosition'] != undefined) {
@@ -203,7 +258,6 @@ export default class VideoAbility extends UIAbility {
         this.calculateWindowSize()
       })
       VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
-        console.error(`current window event type: ${windowEventType}`)
         if (windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
           let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
           shouldDies.push(VideoAbility.receivedWant?.parameters!.hash as string)
@@ -215,29 +269,34 @@ export default class VideoAbility extends UIAbility {
 
     windowStage.loadContent('pages/VideoIndex', (err) => {
       if (err.code) {
-        hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
+        LOGGER.fatal(`Failed to load content`, {
+          error: err
+        })
         return;
       }
 
       let windowClass: window.Window = windowStage.getMainWindowSync()
 
       windowClass.setWindowLayoutFullScreen(true).then(() => { // 防止出现导航避让区
-        console.info('Succeeded in setting the window layout to full-screen mode.');
       }).catch((err: BusinessError) => {
-        console.error('Failed to set the window layout to full-screen mode. Cause:' + JSON.stringify(err));
+        LOGGER.fatal(`Failed to enable fullscreen mode`, {
+          error: err
+        })
       });
       windowClass.setSpecificSystemBarEnabled('status', false).then(() => {
-        console.info('Succeeded in setting the status bar to be invisible.');
       }).catch((err: BusinessError) => {
-        console.error(`Failed to set the status bar to be invisible. Code is ${err.code}, message is ${err.message}`);
+        LOGGER.fatal(`Failed to disable systme status bar`, {
+          error: err
+        })
       });
       windowClass.setSpecificSystemBarEnabled('navigationIndicator', false).then(() => {
-        console.info('Succeeded in setting the navigation indicator to be invisible.');
       }).catch((err: BusinessError) => {
-        console.error(`Failed to set the navigation indicator to be invisible. Code is ${err.code}, message is ${err.message}`);
+        LOGGER.fatal(`Failed to disable systme navigation indicator`, {
+          error: err
+        })
       });
 
-      hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
+      LOGGER.debug(`successfully loaded content page`)
     });
   }
 
@@ -248,7 +307,6 @@ export default class VideoAbility extends UIAbility {
         this.calculateWindowSize()
       })
       VideoAbility.windowObj.on('windowEvent', (windowEventType: window.WindowEventType) => {
-        console.error(`current window event type: ${windowEventType}`)
         if (windowEventType == window.WindowEventType.WINDOW_HIDDEN) {
           let shouldDies: StringArray = AppStorage.get<StringArray>("videoAbility_shouldDie") || []
           shouldDies.push(VideoAbility.receivedWant?.parameters!.hash as string)
@@ -260,24 +318,34 @@ export default class VideoAbility extends UIAbility {
 
     windowStage.loadContent('pages/VideoIndex', (err) => {
       if (err.code) {
-        hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
+        LOGGER.fatal(`Failed to load content`, {
+          error: err
+        })
         return;
       }
 
       let windowClass: window.Window = windowStage.getMainWindowSync()
 
-      windowClass.setSpecificSystemBarEnabled('status', false).then(() => {
-        console.info('Succeeded in setting the status bar to be invisible.');
+      windowClass.setWindowLayoutFullScreen(true).then(() => { // 防止出现导航避让区
       }).catch((err: BusinessError) => {
-        console.error(`Failed to set the status bar to be invisible. Code is ${err.code}, message is ${err.message}`);
+        LOGGER.fatal(`Failed to enable fullscreen mode`, {
+          error: err
+        })
+      });
+      windowClass.setSpecificSystemBarEnabled('status', false).then(() => {
+      }).catch((err: BusinessError) => {
+        LOGGER.fatal(`Failed to disable systme status bar`, {
+          error: err
+        })
       });
       windowClass.setSpecificSystemBarEnabled('navigationIndicator', false).then(() => {
-        console.info('Succeeded in setting the navigation indicator to be invisible.');
       }).catch((err: BusinessError) => {
-        console.error(`Failed to set the navigation indicator to be invisible. Code is ${err.code}, message is ${err.message}`);
+        LOGGER.fatal(`Failed to disable systme navigation indicator`, {
+          error: err
+        })
       });
 
-      hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
+      LOGGER.debug(`successfully loaded content page`)
     });
   }
 }

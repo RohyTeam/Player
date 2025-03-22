@@ -1,3 +1,4 @@
+import { PreferencesUtil } from '@pura/harmony-utils'
 import { DraggableCustomizationOption } from '../pages/components/DraggableCustomization'
 
 export class TopBarOptions {
@@ -55,3 +56,51 @@ export const bottomBarOptions: DraggableCustomizationOption[] = [
     name: $r('app.string.settings_toolbar_option_subtitles'),
   }
 ]
+
+export function getTopBarButtons(): string {
+  let selected = PreferencesUtil.getStringSync('toolbar_landscape_topbar', '')
+  let topBarLandscapeSelected: number[] = []
+  if (selected.length > 0) {
+    if (selected.indexOf(',') > 0) {
+      topBarLandscapeSelected = selected.split(',').map((value) => parseInt(value))
+    } else {
+      topBarLandscapeSelected = [parseInt(selected)]
+    }
+  }
+  return topBarLandscapeSelected.map((value) => {
+    if (value == ToolbarOptions.TOP_BAR.REPEAT) {
+      return "repeat"
+    } else if (value == ToolbarOptions.TOP_BAR.MIRROR) {
+      return "mirror"
+    } else if (value == ToolbarOptions.TOP_BAR.ADJUSTMENT) {
+      return "adjustment"
+    } else {
+      return "unknown"
+    }
+  }).join(', ')
+}
+
+export function getBottomBarButtons(): string {
+  let selected = PreferencesUtil.getStringSync('toolbar_landscape_bottombar', '')
+  let bottomBarLandscapeSelected: number[] = []
+  if (selected.length > 0) {
+    if (selected.indexOf(',') > 0) {
+      bottomBarLandscapeSelected = selected.split(',').map((value) => parseInt(value))
+    } else {
+      bottomBarLandscapeSelected = [parseInt(selected)]
+    }
+  }
+  return bottomBarLandscapeSelected.map((value) => {
+    if (value == ToolbarOptions.BOTTOM_BAR.FILLING_MODE) {
+      return "filling mode"
+    } else if (value == ToolbarOptions.BOTTOM_BAR.SPEED) {
+      return "speed"
+    } else if (value == ToolbarOptions.BOTTOM_BAR.AUDIOS) {
+      return "audios"
+    } else if (value == ToolbarOptions.BOTTOM_BAR.SUBTITLES) {
+      return "subtitles"
+    } else {
+      return "unknown"
+    }
+  }).join(', ')
+}

@@ -9,6 +9,9 @@ import { pixelMapToArrayBuffer } from '../util/ImageUtil';
 import resourceManager from '@ohos.resourceManager';
 import { VirtualNode } from '../pages/components/VirtualFilePicker';
 import { WebDAVClient } from '../lib/webdav_client/WebDAVClient';
+import { RLogger } from '../log/Rlog';
+
+let LOGGER = RLogger.of('WebDAVDatabase')
 
 export class WebDAVDatabase {
   private static SQL_CREATE_WEBDAV_SERVER_TABLE = 'CREATE TABLE IF NOT EXISTS WebDAVServers (' +
@@ -35,46 +38,61 @@ export class WebDAVDatabase {
   }
 
   public static init(context: common.Context) {
+    LOGGER.debug("start: invoke of WebDAVDatabase#init function")
     relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
       if (err) {
-        hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+        LOGGER.error(`failed to get RdbStore`, {
+          error: err
+        })
+        LOGGER.debug("end: invoke of WebDAVDatabase#init function")
         return;
       }
       if (store.version === 0) {
         store.executeSql(WebDAVDatabase.SQL_CREATE_WEBDAV_SERVER_TABLE)
         store.executeSql(WebDAVDatabase.SQL_CREATE_WEVDAV_VIDEO_LIBRARY_TABLE)
         store.version = 1
+        LOGGER.debug(`initialized webdav library database`)
+      } else {
+        LOGGER.debug(`webdav database has already been initialized, nothing to do`)
       }
 
-      hilog.debug(0x0, "database", "created webdav database")
+      LOGGER.debug("end: invoke of WebDAVDatabase#init function")
     })
   }
 
 
   public static tryFetchByLocationAndUrl(context: common.Context, location: string,
     url: string): Promise<WebDAVVideoSource | undefined> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#tryFetchByLocationAndUrl function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#tryFetchByLocationAndUrl function")
           return;
         }
-
-        console.error(`fetching with url: ${url}, location: ${location}`)
 
         store.query(new relationalStore.RdbPredicates("WebDAVVideoLibrary")
           .equalTo("FILE_SOURCE", url)
           .equalTo("LOCATION", location), async (err: BusinessError, resultSet) => {
           if (err) {
-            hilog.error(0x2, "database", `Failed to query data. Code:${err.code}, message:${err.message}`)
+            LOGGER.error(`failed to query data from database`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#tryFetchByLocationAndUrl function")
             resultReturner(undefined)
             return
           }
           if (resultSet.rowCount == 0) {
-            console.error("there are no data in database")
+            LOGGER.debug(`there is no data in webdav database`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#tryFetchByLocationAndUrl function")
             resultReturner(undefined)
           } else {
+            LOGGER.debug(`queried ${resultSet.rowCount} data from webdav database${resultSet.rowCount > 1 ? ", multiple data queried, only the first data will be taken" : ""}`)
             resultSet.goToFirstRow()
+            LOGGER.debug("end: invoke of WebDAVDatabase#tryFetchByLocationAndUrl function")
             resultReturner(
               new WebDAVVideoSource(
                 resultSet.getString(resultSet.getColumnIndex("LOCATION")),
@@ -97,10 +115,14 @@ export class WebDAVDatabase {
 
   public static addVideo(context: common.Context, webdavClient: WebDAVClient, webdavUri: string, location: string,
     node: VirtualNode): Promise<WebDAVVideoSource> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#addVideo function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#addVideo function")
           return;
         }
         const resourceMgr: resourceManager.ResourceManager = context.resourceManager;
@@ -110,7 +132,8 @@ export class WebDAVDatabase {
 
             let pixelMap = imageSource.createPixelMapSync()
             if (pixelMap == undefined) {
-              console.error(`pixel map is undefined`)
+              LOGGER.error(`failed to create cover pixel map, which shouldn't happen!`)
+              LOGGER.debug("end: invoke of WebDAVDatabase#addVideo function")
               return
             }
             pixelMapToArrayBuffer(pixelMap)
@@ -136,7 +159,7 @@ export class WebDAVDatabase {
                     "VIDEO_COVER": new Uint8Array(buffer)
                   }
                 ).then(() => {
-                  console.error(`added webdav video`)
+                  LOGGER.debug(`successful add a video from webdav server`)
                   resultReturner(new WebDAVVideoSource(
                     location,
                     node.displayName,
@@ -150,25 +173,38 @@ export class WebDAVDatabase {
                   ))
                 })
                   .catch((err: BusinessError) => {
-                    console.error(`error occurs when inserting webdav video, code: ${err.code}, message: ${err.message}`)
+                    LOGGER.error(`failed to insert webdav video data to database` ,{
+                      error: err
+                    })
+                    LOGGER.debug("end: invoke of WebDAVDatabase#addVideo function")
                   })
               })
               .catch((err: BusinessError) => {
-                console.error(`error occurs when converting pixelmap to array buffer, code: ${err.code}, message: ${err.message}`)
+                LOGGER.error(`failed to convert cover pixel map to array buffer` ,{
+                  error: err
+                })
+                LOGGER.debug("end: invoke of WebDAVDatabase#addVideo function")
               })
           })
           .catch((error: BusinessError) => {
-            console.error(`Failed to get RawFileDescriptor.code is ${error.code}, message is ${error.message}`);
+            LOGGER.error(`failed to get default cover for remote video` ,{
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#addVideo function")
           })
       })
     })
   }
 
   public static addWebDAV(context: common.Context, authorization: WebDAVAuthorization): Promise<void> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#addWebDAV function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#addWebDAV function")
           return;
         }
         store.insert(
@@ -179,30 +215,50 @@ export class WebDAVDatabase {
             "USERNAME": authorization.account.username,
             "PASSWORD": authorization.account.password
           }
-        ).then(() => {
-          resultReturner()
-        })
+        )
+          .then(() => {
+            LOGGER.debug(`successfully added a webdav server`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#addWebDAV function")
+            resultReturner()
+          })
+          .catch((err: BusinessError) => {
+            LOGGER.error(`failed to add webdav server`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#addWebDAV function")
+            resultReturner()
+          })
       })
     })
   }
 
   public static unsafeListWebDAV(context: common.Context): Promise<Array<WebDAVAuthorization>> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#unsafeListWebDAV function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListWebDAV function")
           return;
         }
         store.query(new relationalStore.RdbPredicates("WebDAVServers"), async (err: BusinessError, resultSet) => {
           if (err) {
-            hilog.error(0x2, "database", `Failed to query data. Code:${err.code}, message:${err.message}`)
+            LOGGER.error(`failed to query data`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListWebDAV function")
             resultReturner(new Array())
             return
           }
           if (resultSet.rowCount == 0) {
-            console.error("there are no data in webdav database")
+            LOGGER.debug(`there is no data in webdav database`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListWebDAV function")
             resultReturner(new Array())
           } else {
+            LOGGER.debug(`queried ${resultSet.rowCount} webdav servers data from database`)
+
             let webdavs = new Array<WebDAVAuthorization>()
 
             while (resultSet.goToNextRow()) {
@@ -217,6 +273,9 @@ export class WebDAVDatabase {
               })
             }
 
+            LOGGER.debug(`unsafely listed ${webdavs.length} webdav server${webdavs.length <= 1 ? "" :
+              "s"}`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListWebDAV function")
             resultReturner(webdavs)
           }
         })
@@ -225,22 +284,32 @@ export class WebDAVDatabase {
   }
 
   public static unsafeListVideos(context: common.Context): Promise<Array<WebDAVVideoSource>> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#unsafeListVideos function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListVideos function")
           return;
         }
         store.query(new relationalStore.RdbPredicates("WebDAVVideoLibrary"), async (err: BusinessError, resultSet) => {
           if (err) {
-            hilog.error(0x2, "database", `Failed to query data. Code:${err.code}, message:${err.message}`)
+            LOGGER.error(`failed to query data`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListVideos function")
             resultReturner(new Array())
             return
           }
           if (resultSet.rowCount == 0) {
-            console.error("there are no data in webdav videos database")
+            LOGGER.debug(`there is no data in webdav database`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListVideos function")
             resultReturner(new Array())
           } else {
+            LOGGER.debug(`queried ${resultSet.rowCount} webdav videos data from database`)
+
             let videos = new Array<WebDAVVideoSource>()
 
             while (resultSet.goToNextRow()) {
@@ -258,6 +327,9 @@ export class WebDAVDatabase {
               videos.push(video)
             }
 
+            LOGGER.debug(`unsafely listed ${videos.length} webdav video${videos.length <= 1 ? "" :
+              "s"}`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#unsafeListVideos function")
             resultReturner(videos)
           }
         })
@@ -267,10 +339,14 @@ export class WebDAVDatabase {
 
   public static updateNameByLocationAndUrl(context: common.Context, newTitle: string, location: string,
     url: string): Promise<void> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#updateNameByLocationAndUrl function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#updateNameByLocationAndUrl function")
           return;
         }
         store.update(
@@ -282,7 +358,16 @@ export class WebDAVDatabase {
             .equalTo("LOCATION", location)
         )
           .then((num: number) => {
+            LOGGER.debug(`updated webdav video name`)
+            LOGGER.debug(`update action affected ${num} rows of data`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#updateNameByLocationAndUrl function")
             resultReturner()
+          })
+          .catch((err: BusinessError) => {
+            LOGGER.error(`failed to update webdav video name`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#updateNameByLocationAndUrl function")
           })
       })
     })
@@ -290,10 +375,14 @@ export class WebDAVDatabase {
 
   public static updatePlayedByLocationAndUrl(context: common.Context, played: number, location: string,
     url: string): Promise<void> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#updatePlayedByLocationAndUrl function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#updatePlayedByLocationAndUrl function")
           return;
         }
         store.update(
@@ -305,7 +394,16 @@ export class WebDAVDatabase {
             .equalTo("LOCATION", location)
         )
           .then((num: number) => {
+            LOGGER.debug(`updated webdav video played time`)
+            LOGGER.debug(`update action affected ${num} rows of data`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#updatePlayedByLocationAndUrl function")
             resultReturner()
+          })
+          .catch((err: BusinessError) => {
+            LOGGER.error(`failed to update webdav video played time`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#updatePlayedByLocationAndUrl function")
           })
       })
     })
@@ -313,10 +411,14 @@ export class WebDAVDatabase {
 
   public static updateWidthAndHeightByLocationAndUrl(context: common.Context, width: number, height: number,
     location: string, url: string): Promise<void> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#updateWidthAndHeightByLocationAndUrl function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#updateWidthAndHeightByLocationAndUrl function")
           return;
         }
         store.update(
@@ -329,8 +431,16 @@ export class WebDAVDatabase {
             .equalTo("LOCATION", location)
         )
           .then((num: number) => {
-            console.error(`webdav updateWidthAndHeightByLocationAndUrl affected rows: ${num}`)
+            LOGGER.debug(`updated webdav video width and height`)
+            LOGGER.debug(`update action affected ${num} rows of data`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#updateWidthAndHeightByLocationAndUrl function")
             resultReturner()
+          })
+          .catch((err: BusinessError) => {
+            LOGGER.error(`failed to update webdav video width and height`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#updateWidthAndHeightByLocationAndUrl function")
           })
       })
     })
@@ -338,10 +448,14 @@ export class WebDAVDatabase {
 
   public static updateLengthByLocationAndUrl(context: common.Context, length: number, location: string,
     url: string): Promise<void> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#updateLengthByLocationAndUrl function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#updateLengthByLocationAndUrl function")
           return;
         }
         store.update(
@@ -353,18 +467,30 @@ export class WebDAVDatabase {
             .equalTo("LOCATION", location)
         )
           .then((num: number) => {
-            console.error(`webdav updateLengthByLocationAndUrl affected rows: ${num}`)
+            LOGGER.debug(`updated webdav video length`)
+            LOGGER.debug(`update action affected ${num} rows of data`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#updateLengthByLocationAndUrl function")
             resultReturner()
+          })
+          .catch((err: BusinessError) => {
+            LOGGER.error(`failed to update webdav video length`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#updateLengthByLocationAndUrl function")
           })
       })
     })
   }
 
   public static deleteWebdavByUrl(context: common.Context, url: string): Promise<void> {
+    LOGGER.debug("start: invoke of WebDAVDatabase#deleteWebdavByUrl function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#deleteWebdavByUrl function")
           return;
         }
 
@@ -373,7 +499,16 @@ export class WebDAVDatabase {
             .equalTo("SERVER_URL", url)
         )
           .then((num: number) => {
+            LOGGER.debug(`deleted a webdav server`)
+            LOGGER.debug(`delete action affected ${num} rows of data`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#deleteWebdavByUrl function")
             resultReturner()
+          })
+          .catch((err: BusinessError) => {
+            LOGGER.error(`failed to delete webdav server`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#deleteWebdavByUrl function")
           })
       })
     })
@@ -381,10 +516,14 @@ export class WebDAVDatabase {
 
   public static deleteVideoByLocationAndUrl(context: common.Context, location: string, url: string): Promise<void> {
     // WebDAV 得使用文件位置和服务器 url 来进行双重判断
+    LOGGER.debug("start: invoke of WebDAVDatabase#deleteVideoByLocationAndUrl function")
     return new Promise((resultReturner) => {
       relationalStore.getRdbStore(context, WebDAVDatabase.databaseConfig, (err, store) => {
         if (err) {
-          hilog.error(0x2, "database", `Failed to get RdbStore. Code:${err.code}, message:${err.message}`)
+          LOGGER.error(`failed to get RdbStore`, {
+            error: err
+          })
+          LOGGER.debug("end: invoke of WebDAVDatabase#deleteVideoByLocationAndUrl function")
           return;
         }
 
@@ -394,7 +533,16 @@ export class WebDAVDatabase {
             .equalTo("LOCATION", location)
         )
           .then((num: number) => {
+            LOGGER.debug(`deleted a webdav video`)
+            LOGGER.debug(`delete action affected ${num} rows of data`)
+            LOGGER.debug("end: invoke of WebDAVDatabase#deleteVideoByLocationAndUrl function")
             resultReturner()
+          })
+          .catch((err: BusinessError) => {
+            LOGGER.error(`failed to delete webdav video`, {
+              error: err
+            })
+            LOGGER.debug("end: invoke of WebDAVDatabase#deleteVideoByLocationAndUrl function")
           })
       })
     })

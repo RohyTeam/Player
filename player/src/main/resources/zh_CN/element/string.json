@@ -471,6 +471,10 @@
     {
       "name": "portrait",
       "value": "竖屏"
+    },
+    {
+      "name": "continue_failed_version",
+      "value": "版本不兼容，请确保两个设备上都更新至最新版"
     }
   ]
 }

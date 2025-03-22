@@ -7,7 +7,6 @@ import {
   SettingsRow
 } from '../../components/SettingsPage'
 import { curves, promptAction } from '@kit.ArkUI'
-rkUI"
 
 @Component
 export struct LogExportPage {

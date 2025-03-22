@@ -1,16 +1,20 @@
 import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
-import { hilog } from '@kit.PerformanceAnalysisKit';
 import { display, window } from '@kit.ArkUI';
 import { AppUtil, PreferencesUtil } from '@pura/harmony-utils';
 import { DatabaseManager } from '../database/DatabaseManager';
-import { ToolbarOptions } from '../util/ToolbarCustomizationUtil';
-import { Rlog } from '../log/Rlog';
+import { getBottomBarButtons, getTopBarButtons, ToolbarOptions } from '../util/ToolbarCustomizationUtil';
+import { Rlog, RLogger } from '../log/Rlog';
+
+let LOGGER = RLogger.of('PlayerAbility')
 
 export default class PlayerAbility extends UIAbility {
   private windowObj?: window.Window;
 
-  private updateHeightBp(): void {
+  private updateBreakpoint(): void {
+    LOGGER.debug(`start: invoke of PlayerAbility#updateBreakpoint function`)
     if (this.windowObj === undefined) {
+      LOGGER.warn(`window object is not initialized`)
+      LOGGER.debug(`end: invoke of PlayerAbility#updateBreakpoint function`)
       return;
     }
     let mainWindow: window.WindowProperties = this.windowObj.getWindowProperties();
@@ -19,6 +23,7 @@ export default class PlayerAbility extends UIAbility {
     let windowWidthVp = windowWidth / display.getDefaultDisplaySync().densityPixels;
     let windowHeightVp = windowHeight / display.getDefaultDisplaySync().densityPixels;
     let heightBp: string = '';
+    let widthBp: string = '';
     let aspectRatio: number = windowHeightVp / windowWidthVp;
     if (aspectRatio < 0.8) {
       heightBp = 'sm';
@@ -27,17 +32,6 @@ export default class PlayerAbility extends UIAbility {
     } else {
       heightBp = 'lg';
     }
-    AppStorage.setOrCreate('currentHeightBreakpoint', heightBp);
-  }
-
-  private updateWidthBp(): void {
-    if (this.windowObj === undefined) {
-      return;
-    }
-    let mainWindow: window.WindowProperties = this.windowObj.getWindowProperties();
-    let windowWidth: number = mainWindow.windowRect.width;
-    let windowWidthVp = windowWidth / display.getDefaultDisplaySync().densityPixels;
-    let widthBp: string = '';
     if (windowWidthVp < 320) {
       widthBp = 'xs';
     } else if (windowWidthVp >= 320 && windowWidthVp < 600) {
@@ -50,6 +44,9 @@ export default class PlayerAbility extends UIAbility {
       widthBp = 'xl';
     }
     AppStorage.setOrCreate('currentWidthBreakpoint', widthBp);
+    AppStorage.setOrCreate('currentHeightBreakpoint', heightBp);
+    LOGGER.debug(`updated breakpoint, width breakpoint is "${widthBp}", height breakpoint is "${heightBp}"`)
+    LOGGER.debug(`end: invoke of PlayerAbility#updateBreakpoint function`)
   }
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -88,6 +85,19 @@ export default class PlayerAbility extends UIAbility {
     AppStorage.setOrCreate("hardwareDecode", PreferencesUtil.getBooleanSync("hardwareDecode", false))
     AppStorage.setOrCreate("lessCovering", PreferencesUtil.getBooleanSync("lessCovering", false))
 
+    LOGGER.debug(`
+      ------- Preference -------
+      app color mode: ${AppStorage.get("appColorMode")}
+      auto shutdown when video player unfocused: ${AppStorage.get("autoShutdown")}
+      show status bar when controllers: ${AppStorage.get("statusBar")}
+      show battery percent in status bar (only when status bar enabled): ${AppStorage.get("statusBarBatteryPercent")}
+      used video player: ${(AppStorage.get("preferFFmpeg") || false) ? "IJKPlayer" : "AVPlayer"}
+      using hardware decode (only when using IJKPlayer): ${AppStorage.get("hardwareDecode")}
+      surface covering less area: ${AppStorage.get("lessCovering")}
+      landscape top bar unfolded buttons: ${getTopBarButtons()}
+      landscape bottom bar unfolded buttons: ${getBottomBarButtons()}
+      --------------------------`)
+
     if (colorMode == "light") {
       this.context.config.colorMode = ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT
     } else if (colorMode == "dark") {
@@ -98,26 +108,24 @@ export default class PlayerAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
-
     DatabaseManager.init(this.context)
 
     windowStage.getMainWindow().then((data: window.Window) => {
       this.windowObj = data;
-      this.updateWidthBp();
-      this.updateHeightBp();
+      this.updateBreakpoint();
       this.windowObj.on('windowSizeChange', (windowSize: window.Size) => {
-        this.updateWidthBp();
-        this.updateHeightBp();
+        this.updateBreakpoint();
       })
     })
 
     windowStage.loadContent('pages/Index', (err) => {
       if (err.code) {
-        hilog.error(0x0000, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err) ?? '');
+        LOGGER.fatal(`Failed to load content`, {
+          error: err
+        })
         return;
       }
-      hilog.info(0x0000, 'testTag', 'Succeeded in loading the content.');
+      LOGGER.debug(`successfully loaded content page`)
     });
   }
 }
