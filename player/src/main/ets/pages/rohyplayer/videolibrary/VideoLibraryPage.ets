@@ -827,7 +827,11 @@ export struct VideoLibraryPage {
     let documentViewPicker = new picker.DocumentViewPicker(this.getUIContext().getHostContext()!);
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = 10; // 太多了处理不过来
-    documentSelectOptions.fileSuffixFilters = ['mp4 视频文件|.mp4', 'mkv 视频文件|.mkv'];
+    documentSelectOptions.fileSuffixFilters = [
+      'mp4 视频文件|.mp4',
+      'mkv 视频文件|.mkv',
+      'mov 视频文件|.mov'
+    ];
 
     documentViewPicker.select(documentSelectOptions)
       .then(async (documentSelectResult: Array<string>) => {
@@ -853,6 +857,7 @@ export struct VideoLibraryPage {
             unsupported = true
             continue
           }
+          LOGGER.debug(`importing file: ${FileUtil.getFileName(fileUrl)}`)
           let hashValue = await hash.hash(FileUtil.getFilePath(fileUrl), "sha256")
           if (this.videos.findIndex((video) => video instanceof LocalVideoSource && video.hash == hashValue) >= 0) {
             duplicated = true
@@ -1051,7 +1056,7 @@ struct WebDAVPickerRow {
           if (node.isDirectory) {
             return true
           }
-          return node.name.endsWith(".mp4") || node.name.endsWith(".mkv")
+          return node.name.endsWith(".mp4") || node.name.endsWith(".mkv") || node.name.endsWith(".mov")
         },
         onFileSelected: (path: string, node: VirtualNode) => {
           this.showVirtualPicker = false

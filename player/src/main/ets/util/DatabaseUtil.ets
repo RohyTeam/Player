@@ -16,7 +16,7 @@ export function videoLibraryDatabase_tryFetchCover(context: common.Context, file
           })
       })
       .catch((err: BusinessError) => {
-        Rlog.error(`failed to fetch album cover`, {
+        Rlog.error(`failed to fetch album cover, trying to get the first frame as the cover`, {
           tag: 'DatabaseUtil'
         })
         media.createAVImageGenerator().then((avImageGenerator: media.AVImageGenerator) => {
