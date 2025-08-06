@@ -1,0 +1,16 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#000000"
+    },
+    {
+      "name": "rohy_background",
+      "value": "#000000"
+    },
+    {
+      "name": "rohy_card",
+      "value": "#ff191a1c"
+    }
+  ]
+}

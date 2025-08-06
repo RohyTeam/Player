@@ -1,0 +1,7 @@
+{
+  "layered-image":
+  {
+    "background" : "$media:webdav_background",
+    "foreground" : "$media:webdav_foreground"
+  }
+}

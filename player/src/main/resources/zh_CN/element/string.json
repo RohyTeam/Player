@@ -1,0 +1,32 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "PlayerAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "PlayerAbility_label",
+      "value": "Rohy 播放器"
+    },
+    {
+      "name": "playlist",
+      "value": "播放列表"
+    },
+    {
+      "name": "drop_tips",
+      "value": "将视频文件拖至此处播放"
+    },
+    {
+      "name": "permission_reason_distributed_datasync",
+      "value": "在相同账号的不同设备之间流转视频"
+    },
+    {
+      "name": "permission_reason_keep_background_running",
+      "value": "后台播放视频"
+    }
+  ]
+}

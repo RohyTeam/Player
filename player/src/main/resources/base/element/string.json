@@ -1,0 +1,32 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "PlayerAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "PlayerAbility_label",
+      "value": "Rohy Player"
+    },
+    {
+      "name": "playlist",
+      "value": "Playlist"
+    },
+    {
+      "name": "permission_reason_distributed_datasync",
+      "value": "To play local video files on other devices in the same account with this device."
+    },
+    {
+      "name": "permission_reason_keep_background_running",
+      "value": "To play video in the background"
+    },
+    {
+      "name": "drop_tips",
+      "value": "Drop video file here to play"
+    }
+  ]
+}
