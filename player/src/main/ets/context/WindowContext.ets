@@ -15,5 +15,3 @@ export class WindowContext {
   heightVp: number = 0
 
 }
-
-export let Win: WindowContext = new WindowContext()

@@ -1,16 +1,35 @@
-import { AbilityConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, common, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
 import { WindowManager } from '../../ui/manager/WindowManager';
 import { SystemContext } from '../../context/SystemContext';
+import { PreferenceContext } from '../../context/PreferenceContext';
+import { JSON } from '@kit.ArkTS';
+import { randomString } from '../../utils/StringUtils';
 
 export default class PlayerAbility extends UIAbility {
 
+  private static contextToAbilityMappings: Map<common.UIAbilityContext, PlayerAbility> = new Map()
+  private key: string | undefined = undefined
+
+  public getIdentifier(): string {
+    return this.key!
+  }
+
+  public static getAbility(context: common.UIAbilityContext): PlayerAbility {
+    return PlayerAbility.contextToAbilityMappings.get(context)!
+  }
+
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    PlayerAbility.contextToAbilityMappings.set(this.context, this)
+    this.key = randomString(32)
+    PreferenceContext.load(this.context)
     SystemContext.start()
   }
 
   onDestroy(): void {
+    PlayerAbility.contextToAbilityMappings.delete(this.context)
+    PreferenceContext.save(this.context)
     SystemContext.stop()
   }
 

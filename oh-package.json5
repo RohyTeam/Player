@@ -2,7 +2,8 @@
   "modelVersion": "5.0.5",
   "description": "Please describe the basic information.",
   "dependencies": {
-    "@ohos/ijkplayer": "^2.0.6"
+    "@ohos/ijkplayer": "^2.0.6",
+    "@zxhhyj/storm": "^3.0.9"
   },
   "devDependencies": {
     "@ohos/hypium": "1.0.21",

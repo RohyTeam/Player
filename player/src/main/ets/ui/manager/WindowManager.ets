@@ -1,6 +1,7 @@
 import { AppStorageV2, display, window } from "@kit.ArkUI";
 import { hilog } from "@kit.PerformanceAnalysisKit";
-import { Win } from "../../context/WindowContext";
+import { WindowContext } from "../../context/WindowContext";
+import { AbilityStorage } from "../../storage/AbilityStorage";
 
 export class WindowManager {
 
@@ -37,6 +38,13 @@ export class WindowManager {
   }
 
   private static updateWindowSize(width: number, height: number): void {
+    let windowContext = AbilityStorage.connect(
+      WindowManager.windowObj!.getUIContext(),
+      WindowContext,
+      "window_context",
+      () => new WindowContext()
+    )!
+
     let windowWidthVp = width / display.getDefaultDisplaySync().densityPixels;
     let windowHeightVp = height / display.getDefaultDisplaySync().densityPixels;
     let heightBp: string = '';
@@ -61,12 +69,12 @@ export class WindowManager {
       widthBp = 'xl';
     }
 
-    Win.widthBreakpoint = widthBp
-    Win.heightBreakpoint = heightBp
-    Win.widthPx = width
-    Win.heightPx = height
-    Win.widthVp = windowWidthVp
-    Win.heightVp = windowHeightVp
+    windowContext.widthBreakpoint = widthBp
+    windowContext.heightBreakpoint = heightBp
+    windowContext.widthPx = width
+    windowContext.heightPx = height
+    windowContext.widthVp = windowWidthVp
+    windowContext.heightVp = windowHeightVp
   }
 
 }

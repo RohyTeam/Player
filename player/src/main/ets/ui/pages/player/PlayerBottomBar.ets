@@ -1,5 +1,6 @@
 import { Sys } from "../../../context/SystemContext"
 import { PlayerController } from "../../../player/PlayerController"
+import { Modifiers } from "../../attributemodifier/Modifiers"
 import { CircleIconButton } from "../../button/CircleIconButton"
 import { PlayerProgressBar } from "./PlayerProgressBar"
 
@@ -58,7 +59,7 @@ export struct PlayerBottomBar {
       topRight: 16
     })
     .width("100%")
-    .backgroundColor($r("app.color.rohy_card"))
+    .attributeModifier(Modifiers.backgroundBlur())
   }
 
 }

@@ -13,6 +13,11 @@ export struct PCControlPanel {
   build() {
     Column() {
       Blank()
+        .onMouse((event) => {
+          if (event.action != MouseAction.Release || event.button != MouseButton.Right)
+            return
+          // todo: add context menu
+        })
         .layoutWeight(1)
       PlayerBottomBar()
         .visibility((Sys.time - this.lastMovingMouse < 3 * 1000) || this.showSidebar ? Visibility.Visible : Visibility.Hidden)

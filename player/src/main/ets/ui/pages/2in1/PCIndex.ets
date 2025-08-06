@@ -1,8 +1,22 @@
 import { DropPage } from "./DropPage"
 import { PCControlPanel } from "../player/PCControlPanel"
-import { curves, SymbolGlyphModifier } from "@kit.ArkUI"
+import { AppStorageV2, curves, SymbolGlyphModifier } from "@kit.ArkUI"
 import { Modifiers } from "../../attributemodifier/Modifiers"
 import { PlaylistSideBar } from "./PlaylistSideBar"
+import { AbilityStorage } from "../../../storage/AbilityStorage"
+import { TypeConstructorWithArgs } from "@ohos.arkui.StateManagement"
+
+@ObservedV2
+class NumberContainer {
+
+  @Trace
+  value: number
+
+  constructor(value?: number) {
+    this.value = value ?? 0
+  }
+
+}
 
 @ComponentV2
 export struct PCIndex {
@@ -30,8 +44,11 @@ export struct PCIndex {
           })
           .transition(
             TransitionEffect.asymmetric(
-              TransitionEffect.move(TransitionEdge.END).combine(TransitionEffect.OPACITY),
-              TransitionEffect.move(TransitionEdge.END).combine(TransitionEffect.OPACITY)
+              TransitionEffect.OPACITY
+                .combine(TransitionEffect.move(TransitionEdge.END))
+                .combine(TransitionEffect.scale({ x: 0, y: 0, centerX: 0 })),
+              TransitionEffect.OPACITY
+                .combine(TransitionEffect.move(TransitionEdge.END))
             )
           )
 
@@ -52,6 +69,9 @@ export struct PCIndex {
               .zIndex(3)
           }
         }
+        .onAppear(() => {
+
+        })
         .width("100%")
         .height("100%")
       }
