@@ -5,6 +5,9 @@ import { Modifiers } from "../../attributemodifier/Modifiers"
 import { PlaylistSideBar } from "./PlaylistSideBar"
 import { AbilityStorage } from "../../../storage/AbilityStorage"
 import { TypeConstructorWithArgs } from "@ohos.arkui.StateManagement"
+import { PlayerController } from "../../../player/PlayerController"
+import { PlayerContext } from "../../../player/PlayerContext"
+import { PlayerPage } from "../player/PlayerPage"
 
 @ObservedV2
 class NumberContainer {
@@ -25,6 +28,15 @@ export struct PCIndex {
   showPlayList: boolean = false
   @Provider("showSidebar")
   showSidebar: boolean = false
+  @Provider("playerController")
+  playerController: PlayerController = new PlayerController()
+  @Local
+  playerContext: PlayerContext = AbilityStorage.connect(
+    this.getUIContext(),
+    PlayerContext,
+    "player_context",
+    () => new PlayerContext()
+  )!
 
   build() {
     Column() {
@@ -54,8 +66,14 @@ export struct PCIndex {
 
         // content
         Stack() {
-          DropPage()
-            .zIndex(1)
+          if (this.playerContext.video && this.playerContext.videoSource != undefined) {
+            PlayerPage({
+              videoSource: this.playerContext.videoSource
+            })
+          } else {
+            DropPage()
+              .zIndex(1)
+          }
           PCControlPanel()
             .zIndex(2)
           if (this.showSidebar) {

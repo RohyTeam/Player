@@ -49,7 +49,7 @@ export class SystemContext {
   }
 
   private static updateSystemContext() {
-    taskpool.executeDelayed(50, SystemContext.task, taskpool.Priority.HIGH)
+    taskpool.executeDelayed(200, SystemContext.task, taskpool.Priority.HIGH)
       .then((result) => {
         let info = result as SystemInfo
         Sys.time = info.time

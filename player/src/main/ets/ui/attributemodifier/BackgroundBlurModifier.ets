@@ -5,8 +5,8 @@ export class BackgroundBlurModifier implements AttributeModifier<CommonAttribute
       .backgroundBlurStyle(
         BlurStyle.Thin,
         {
-          policy: BlurStyleActivePolicy.FOLLOWS_WINDOW_ACTIVE_STATE,
-          scale: 0.7
+          policy: BlurStyleActivePolicy.ALWAYS_ACTIVE,
+          scale: 0.8,
         }
       )
   }

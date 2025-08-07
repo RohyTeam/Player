@@ -5,6 +5,7 @@ import { AbilityStorage } from "../storage/AbilityStorage";
 import { PlayerContext } from "./PlayerContext";
 import { IjkMediaPlayer } from "@ohos/ijkplayer";
 import { hilog } from "@kit.PerformanceAnalysisKit";
+import { fileIo, fileUri } from "@kit.CoreFileKit";
 
 export interface Player {
 
@@ -12,6 +13,8 @@ export interface Player {
   pause(): void
   release(): void
   prepare(abilityContext: Context, context: object | undefined, controller: XComponentController, source: VideoSource): void
+
+  seek(time: number): void
 
   selectTrack(index: number): void
   deselectTrack(index: number): void
@@ -46,13 +49,39 @@ abstract class AbstractPlayer implements Player {
   abstract pause(): void
   abstract play(): void
   abstract release(): void
-  abstract prepare(abilityContext: Context, context: object, controller: XComponentController, source: VideoSource): void
+  abstract prepare(abilityContext: Context, context: object, idOrController: XComponentController | string, source: VideoSource): void
+  abstract seek(time: number): void
 
   abstract selectTrack(index: number): void
   abstract deselectTrack(index: number): void
 
   abstract enableHardwareEncoding(): void
   abstract disableHardwareEncoding(): void
+
+  protected internalRelease() {
+    let playerContext = AbilityStorage.connect(
+      this.context!,
+      PlayerContext,
+      "player_context",
+      () => new PlayerContext()
+    )!
+    playerContext.video = false
+    playerContext.videoSource = undefined
+    playerContext.player = undefined
+    playerContext.currentDuration = 0
+    playerContext.maxDuration = 0
+  }
+
+  protected internalPrepare(videoSource: VideoSource) {
+    let playerContext = AbilityStorage.connect(
+      this.context!,
+      PlayerContext,
+      "player_context",
+      () => new PlayerContext()
+    )!
+    playerContext.currentDuration = 0
+    playerContext.maxDuration = videoSource.metadata().duration
+  }
 
   setFillingMode(mode: SurfaceFillingMode): void {
     if (this.context == undefined)
@@ -129,14 +158,21 @@ export class AvPlayer extends AbstractPlayer {
     this.avPlayer?.release()
     this.context = undefined
     this.avPlayer = undefined
+    this.internalRelease()
   }
 
-  async prepare(abilityContext: Context, context: object, controller: XComponentController, source: VideoSource): Promise<void> {
+  seek(time: number): void {
+    this.avPlayer?.seek(time, media.SeekMode.SEEK_CLOSEST)
+  }
+
+  async prepare(abilityContext: Context, context: object | undefined, idOrController: XComponentController, source: VideoSource): Promise<void> {
     if (source.type() != VideoSourceType.Photos)
       throw Error("av player only supports videos from photos")
 
     this.context = abilityContext
     source.prepare()
+
+    this.internalPrepare(source)
 
     let avPlayer = this.avPlayer = await media.createAVPlayer()
 
@@ -158,7 +194,7 @@ export class AvPlayer extends AbstractPlayer {
       } else if (state == 'playing') {
         this.onPlayCallback()
       } else if (state == 'initialized') {
-        avPlayer.surfaceId = controller.getXComponentSurfaceId()
+        avPlayer.surfaceId = idOrController.getXComponentSurfaceId()
         avPlayer.prepare();
       } else if (state == 'prepared') {
         this.onPreparedCallback()
@@ -205,23 +241,28 @@ export class IjkPlayer extends AbstractPlayer {
     if (this.positionUpdater != undefined) {
       clearInterval(this.positionUpdater)
     }
+    this.internalRelease()
     this.context = undefined
     this.ijkPlayer = undefined
     this.positionUpdater = undefined
   }
 
-  prepare(abilityContext: Context, context: object, controller: XComponentController, source: VideoSource): void {
+  prepare(abilityContext: Context, context: object, idOrController: XComponentController | string, source: VideoSource): void {
     if (source.type() == VideoSourceType.Photos)
       throw Error("ijk player not supports videos from photos")
 
     this.context = abilityContext
     source.prepare()
 
+    this.internalPrepare(source)
+
     let ijkPlayer = new IjkMediaPlayer()
     this.ijkPlayer = ijkPlayer
-    ijkPlayer.setContext(context, controller.getXComponentSurfaceId())
-    ijkPlayer.setDataSource(source.url())
 
+    ijkPlayer.setContext(context, idOrController as string)
+    ijkPlayer.native_setup();
+
+    ijkPlayer.setDataSource(new fileUri.FileUri(source.url()).path)
     let headers = source.headers()
     if (headers != null) {
       ijkPlayer.setDataSourceHeader(headers)
@@ -267,6 +308,10 @@ export class IjkPlayer extends AbstractPlayer {
 
     ijkPlayer.setMessageListener();
     ijkPlayer.prepareAsync();
+  }
+
+  seek(time: number): void {
+    this.ijkPlayer?.seekTo(time.toString())
   }
 
   selectTrack(index: number): void {

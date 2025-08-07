@@ -1,19 +1,25 @@
+import { Player } from "./Player";
 import { SurfaceFillingMode } from "./SurfaceFillingMode";
+import { VideoSource } from "./VideoSource";
 
 @ObservedV2
 export class PlayerContext {
 
   @Trace
-  surfaceFillingMode: SurfaceFillingMode
+  video: boolean = false
   @Trace
-  hardwareEncoding: boolean
-
-  public constructor(
-    surfaceFillingMode?: SurfaceFillingMode,
-    hardwareEncoding?: boolean
-  ) {
-    this.surfaceFillingMode = surfaceFillingMode ?? SurfaceFillingMode.Fit
-    this.hardwareEncoding = hardwareEncoding ?? false
-  }
+  paused: boolean = true
+  @Trace
+  videoSource: VideoSource | undefined = undefined
+  @Trace
+  player: Player | undefined = undefined
+  @Trace
+  currentDuration: number = 0
+  @Trace
+  maxDuration: number = 0
+  @Trace
+  surfaceFillingMode: SurfaceFillingMode = SurfaceFillingMode.Fit
+  @Trace
+  hardwareEncoding: boolean = false
 
 }

@@ -1,3 +1,5 @@
+import { AbilityStorage } from "../storage/AbilityStorage"
+
 @ObservedV2
 export class WindowContext {
 
@@ -13,5 +15,18 @@ export class WindowContext {
   widthVp: number = 0
   @Trace
   heightVp: number = 0
+
+}
+
+export class Win {
+
+  public static get(context: UIContext | Context): WindowContext {
+    return AbilityStorage.connect(
+      context,
+      WindowContext,
+      "window_context",
+      () => new WindowContext()
+    )!
+  }
 
 }

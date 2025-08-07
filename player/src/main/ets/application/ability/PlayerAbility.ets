@@ -23,20 +23,16 @@ export default class PlayerAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     PlayerAbility.contextToAbilityMappings.set(this.context, this)
     this.key = randomString(32)
-    PreferenceContext.load(this.context)
-    SystemContext.start()
   }
 
   onDestroy(): void {
     PlayerAbility.contextToAbilityMappings.delete(this.context)
-    PreferenceContext.save(this.context)
-    SystemContext.stop()
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
     windowStage.getMainWindow()
       .then((window: window.Window) => {
-        WindowManager.init(window)
+        WindowManager.init(this.context, window)
       })
     windowStage.loadContent('ui/pages/Index', (err) => {
       if (err.code) {

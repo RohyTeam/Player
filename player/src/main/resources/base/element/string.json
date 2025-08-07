@@ -27,6 +27,22 @@
     {
       "name": "drop_tips",
       "value": "Drop video file here to play"
+    },
+    {
+      "name": "context_menu_open",
+      "value": "Open"
+    },
+    {
+      "name": "context_menu_close_file",
+      "value": "Close file"
+    },
+    {
+      "name": "context_menu_settings",
+      "value": "Settings"
+    },
+    {
+      "name": "context_menu_open_subtitle",
+      "value": "Open subtitle"
     }
   ]
 }

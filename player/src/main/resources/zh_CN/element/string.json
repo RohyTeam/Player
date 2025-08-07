@@ -27,6 +27,22 @@
     {
       "name": "permission_reason_keep_background_running",
       "value": "后台播放视频"
+    },
+    {
+      "name": "context_menu_open",
+      "value": "打开"
+    },
+    {
+      "name": "context_menu_close_file",
+      "value": "关闭文件"
+    },
+    {
+      "name": "context_menu_settings",
+      "value": "设置"
+    },
+    {
+      "name": "context_menu_open_subtitle",
+      "value": "打开字幕"
     }
   ]
 }
