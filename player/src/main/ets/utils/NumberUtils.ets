@@ -1,4 +1,4 @@
-import { divideAndFloor } from "./MathUtils"
+import { divideAndFloor } from './MathUtils'
 
 export function convertNumberToDurationString(num: number): string {
   if (num < 0 || num == undefined) {

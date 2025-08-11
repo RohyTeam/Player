@@ -1,22 +1,18 @@
-import { Sys } from "../../../context/SystemContext"
-import { PlayerBottomBar } from "./PlayerBottomBar"
-import { curves } from "@kit.ArkUI"
-import { uniformTypeDescriptor } from "@kit.ArkData"
-import { Dialoger } from "../../dialog/Dialoger"
-import { pickSingleVideoFile, saveJpgFile } from "../../../utils/PickerUtils"
-import RohyPlayer from "libplayer.so"
-import { fileUri } from "@kit.CoreFileKit"
-import { JSON } from "@kit.ArkTS"
-import { VideoMetadata } from "../../../metadata/VideoMetadata"
-import { PlayerContext } from "../../../player/PlayerContext"
-import { AbilityStorage } from "../../../storage/AbilityStorage"
-import { LocalFileVideoSource } from "../../../player/VideoSource"
-import { PlayerController } from "../../../player/PlayerController"
-import { MetadataCache } from "../../../cache/MetadataCache"
+import { Sys } from '../../../../context/SystemContext'
+import { PlayerBottomBar } from '../PlayerBottomBar'
+import { curves } from '@kit.ArkUI'
+import { uniformTypeDescriptor } from '@kit.ArkData'
+import { Dialoger } from '../../../dialog/Dialoger'
+import { pickSingleVideoFile } from '../../../../utils/PickerUtils'
+import { fileUri } from '@kit.CoreFileKit'
+import { PlayerContext } from '../../../../player/PlayerContext'
+import { AbilityStorage } from '../../../../storage/AbilityStorage'
+import { LocalFileVideoSource } from '../../../../player/VideoSource'
+import { PlayerController } from '../../../../player/PlayerController'
+import { MetadataCache } from '../../../../cache/MetadataCache'
 
 @ComponentV2
 export struct PCControlPanel {
-
   @Local
   lastMovingMouse: number = 0
   @Consumer("playerController")
@@ -58,18 +54,16 @@ export struct PCControlPanel {
         })
         .layoutWeight(1)
       PlayerBottomBar()
-        .visibility((Sys.time - this.lastMovingMouse < 3 * 1000) || this.showSidebar ? Visibility.Visible : Visibility.Hidden)
+        .focusable(false)
+        .visibility((Sys.time - this.lastMovingMouse < 3 * 1000) || this.showSidebar ? Visibility.Visible :
+        Visibility.Hidden)
         .animation({
           curve: curves.springMotion(),
           duration: 200
         })
-        .transition(
-          TransitionEffect.asymmetric(
-            TransitionEffect.move(TransitionEdge.BOTTOM).combine(TransitionEffect.OPACITY),
-            TransitionEffect.move(TransitionEdge.BOTTOM).combine(TransitionEffect.OPACITY)
-          )
-        )
+        .transition(TransitionEffect.move(TransitionEdge.BOTTOM).combine(TransitionEffect.OPACITY))
     }
+    .focusable(false)
     .onMouse(() => {
       animateTo({}, () => {
         this.lastMovingMouse = Date.now()
@@ -87,16 +81,17 @@ export struct PCControlPanel {
           .onClick(() => {
             this.playerController.release()
             pickSingleVideoFile(this.getUIContext())
-              .then((path) => {
+              .then(async (path) => {
                 if (path == undefined) {
                   console.error(`metadata path: ${path}`)
                   return
                 }
-                let metadata = MetadataCache.getOrCreate(path)
+                let metadata = await MetadataCache.getOrCreate(path)
                 this.playerContext.video = true
                 this.playerContext.videoSource = new LocalFileVideoSource(
                   metadata,
-                  path
+                  path,
+                  new fileUri.FileUri(path).name
                 )
               })
           })
@@ -111,6 +106,7 @@ export struct PCControlPanel {
             })
         }
       }
+
       MenuItemGroup() {
         MenuItem({ content: $r("app.string.context_menu_settings") })
           .onClick(() => {
@@ -119,5 +115,4 @@ export struct PCControlPanel {
       }
     }
   }
-
 }

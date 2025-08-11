@@ -1,6 +1,6 @@
-import { UIContext, window } from "@kit.ArkUI";
-import { common, Context } from "@kit.AbilityKit";
-import PlayerAbility from "../application/ability/PlayerAbility";
+import { UIContext, window } from '@kit.ArkUI';
+import { common, Context } from '@kit.AbilityKit';
+import PlayerAbility from '../application/ability/PlayerAbility';
 
 export function abilityKey(context: UIContext | Context): string {
   let identifier = ability(context).getIdentifier()
@@ -10,6 +10,14 @@ export function abilityKey(context: UIContext | Context): string {
 
 export function abilityWindow(context: UIContext | Context): window.Window {
   return ability(context).context.windowStage.getMainWindowSync()
+}
+
+export function ensureContext(context: UIContext | Context): Context {
+  if (context instanceof UIContext) {
+    return context.getHostContext()!
+  } else {
+    return context
+  }
 }
 
 export function ability(context: UIContext | Context): PlayerAbility {

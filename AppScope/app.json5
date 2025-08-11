@@ -2,8 +2,8 @@
   "app": {
     "bundleName": "org.rohy.player",
     "vendor": "example",
-    "versionCode": 1000000,
-    "versionName": "1.0.0",
+    "versionCode": 1000,
+    "versionName": "0.1.0",
     "icon": "$media:rohyplayer_icon",
     "label": "$string:app_name"
   }

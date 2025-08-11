@@ -1,10 +1,35 @@
-import { Player } from "./Player";
-import { SurfaceFillingMode } from "./SurfaceFillingMode";
+import { Player } from './Player';
+import { SurfaceFillingMode } from './SurfaceFillingMode';
 
 @ObservedV2
 export class PlayerController {
-
   private player: Player | undefined = undefined
+
+  playOrPause(): void {
+    if (!this.player) {
+      return
+    }
+    if (this.player.isPaused()) {
+      this.play()
+    } else {
+      this.pause()
+    }
+  }
+
+  setSpeed(speed: number) {
+    if (!this.player) {
+      return
+    }
+    this.player?.setSpeed(speed)
+  }
+
+  startLongPressSpeeding() {
+    this.player?.startLongPressSpeeding()
+  }
+
+  stopLongPressSpeeding() {
+    this.player?.stopLongPressSpeeding()
+  }
 
   play(): void {
     this.player?.play()
@@ -21,6 +46,20 @@ export class PlayerController {
 
   seek(time: number) {
     this.player?.seek(time)
+  }
+
+  goBackward(delta: number) {
+    if (!this.player) {
+      return
+    }
+    this.player.seek(Math.max(this.player.currentPosition() - delta, 0))
+  }
+
+  goForward(delta: number) {
+    if (!this.player) {
+      return
+    }
+    this.player.seek(Math.min(this.player.currentPosition() + delta, this.player.maxDuration()))
   }
 
   selectTrack(index: number): void {
@@ -54,5 +93,4 @@ export class PlayerController {
   initPlayer(player: Player) {
     this.player = player
   }
-
 }

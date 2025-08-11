@@ -1,5 +1,4 @@
 export class BackgroundBlurModifier implements AttributeModifier<CommonAttribute> {
-
   applyNormalAttribute(instance: CommonAttribute): void {
     instance.backgroundColor($r("app.color.rohy_background_opacity_50"))
       .backgroundBlurStyle(
@@ -10,5 +9,4 @@ export class BackgroundBlurModifier implements AttributeModifier<CommonAttribute
         }
       )
   }
-
 }

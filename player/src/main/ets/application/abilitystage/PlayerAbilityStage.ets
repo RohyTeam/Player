@@ -5,8 +5,10 @@ import { DB } from '../../database/DatabaseManager'
 import { randomString } from '../../utils/StringUtils'
 
 export default class PlayerAbilityStage extends AbilityStage {
+  private static superContext: Context | undefined = undefined
 
   async onCreate(): Promise<void> {
+    PlayerAbilityStage.superContext = this.context
     await DB.init(this.context)
     PreferenceContext.load(this.context)
     SystemContext.start()
@@ -27,4 +29,11 @@ export default class PlayerAbilityStage extends AbilityStage {
     return 'RohyPlayer'
   }
 
+  public static getContext(): Context {
+    return PlayerAbilityStage.superContext!!
+  }
+}
+
+export function superContext(): Context {
+  return PlayerAbilityStage.getContext()
 }

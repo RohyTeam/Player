@@ -1,23 +1,21 @@
-import { AvPlayer, IjkPlayer } from "../../../player/Player";
-import { PlayerContext } from "../../../player/PlayerContext";
-import { PlayerController } from "../../../player/PlayerController";
-import { SurfaceFillingMode } from "../../../player/SurfaceFillingMode";
-import { VideoSource, VideoSourceType } from "../../../player/VideoSource";
-import { AbilityStorage } from "../../../storage/AbilityStorage";
-import { Modifiers } from "../../attributemodifier/Modifiers";
-import { AvXComponent } from "./AvXComponent";
-import { IjkXComponent } from "./IjkXComponent";
+import { AVSessionContext } from '../../../context/AVSessionContext';
+import { Sys } from '../../../context/SystemContext';
+import { AvPlayer, IjkPlayer } from '../../../player/Player';
+import { PlayerContext } from '../../../player/PlayerContext';
+import { PlayerController } from '../../../player/PlayerController';
+import { VideoSource, VideoSourceType } from '../../../player/VideoSource';
+import { AbilityStorage } from '../../../storage/AbilityStorage';
+import { Modifiers } from '../../attributemodifier/Modifiers';
+import { AvXComponent } from './AvXComponent';
+import { IjkXComponent } from './IjkXComponent';
 
 @ComponentV2
 export struct PlayerPage {
-
   @Param
   @Require
   videoSource: VideoSource
-
   @Consumer("playerController")
   playerController: PlayerController = new PlayerController()
-
   @Local
   playerContext: PlayerContext = AbilityStorage.connect(
     this.getUIContext(),
@@ -38,16 +36,32 @@ export struct PlayerPage {
     })
     this.playerContext.player.onPlay(() => {
       this.playerContext.paused = false
+      if (!Sys.isPC()) {
+        AVSessionContext.updateSession(this.getUIContext())
+      }
     })
     this.playerContext.player.onPause(() => {
       this.playerContext.paused = true
+      if (!Sys.isPC()) {
+        AVSessionContext.updateSession(this.getUIContext())
+      }
     })
     this.playerContext.player.onPositionChange((time) => {
-      this.playerContext.currentDuration = time
+      this.playerContext.currentPosition = time
+      if (!Sys.isPC()) {
+        AVSessionContext.updateSession(this.getUIContext())
+      }
     })
     this.playerContext.player.onSeekComplete((time) => {
-      this.playerContext.currentDuration = time
+      this.playerContext.currentPosition = time
+      if (!Sys.isPC()) {
+        AVSessionContext.updateSession(this.getUIContext())
+      }
     })
+  }
+
+  aboutToDisappear(): void {
+    this.playerController.release()
   }
 
   build() {
@@ -70,5 +84,4 @@ export struct PlayerPage {
     .width("100%")
     .height("100%")
   }
-
 }

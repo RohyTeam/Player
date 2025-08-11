@@ -1,11 +1,10 @@
-import { PlayerContext } from "../../../player/PlayerContext"
-import { PlayerController } from "../../../player/PlayerController"
-import { AbilityStorage } from "../../../storage/AbilityStorage"
-import { convertNumberToDurationString } from "../../../utils/NumberUtils"
+import { PlayerContext } from '../../../player/PlayerContext'
+import { PlayerController } from '../../../player/PlayerController'
+import { AbilityStorage } from '../../../storage/AbilityStorage'
+import { convertNumberToDurationString } from '../../../utils/NumberUtils'
 
 @ComponentV2
 export struct PlayerProgressBar {
-
   @Consumer("playerController")
   playerController: PlayerController = new PlayerController()
   @Local
@@ -29,7 +28,7 @@ export struct PlayerProgressBar {
 
   @Builder
   private videoProgressBar() {
-    Text(`${convertNumberToDurationString(this.playerContext.currentDuration)}`)
+    Text(`${convertNumberToDurationString(this.playerContext.currentPosition)}`)
       .margin({
         left: 16,
         right: 4
@@ -39,7 +38,7 @@ export struct PlayerProgressBar {
       min: 0,
       max: this.playerContext.maxDuration,
       step: 1,
-      value: this.playerContext.currentDuration
+      value: this.playerContext.currentPosition
     })
       .onChange((value, mode: SliderChangeMode) => {
         // todo
@@ -79,5 +78,4 @@ export struct PlayerProgressBar {
       })
       .fontColor($r("sys.color.font_secondary"))
   }
-
 }

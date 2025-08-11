@@ -1,29 +1,25 @@
-import { DropPage } from "./DropPage"
-import { PCControlPanel } from "../player/PCControlPanel"
-import { AppStorageV2, curves, SymbolGlyphModifier } from "@kit.ArkUI"
-import { Modifiers } from "../../attributemodifier/Modifiers"
-import { PlaylistSideBar } from "./PlaylistSideBar"
-import { AbilityStorage } from "../../../storage/AbilityStorage"
-import { TypeConstructorWithArgs } from "@ohos.arkui.StateManagement"
-import { PlayerController } from "../../../player/PlayerController"
-import { PlayerContext } from "../../../player/PlayerContext"
-import { PlayerPage } from "../player/PlayerPage"
+import { DropPage } from './DropPage'
+import { PCControlPanel } from '../player/pc/PCControlPanel'
+import { curves } from '@kit.ArkUI'
+import { PlaylistSideBar } from './PlaylistSideBar'
+import { AbilityStorage } from '../../../storage/AbilityStorage'
+import { PlayerController } from '../../../player/PlayerController'
+import { PlayerContext } from '../../../player/PlayerContext'
+import { PlayerPage } from '../player/PlayerPage'
+import { PCKeyboardHandler } from '../../handler/PCKeyboardHandler'
 
 @ObservedV2
 class NumberContainer {
-
   @Trace
   value: number
 
   constructor(value?: number) {
     this.value = value ?? 0
   }
-
 }
 
 @ComponentV2
 export struct PCIndex {
-
   @Local
   showPlayList: boolean = false
   @Provider("showSidebar")
@@ -70,6 +66,7 @@ export struct PCIndex {
             PlayerPage({
               videoSource: this.playerContext.videoSource
             })
+              .zIndex(1)
           } else {
             DropPage()
               .zIndex(1)
@@ -87,12 +84,15 @@ export struct PCIndex {
               .zIndex(3)
           }
         }
-        .onAppear(() => {
-
-        })
         .width("100%")
         .height("100%")
       }
+      .focusable(true)
+      .defaultFocus(true)
+      .onKeyPreIme((event) => {
+        console.error(`fuck keyboard: trying solving keyboard`)
+        return PCKeyboardHandler.handle(this.getUIContext(), this.playerController, event)
+      })
       .width("100%")
       .height("100%")
       .divider({
@@ -109,5 +109,4 @@ export struct PCIndex {
     .width("100%")
     .height("100%")
   }
-
 }

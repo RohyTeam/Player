@@ -1,9 +1,5 @@
-import { uniformDataStruct, uniformTypeDescriptor } from "@kit.ArkData"
-import { Dialoger } from "../../dialog/Dialoger"
-
 @ComponentV2
 export struct DropPage {
-
   build() {
     Stack() {
       Column() {
@@ -26,12 +22,4 @@ export struct DropPage {
     .height("100%")
     .backgroundColor(Color.Transparent)
   }
-
-}
-
-interface FileInfo {
-
-  oriUri: string
-  remoteUri: string
-
 }

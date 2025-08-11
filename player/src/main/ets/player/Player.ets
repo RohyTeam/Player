@@ -1,62 +1,141 @@
-import { VideoSource, VideoSourceType } from "./VideoSource";
-import { media } from "@kit.MediaKit";
-import { SurfaceFillingMode } from "./SurfaceFillingMode";
-import { AbilityStorage } from "../storage/AbilityStorage";
-import { PlayerContext } from "./PlayerContext";
-import { IjkMediaPlayer } from "@ohos/ijkplayer";
-import { hilog } from "@kit.PerformanceAnalysisKit";
-import { fileIo, fileUri } from "@kit.CoreFileKit";
+import { VideoSource, VideoSourceType } from './VideoSource';
+import { media } from '@kit.MediaKit';
+import { SurfaceFillingMode } from './SurfaceFillingMode';
+import { AbilityStorage } from '../storage/AbilityStorage';
+import { PlayerContext } from './PlayerContext';
+import { IjkMediaPlayer } from '@ohos/ijkplayer';
+import { hilog } from '@kit.PerformanceAnalysisKit';
+import { fileIo, fileUri } from '@kit.CoreFileKit';
 
 export interface Player {
 
+  isPaused(): boolean
+
   play(): void
+
   pause(): void
+
   release(): void
-  prepare(abilityContext: Context, context: object | undefined, controller: XComponentController, source: VideoSource): void
+
+  prepare(abilityContext: Context, context: object | undefined, controller: XComponentController,
+    source: VideoSource): void
+
+  currentPosition(): number
+
+  maxDuration(): number
 
   seek(time: number): void
 
+  startLongPressSpeeding(): void
+
+  stopLongPressSpeeding(): void
+
+  setSpeed(speed: number): void
+
   selectTrack(index: number): void
+
   deselectTrack(index: number): void
 
   getFillingMode(): SurfaceFillingMode
+
   setFillingMode(mode: SurfaceFillingMode): void
 
   isHardwareEncoding(): boolean
+
   enableHardwareEncoding(): void
+
   disableHardwareEncoding(): void
 
   onPositionChange(callback: (time: number) => void): void
+
   onSeekComplete(callback: (time: number) => void): void
+
   onPrepared(callback: () => void): void
+
   onPlay(callback: () => void): void
+
   onPause(callback: () => void): void
+
   onCompleted(callback: () => void): void
 
 }
 
 abstract class AbstractPlayer implements Player {
-
   protected context: Context | undefined = undefined
-
-  protected onPositionChangeCallback: (time: number) => void = () => {}
-  protected onSeekCompleteCallback: (time: number) => void = () => {}
-  protected onPreparedCallback: () => void = () => {}
-  protected onPlayCallback: () => void = () => {}
-  protected onPauseCallback: () => void = () => {}
-  protected onCompletedCallback: () => void = () => {}
+  protected onPositionChangeCallback: (time: number) => void = () => {
+  }
+  protected onSeekCompleteCallback: (time: number) => void = () => {
+  }
+  protected onPreparedCallback: () => void = () => {
+  }
+  protected onPlayCallback: () => void = () => {
+  }
+  protected onPauseCallback: () => void = () => {
+  }
+  protected onCompletedCallback: () => void = () => {
+  }
+  protected cachedMaxDuration: number = 0
+  protected longPressSpeeding: boolean = false
 
   abstract pause(): void
+
   abstract play(): void
+
   abstract release(): void
-  abstract prepare(abilityContext: Context, context: object, idOrController: XComponentController | string, source: VideoSource): void
+
+  abstract prepare(abilityContext: Context, context: object, idOrController: XComponentController | string,
+    source: VideoSource): void
+
+  abstract currentPosition(): number
+
   abstract seek(time: number): void
 
+  abstract setSpeed(speed: number): void
+
   abstract selectTrack(index: number): void
+
   abstract deselectTrack(index: number): void
 
   abstract enableHardwareEncoding(): void
+
   abstract disableHardwareEncoding(): void
+
+  startLongPressSpeeding(): void {
+    if (this.longPressSpeeding) {
+      return
+    }
+    this.longPressSpeeding = true
+    this.setSpeed(3)
+  }
+
+  stopLongPressSpeeding(): void {
+    if (!this.longPressSpeeding) {
+      return
+    }
+    this.longPressSpeeding = false
+    this.setSpeed(
+      AbilityStorage.connect(
+        this.context!,
+        PlayerContext,
+        "player_context",
+        () => new PlayerContext()
+      )!.playSpeed
+    )
+  }
+
+  isPaused(): boolean {
+    let playerContext = AbilityStorage.connect(
+      this.context!,
+      PlayerContext,
+      "player_context",
+      () => new PlayerContext()
+    )!
+    return playerContext.paused
+  }
+
+  maxDuration(): number {
+    return this.cachedMaxDuration
+  }
 
   protected internalRelease() {
     let playerContext = AbilityStorage.connect(
@@ -68,8 +147,10 @@ abstract class AbstractPlayer implements Player {
     playerContext.video = false
     playerContext.videoSource = undefined
     playerContext.player = undefined
-    playerContext.currentDuration = 0
+    playerContext.currentPosition = 0
     playerContext.maxDuration = 0
+    playerContext.playSpeed = 1
+    this.cachedMaxDuration = 0
   }
 
   protected internalPrepare(videoSource: VideoSource) {
@@ -79,13 +160,15 @@ abstract class AbstractPlayer implements Player {
       "player_context",
       () => new PlayerContext()
     )!
-    playerContext.currentDuration = 0
+    playerContext.currentPosition = 0
     playerContext.maxDuration = videoSource.metadata().duration
+    this.cachedMaxDuration = videoSource.metadata().duration
   }
 
   setFillingMode(mode: SurfaceFillingMode): void {
-    if (this.context == undefined)
+    if (this.context == undefined) {
       return
+    }
     AbilityStorage.connect(
       this.context,
       PlayerContext,
@@ -95,8 +178,9 @@ abstract class AbstractPlayer implements Player {
   }
 
   getFillingMode(): SurfaceFillingMode {
-    if (this.context == undefined)
+    if (this.context == undefined) {
       return SurfaceFillingMode.Fit
+    }
     return AbilityStorage.connect(
       this.context,
       PlayerContext,
@@ -106,8 +190,9 @@ abstract class AbstractPlayer implements Player {
   }
 
   isHardwareEncoding(): boolean {
-    if (this.context == undefined)
+    if (this.context == undefined) {
       return false
+    }
     return AbilityStorage.connect(
       this.context,
       PlayerContext,
@@ -123,6 +208,7 @@ abstract class AbstractPlayer implements Player {
   onSeekComplete(callback: (time: number) => void): void {
     this.onSeekCompleteCallback = callback
   }
+
   onPrepared(callback: () => void): void {
     this.onPreparedCallback = callback
   }
@@ -138,12 +224,34 @@ abstract class AbstractPlayer implements Player {
   onCompleted(callback: () => void): void {
     this.onCompletedCallback = callback
   }
-
 }
 
 export class AvPlayer extends AbstractPlayer {
-
   private avPlayer: media.AVPlayer | undefined = undefined
+
+  private numberToSpeed(speed: number): media.PlaybackSpeed {
+    switch (speed) {
+      case 0.25:
+        return media.PlaybackSpeed.SPEED_FORWARD_0_25_X
+      case 0.5:
+        return media.PlaybackSpeed.SPEED_FORWARD_0_50_X
+      case 0.75:
+        return media.PlaybackSpeed.SPEED_FORWARD_0_75_X
+      case 1.25:
+        return media.PlaybackSpeed.SPEED_FORWARD_1_25_X
+      case 1.50:
+        return media.PlaybackSpeed.SPEED_FORWARD_1_50_X
+      case 1.75:
+        return media.PlaybackSpeed.SPEED_FORWARD_1_75_X
+      case 2:
+        return media.PlaybackSpeed.SPEED_FORWARD_2_00_X
+      case 3:
+        return media.PlaybackSpeed.SPEED_FORWARD_3_00_X
+      case 1:
+      default:
+        return media.PlaybackSpeed.SPEED_FORWARD_0_75_X
+    }
+  }
 
   pause(): void {
     this.avPlayer?.pause()
@@ -156,18 +264,38 @@ export class AvPlayer extends AbstractPlayer {
   release(): void {
     this.avPlayer?.pause() // 释放前暂停，防止程序出现问题导致视频内容仍在播放（有先例的）
     this.avPlayer?.release()
+    this.internalRelease()
     this.context = undefined
     this.avPlayer = undefined
-    this.internalRelease()
+  }
+
+  currentPosition(): number {
+    return this.avPlayer?.currentTime ?? 0
   }
 
   seek(time: number): void {
     this.avPlayer?.seek(time, media.SeekMode.SEEK_CLOSEST)
   }
 
-  async prepare(abilityContext: Context, context: object | undefined, idOrController: XComponentController, source: VideoSource): Promise<void> {
-    if (source.type() != VideoSourceType.Photos)
+  setSpeed(speed: number): void {
+    if (speed != 3) {
+      AbilityStorage.connect(
+        this.context!,
+        PlayerContext,
+        "player_context",
+        () => new PlayerContext()
+      )!.playSpeed = speed
+    }
+    if (!this.longPressSpeeding) {
+      this.avPlayer?.setSpeed(this.numberToSpeed(speed))
+    }
+  }
+
+  async prepare(abilityContext: Context, context: object | undefined, idOrController: XComponentController,
+    source: VideoSource): Promise<void> {
+    if (source.type() != VideoSourceType.Photos) {
       throw Error("av player only supports videos from photos")
+    }
 
     this.context = abilityContext
     source.prepare()
@@ -176,7 +304,8 @@ export class AvPlayer extends AbstractPlayer {
 
     let avPlayer = this.avPlayer = await media.createAVPlayer()
 
-    avPlayer.url = source.url()
+    let file = fileIo.openSync(source.url())
+    avPlayer.url = `fd://${file.fd}`
 
     // 下面所有的监听器都不要直接把 callback 传进去，要不然修改了 callback 后 AVPlayer 的回调仍然是原来的
     avPlayer.on('timeUpdate', (time) => {
@@ -217,11 +346,9 @@ export class AvPlayer extends AbstractPlayer {
   disableHardwareEncoding(): void {
     hilog.warn(0x1000, 'player', 'av player not support hardware encoding')
   }
-
 }
 
 export class IjkPlayer extends AbstractPlayer {
-
   private ijkPlayer: IjkMediaPlayer | undefined = undefined
   private positionUpdater: number | undefined = undefined
 
@@ -247,9 +374,25 @@ export class IjkPlayer extends AbstractPlayer {
     this.positionUpdater = undefined
   }
 
-  prepare(abilityContext: Context, context: object, idOrController: XComponentController | string, source: VideoSource): void {
-    if (source.type() == VideoSourceType.Photos)
+  setSpeed(speed: number): void {
+    if (speed != 3) {
+      AbilityStorage.connect(
+        this.context!,
+        PlayerContext,
+        "player_context",
+        () => new PlayerContext()
+      )!.playSpeed = speed
+    }
+    if (!this.longPressSpeeding) {
+      this.ijkPlayer?.setSpeed(`${speed}f`)
+    }
+  }
+
+  prepare(abilityContext: Context, context: object, idOrController: XComponentController | string,
+    source: VideoSource): void {
+    if (source.type() == VideoSourceType.Photos) {
       throw Error("ijk player not supports videos from photos")
+    }
 
     this.context = abilityContext
     source.prepare()
@@ -310,6 +453,10 @@ export class IjkPlayer extends AbstractPlayer {
     ijkPlayer.prepareAsync();
   }
 
+  currentPosition(): number {
+    return this.ijkPlayer?.getCurrentPosition() ?? 0
+  }
+
   seek(time: number): void {
     this.ijkPlayer?.seekTo(time.toString())
   }
@@ -323,8 +470,9 @@ export class IjkPlayer extends AbstractPlayer {
   }
 
   enableHardwareEncoding(): void {
-    if (this.isHardwareEncoding())
+    if (this.isHardwareEncoding()) {
       return
+    }
 
     AbilityStorage.connect(
       this.context!,
@@ -338,8 +486,9 @@ export class IjkPlayer extends AbstractPlayer {
   }
 
   disableHardwareEncoding(): void {
-    if (!this.isHardwareEncoding())
+    if (!this.isHardwareEncoding()) {
       return
+    }
 
     AbilityStorage.connect(
       this.context!,
@@ -351,5 +500,4 @@ export class IjkPlayer extends AbstractPlayer {
     this.ijkPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-all-videos", "0");
     this.ijkPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-hevc", "0");
   }
-
 }

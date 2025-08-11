@@ -43,6 +43,130 @@
     {
       "name": "context_menu_open_subtitle",
       "value": "Open subtitle"
+    },
+    {
+      "name": "choose_location",
+      "value": "Choose location"
+    },
+    {
+      "name": "file_manager",
+      "value": "File Manager"
+    },
+    {
+      "name": "images",
+      "value": "Images"
+    },
+    {
+      "name": "permission_reason_read_imagevideo",
+      "value": "To import video from photos to playlist"
+    },
+    {
+      "name": "speed_0_25",
+      "value": "x0.25"
+    },
+    {
+      "name": "speed_0_50",
+      "value": "x0.5"
+    },
+    {
+      "name": "speed_0_75",
+      "value": "x0.75"
+    },
+    {
+      "name": "speed_1_00",
+      "value": "x1"
+    },
+    {
+      "name": "speed_1_25",
+      "value": "x1.25"
+    },
+    {
+      "name": "speed_1_50",
+      "value": "x1.5"
+    },
+    {
+      "name": "speed_1_75",
+      "value": "x1.75"
+    },
+    {
+      "name": "speed_2_00",
+      "value": "x2"
+    },
+    {
+      "name": "create_folder",
+      "value": "Create playlist"
+    },
+    {
+      "name": "import_video",
+      "value": "Import video"
+    },
+    {
+      "name": "not_implemented",
+      "value": "Not implemented"
+    },
+    {
+      "name": "font_management",
+      "value": "Manage fonts"
+    },
+    {
+      "name": "color_mode",
+      "value": "Color mode"
+    },
+    {
+      "name": "color_mode_system",
+      "value": "Sys"
+    },
+    {
+      "name": "color_mode_light",
+      "value": "Light"
+    },
+    {
+      "name": "color_mode_dark",
+      "value": "Dark"
+    },
+    {
+      "name": "settings",
+      "value": "Settings"
+    },
+    {
+      "name": "about",
+      "value": "About"
+    },
+    {
+      "name": "blur_effect",
+      "value": "Blur effect"
+    },
+    {
+      "name": "continuation",
+      "value": "Continuation"
+    },
+    {
+      "name": "continuation_tips",
+      "value": "Turn on this, you can transfer your current playing video to another device under the same account."
+    },
+    {
+      "name": "less_cover",
+      "value": "Less cover"
+    },
+    {
+      "name": "less_cover_tips",
+      "value": "Enable this option, speeding up and dragging progress bar will have less covering field."
+    },
+    {
+      "name": "hardware_decode",
+      "value": "Hardware decode"
+    },
+    {
+      "name": "hardware_decode_tips",
+      "value": "Enable this option allows you to use your gpu to render video. But it may lead to abnormal video pictures."
+    },
+    {
+      "name": "questions",
+      "value": "Q&A"
+    },
+    {
+      "name": "open_video",
+      "value": "Open video"
     }
   ]
 }

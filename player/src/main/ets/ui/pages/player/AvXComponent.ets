@@ -1,12 +1,11 @@
-import { AvPlayer } from "../../../player/Player"
-import { PlayerContext } from "../../../player/PlayerContext"
-import { VideoSource } from "../../../player/VideoSource"
-import { AbilityStorage } from "../../../storage/AbilityStorage"
-import { ability } from "../../../utils/AbilityUtils"
+import { AvPlayer } from '../../../player/Player'
+import { PlayerContext } from '../../../player/PlayerContext'
+import { VideoSource } from '../../../player/VideoSource'
+import { AbilityStorage } from '../../../storage/AbilityStorage'
+import { ensureContext } from '../../../utils/AbilityUtils'
 
 @ComponentV2
 export struct AvXComponent {
-
   @Param
   @Require
   videoSource: VideoSource
@@ -20,7 +19,6 @@ export struct AvXComponent {
     "player_context",
     () => new PlayerContext()
   )!
-
   private xComponentController: XComponentController = new XComponentController()
 
   build() {
@@ -30,10 +28,9 @@ export struct AvXComponent {
       controller: this.xComponentController
     })
       .onAppear(() => {
-        this.player.prepare(ability(this.getUIContext()).context, undefined, this.xComponentController, this.videoSource)
+        this.player.prepare(ensureContext(this.getUIContext()), undefined, this.xComponentController, this.videoSource)
       })
       .width("100%")
       .height("100%")
   }
-
 }

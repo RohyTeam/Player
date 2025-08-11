@@ -7,11 +7,11 @@
         "material": {
           "certpath": "C:\\Users\\deechael\\.ohos\\config\\default_RohyPlayerReborn_JN8JGrJ1uWy5x2udn0ers082KSZYDrRaxNlV2tdOBYg=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001BA3B3A65F04FCA3286BA65B0C2AD47A9A3C6B0DF2A715E170B15343ACA86075FB5B9F9B584D3F3F",
+          "keyPassword": "0000001B03E80909995388F2CF92079EFAAB6E453E1A27F71E9E0CAE1E775B02D59C6E5036043CA1447EEA",
           "profile": "C:\\Users\\deechael\\.ohos\\config\\default_RohyPlayerReborn_JN8JGrJ1uWy5x2udn0ers082KSZYDrRaxNlV2tdOBYg=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\deechael\\.ohos\\config\\default_RohyPlayerReborn_JN8JGrJ1uWy5x2udn0ers082KSZYDrRaxNlV2tdOBYg=.p12",
-          "storePassword": "0000001B418FA7193D337A7BC6AF8BBF3F117F288808A3BD6B64B7DAC64A3C3D24245EB7C3E2D76B5BA630"
+          "storePassword": "0000001B969BA631CBAE7C18979C5AB58949EFDE7C0B80F3F8C5ECD38423E0C70369BBEDE44DBDEE399C99"
         }
       }
     ],

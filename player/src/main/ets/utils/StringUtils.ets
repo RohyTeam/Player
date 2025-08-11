@@ -1,4 +1,4 @@
-import { util } from "@kit.ArkTS"
+import { util } from '@kit.ArkTS'
 
 export function randomString(
   length: number,

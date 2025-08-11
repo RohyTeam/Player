@@ -1,9 +1,8 @@
-import { SymbolGlyphModifier } from "@kit.ArkUI"
-import { Modifiers } from "../../attributemodifier/Modifiers"
+import { SymbolGlyphModifier } from '@kit.ArkUI'
+import { Modifiers } from '../../attributemodifier/Modifiers'
 
 @ComponentV2
 export struct PlaylistSideBar {
-
   @Consumer("showSidebar")
   showSidebar: boolean = false
 
@@ -35,5 +34,4 @@ export struct PlaylistSideBar {
   SidebarPager(name: string) {
 
   }
-
 }

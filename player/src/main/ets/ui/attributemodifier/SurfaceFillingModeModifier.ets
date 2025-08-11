@@ -1,10 +1,9 @@
-import { VideoMetadata } from "../../metadata/VideoMetadata";
-import { SurfaceFillingMode } from "../../player/SurfaceFillingMode";
-import { CommonModifier } from "@kit.ArkUI";
-import { Win } from "../../context/WindowContext";
+import { VideoMetadata } from '../../metadata/VideoMetadata';
+import { SurfaceFillingMode } from '../../player/SurfaceFillingMode';
+import { CommonModifier } from '@kit.ArkUI';
+import { Win } from '../../context/WindowContext';
 
 export class SurfaceFillingModeModifier extends CommonModifier {
-
   private metadata: VideoMetadata
   private mode: SurfaceFillingMode
 
@@ -47,5 +46,4 @@ export class SurfaceFillingModeModifier extends CommonModifier {
       }
     }
   }
-
 }

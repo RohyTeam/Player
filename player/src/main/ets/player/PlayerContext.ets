@@ -1,10 +1,9 @@
-import { Player } from "./Player";
-import { SurfaceFillingMode } from "./SurfaceFillingMode";
-import { VideoSource } from "./VideoSource";
+import { Player } from './Player';
+import { SurfaceFillingMode } from './SurfaceFillingMode';
+import { VideoSource } from './VideoSource';
 
 @ObservedV2
 export class PlayerContext {
-
   @Trace
   video: boolean = false
   @Trace
@@ -14,12 +13,13 @@ export class PlayerContext {
   @Trace
   player: Player | undefined = undefined
   @Trace
-  currentDuration: number = 0
+  playSpeed: number = 1
+  @Trace
+  currentPosition: number = 0
   @Trace
   maxDuration: number = 0
   @Trace
   surfaceFillingMode: SurfaceFillingMode = SurfaceFillingMode.Fit
   @Trace
   hardwareEncoding: boolean = false
-
 }

@@ -1,20 +1,31 @@
-import { AppStorageV2, display, window } from "@kit.ArkUI";
-import { hilog } from "@kit.PerformanceAnalysisKit";
-import { WindowContext } from "../../context/WindowContext";
-import { AbilityStorage } from "../../storage/AbilityStorage";
-import { common } from "@kit.AbilityKit";
-import { abilityWindow } from "../../utils/AbilityUtils";
+import { display, window } from '@kit.ArkUI';
+import { hilog } from '@kit.PerformanceAnalysisKit';
+import { Win } from '../../context/WindowContext';
+import { abilityWindow } from '../../utils/AbilityUtils';
 
 export class WindowManager {
-
-  public static init(context: Context, window: window.Window) {
-    let rect = window.getWindowProperties().windowRect
+  public static init(context: Context, windowObj: window.Window) {
+    let rect = windowObj.getWindowProperties().windowRect
     WindowManager.updateWindowSize(context, rect.width, rect.height)
-    window.on('windowSizeChange', (size: window.Size) => {
+    WindowManager.updateAvoidArea(
+      context,
+      window.AvoidAreaType.TYPE_SYSTEM,
+      windowObj.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
+    )
+    WindowManager.updateAvoidArea(
+      context,
+      window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR,
+      windowObj.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
+    )
+    WindowManager.updateWindowStatusType(context, windowObj.getWindowStatus())
+    windowObj.on('windowSizeChange', (size: window.Size) => {
       WindowManager.updateWindowSize(context, size.width, size.height)
     })
-    window.on('avoidAreaChange', (options: window.AvoidAreaOptions) => {
-
+    windowObj.on('avoidAreaChange', (options: window.AvoidAreaOptions) => {
+      WindowManager.updateAvoidArea(context, options.type, options.area)
+    })
+    windowObj.on('windowStatusChange', (type: window.WindowStatusType) => {
+      WindowManager.updateWindowStatusType(context, type)
     })
   }
 
@@ -36,15 +47,25 @@ export class WindowManager {
     })
   }
 
+  public static setOrientation(context: UIContext | Context, orientation: window.Orientation) {
+    abilityWindow(context).setPreferredOrientation(orientation)
+  }
+
+  private static updateWindowStatusType(context: UIContext | Context, type: WindowStatusType) {
+    Win.get(context).windowStatusType = type
+  }
+
+  private static updateAvoidArea(context: UIContext | Context, type: window.AvoidAreaType, area: window.AvoidArea) {
+    let windowContext = Win.get(context)
+    if (type === window.AvoidAreaType.TYPE_SYSTEM) {
+      windowContext.topAvoid = area.topRect.height
+    } else if (type === window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR) {
+      windowContext.bottomAvoid = area.bottomRect.height
+    }
+  }
+
   private static updateWindowSize(context: UIContext | Context, width: number, height: number): void {
-    console.error(`updating window size: ${width}, ${height}`)
-    let windowContext = AbilityStorage.connect(
-      context,
-      WindowContext,
-      "window_context",
-      () => new WindowContext()
-    )!
-    console.error(`caodabi`)
+    let windowContext = Win.get(context)
 
     let windowWidthVp = width / display.getDefaultDisplaySync().densityPixels;
     let windowHeightVp = height / display.getDefaultDisplaySync().densityPixels;
@@ -70,8 +91,6 @@ export class WindowManager {
       widthBp = 'xl';
     }
 
-    console.error(`caoxiaobi`)
-
     windowContext.widthBreakpoint = widthBp
     windowContext.heightBreakpoint = heightBp
     windowContext.widthPx = width
@@ -79,5 +98,4 @@ export class WindowManager {
     windowContext.widthVp = windowWidthVp
     windowContext.heightVp = windowHeightVp
   }
-
 }

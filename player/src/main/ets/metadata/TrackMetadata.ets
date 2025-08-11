@@ -7,16 +7,13 @@ export interface TrackMetadata {
   language: string | undefined
   codec: string | undefined
   codecLong: string | undefined
-
   // video
   width: number | undefined
   height: number | undefined
   duration: number | undefined
   bitrate: number | undefined
-
   // audio
   sampleRate: number | undefined
-
   // attachment
   filename: string | undefined
   mimetype: string | undefined

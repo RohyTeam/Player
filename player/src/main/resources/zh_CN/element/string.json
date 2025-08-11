@@ -43,6 +43,130 @@
     {
       "name": "context_menu_open_subtitle",
       "value": "打开字幕"
+    },
+    {
+      "name": "choose_location",
+      "value": "选择位置"
+    },
+    {
+      "name": "file_manager",
+      "value": "文件管理"
+    },
+    {
+      "name": "images",
+      "value": "图库"
+    },
+    {
+      "name": "permission_reason_read_imagevideo",
+      "value": "从图库中导入视频到播放列表"
+    },
+    {
+      "name": "speed_0_25",
+      "value": "0.25 倍速"
+    },
+    {
+      "name": "speed_0_50",
+      "value": "0.5 倍速"
+    },
+    {
+      "name": "speed_0_75",
+      "value": "0.75 倍速"
+    },
+    {
+      "name": "speed_1_00",
+      "value": "1 倍速"
+    },
+    {
+      "name": "speed_1_25",
+      "value": "1.25 倍速"
+    },
+    {
+      "name": "speed_1_50",
+      "value": "1.5 倍速"
+    },
+    {
+      "name": "speed_1_75",
+      "value": "1.75 倍速"
+    },
+    {
+      "name": "speed_2_00",
+      "value": "2 倍速"
+    },
+    {
+      "name": "create_folder",
+      "value": "创建文件夹"
+    },
+    {
+      "name": "import_video",
+      "value": "导入视频"
+    },
+    {
+      "name": "not_implemented",
+      "value": "当前功能暂未实现"
+    },
+    {
+      "name": "font_management",
+      "value": "字体管理"
+    },
+    {
+      "name": "color_mode_system",
+      "value": "系统"
+    },
+    {
+      "name": "color_mode_light",
+      "value": "浅色"
+    },
+    {
+      "name": "color_mode_dark",
+      "value": "深色"
+    },
+    {
+      "name": "settings",
+      "value": "设置"
+    },
+    {
+      "name": "color_mode",
+      "value": "颜色模式"
+    },
+    {
+      "name": "about",
+      "value": "关于"
+    },
+    {
+      "name": "blur_effect",
+      "value": "模糊效果"
+    },
+    {
+      "name": "continuation",
+      "value": "流转/接续"
+    },
+    {
+      "name": "continuation_tips",
+      "value": "开启此选项后，您可以将正在播放的视频转移到另一个登录了相同系统账号的设备下继续播放。"
+    },
+    {
+      "name": "less_cover",
+      "value": "更少的遮盖"
+    },
+    {
+      "name": "less_cover_tips",
+      "value": "开启此选项后，长按加速和调整进度条时的提示将不会覆盖整个屏幕。"
+    },
+    {
+      "name": "hardware_decode_tips",
+      "value": "开启此选项后，将会使用 GPU 进行视频解码渲染。但是开启此选项后画面可能会出现错误。"
+    },
+    {
+      "name": "hardware_decode",
+      "value": "硬件解码"
+    },
+    {
+      "name": "questions",
+      "value": "常见问题"
+    },
+    {
+      "name": "open_video",
+      "value": "打开视频"
     }
   ]
 }

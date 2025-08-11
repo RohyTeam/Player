@@ -1,12 +1,49 @@
+import { Wanter } from '../../../context/WantAnnouncer'
+import { PlayerContext } from '../../../player/PlayerContext'
+import { AbilityStorage } from '../../../storage/AbilityStorage'
+import { GeneralPlayerPage } from '../player/general/GeneralPlayerPage'
+import { IndexMenuButtons } from './IndexMenuButtons'
+
 @ComponentV2
 export struct GeneralDeviceIndex {
+  @Provider("indexNavigator")
+  private indexNavigator: NavPathStack = new NavPathStack()
+  @Local
+  playerContext: PlayerContext = AbilityStorage.connect(
+    this.getUIContext(),
+    PlayerContext,
+    "player_context",
+    () => new PlayerContext()
+  )!
+
+  onDidBuild(): void {
+    if (this.playerContext.video && this.playerContext.videoSource != undefined) {
+      this.indexNavigator.pushPath({ name: "Player" })
+    }
+  }
 
   build() {
-    Navigation() {
+    Navigation(this.indexNavigator) {
+      List() {
+        if (Wanter.announced) {
+          ListItem() {
+
+          }
+          .onAppear(() => {
+            if (this.playerContext.video && this.playerContext.videoSource != undefined) {
+              this.indexNavigator.pushPath({ name: "Player" })
+            }
+            Wanter.announced = false
+          })
+        }
+      }
+      .width("100%")
+      .height("100%")
     }
+    .menus(this.menuButtons)
     .width("100%")
     .height("100%")
-    .backgroundColor(Color.Transparent)
+    .backgroundColor($r("app.color.rohy_background"))
     .navDestination(this.IndexPager)
     .hideBackButton(true)
     .hideToolBar(true)
@@ -14,15 +51,22 @@ export struct GeneralDeviceIndex {
       $r("app.string.playlist"),
       {
         backgroundColor: $r("app.color.rohy_background"),
-        backgroundBlurStyle: BlurStyle.Regular,
+        // backgroundBlurStyle: BlurStyle.Regular,
       }
     )
+    .titleMode(NavigationTitleMode.Mini)
     .mode(NavigationMode.Stack)
   }
 
   @Builder
-  IndexPager(name: string) {
-
+  private menuButtons() {
+    IndexMenuButtons()
   }
 
+  @Builder
+  IndexPager(name: string) {
+    if (name == "Player") {
+      GeneralPlayerPage()
+    }
+  }
 }

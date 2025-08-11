@@ -1,23 +1,45 @@
 @ComponentV2
 export struct CircleIconButton {
-
   @Param
   @Require
   icon: Resource
-
+  @Param
+  isSymbol: boolean = true
+  @Param
+  iconRotation: number = 0
   @Param
   buttonMargin: Margin = {}
-
+  @Param
+  bgColor: Resource = $r("sys.color.comp_background_tertiary")
   @Event
-  clickCallback: () => void = () => {}
+  clickCallback: () => void = () => {
+  }
 
   build() {
     Button({
       type: ButtonType.Circle
     }) {
-      SymbolGlyph(this.icon)
-        .fontSize(24)
-        .fontColor([$r("sys.color.icon_primary")])
+      if (this.isSymbol) {
+        SymbolGlyph(this.icon)
+          .fontSize(24)
+          .fontColor([$r("sys.color.icon_primary")])
+          .rotate({
+            angle: this.iconRotation,
+            z: 1,
+            centerX: "50%",
+            centerY: "50%",
+          })
+      } else {
+        Image(this.icon)
+          .width(24)
+          .height(24)
+          .rotate({
+            angle: this.iconRotation,
+            z: 1,
+            centerX: "50%",
+            centerY: "50%",
+          })
+      }
     }
     .clickEffect({
       level: ClickEffectLevel.LIGHT,
@@ -28,7 +50,6 @@ export struct CircleIconButton {
     .width(40)
     .height(40)
     .onClick(this.clickCallback)
-    .backgroundColor($r("sys.color.comp_background_tertiary"))
+    .backgroundColor(this.bgColor)
   }
-
 }

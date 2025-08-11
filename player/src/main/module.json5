@@ -86,7 +86,7 @@
         name: "ohos.permission.FILE_ACCESS_PERSIST"
       },
       {
-        name: "ohos.permission.DISTRIBUTED_DATASYNC",
+        name: "ohos.permission.READ_IMAGEVIDEO",
         reason: "$string:permission_reason_distributed_datasync",
         usedScene: {
           abilities: [
@@ -96,14 +96,14 @@
         }
       },
       {
-        name: "ohos.permission.KEEP_BACKGROUND_RUNNING",
-        reason: "$string:permission_reason_keep_background_running",
+        name: "ohos.permission.DISTRIBUTED_DATASYNC",
+        reason: "$string:permission_reason_distributed_datasync",
         usedScene: {
           abilities: [
             "PlayerAbility"
           ],
           when: "always",
-        },
+        }
       },
     ]
   }
