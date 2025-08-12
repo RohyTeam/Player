@@ -1,4 +1,5 @@
 import { Win, WindowContext } from '../../context/WindowContext'
+import { window } from '@kit.ArkUI'
 
 @ComponentV2
 export struct BottomAvoidArea {
@@ -6,7 +7,9 @@ export struct BottomAvoidArea {
   private win: WindowContext = Win.get(this.getUIContext())
 
   build() {
-    Blank()
-      .height(28)
+    if (this.win.windowStatusType != window.WindowStatusType.FLOATING) {
+      Blank()
+        .height(28)
+    }
   }
 }

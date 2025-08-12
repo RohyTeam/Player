@@ -57,10 +57,6 @@
       "value": "Images"
     },
     {
-      "name": "permission_reason_read_imagevideo",
-      "value": "To import video from photos to playlist"
-    },
-    {
       "name": "speed_0_25",
       "value": "x0.25"
     },

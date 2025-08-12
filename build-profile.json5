@@ -13,12 +13,38 @@
           "storeFile": "C:\\Users\\deechael\\.ohos\\config\\default_RohyPlayerReborn_JN8JGrJ1uWy5x2udn0ers082KSZYDrRaxNlV2tdOBYg=.p12",
           "storePassword": "0000001B969BA631CBAE7C18979C5AB58949EFDE7C0B80F3F8C5ECD38423E0C70369BBEDE44DBDEE399C99"
         }
+      },
+      {
+        "name": "testrelease",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "G:/secret/rohyplayer/rohyplayer.p12",
+          "storePassword": "00000025A58EA6DC5B6E8522DC22093E6BBD592FF3B17EB96386C86CEC33E6F9B3497DDCFAC5357A04B7356887128DDBBCE5082AED",
+          "keyAlias": "rohyplayer",
+          "keyPassword": "00000025DDF76767200FCA2C7CA8DBCE8DE4A9F9D8F9DDC3F0CCDE61BCA439E4480FECF367256850D924387806ECDD2DF73D0E0DF5",
+          "signAlg": "SHA256withECDSA",
+          "profile": "G:/secret/rohyplayer/Rohy Player TestRelease.p7b",
+          "certpath": "G:/secret/rohyplayer/Rohy Player Test.cer"
+        }
       }
     ],
     "products": [
       {
         "name": "default",
         "signingConfig": "default",
+        "targetSdkVersion": "5.0.5(17)",
+        "compatibleSdkVersion": "5.0.5(17)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      },
+      {
+        "name": "testrelease",
+        "signingConfig": "testrelease",
         "targetSdkVersion": "5.0.5(17)",
         "compatibleSdkVersion": "5.0.5(17)",
         "runtimeOS": "HarmonyOS",
@@ -47,7 +73,8 @@
         {
           "name": "default",
           "applyToProducts": [
-            "default"
+            "default",
+            "testrelease"
           ]
         }
       ]

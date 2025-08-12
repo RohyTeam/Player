@@ -4,10 +4,6 @@ import { Sys } from '../../context/SystemContext';
 import { PreferenceContext } from '../../context/PreferenceContext';
 import { AppStorageV2 } from '@kit.ArkUI';
 
-interface CJLib {
-  testCJ(src: string): string
-}
-
 @Entry
 @ComponentV2
 struct Index {

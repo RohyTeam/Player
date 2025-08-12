@@ -57,10 +57,6 @@
       "value": "图库"
     },
     {
-      "name": "permission_reason_read_imagevideo",
-      "value": "从图库中导入视频到播放列表"
-    },
-    {
       "name": "speed_0_25",
       "value": "0.25 倍速"
     },
