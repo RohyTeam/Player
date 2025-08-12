@@ -1,3 +1,4 @@
+import { WindowContext } from '../context/WindowContext';
 import { Player } from './Player';
 import { SurfaceFillingMode } from './SurfaceFillingMode';
 
@@ -14,6 +15,35 @@ export class PlayerController {
     } else {
       this.pause()
     }
+  }
+
+  getWindowContext(): WindowContext | undefined {
+    return this.player?.getWindowContext()
+  }
+
+  startAdjustingScreenBrightness() {
+  }
+  stopAdjustingScreenBrightness() {
+  }
+  startAdjustingVolume() {
+  }
+  stopAdjustingVolume() {
+  }
+
+  increaseScreenBrightness(brightness: number) {
+
+  }
+
+  decreaseScreenBrightness(brightness: number) {
+
+  }
+
+  increaseVolume(brightness: number) {
+
+  }
+
+  decreaseVolume(brightness: number) {
+
   }
 
   setSpeed(speed: number) {

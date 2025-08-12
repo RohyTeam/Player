@@ -3,20 +3,38 @@ import { PreferenceContext } from '../../context/PreferenceContext'
 import { Sys, SystemContext } from '../../context/SystemContext'
 import { DB } from '../../database/DatabaseManager'
 import { randomString } from '../../utils/StringUtils'
+import { taskpool } from '@kit.ArkTS'
+import { superContext } from '../../utils/AbilityUtils'
+
+@Concurrent
+function periodJob(): void {
+  PreferenceContext.save(superContext())
+}
 
 export default class PlayerAbilityStage extends AbilityStage {
   private static superContext: Context | undefined = undefined
+  private static task: taskpool.Task = new taskpool.Task(periodJob)
+
+  private static doPeriodJob() {
+    // 10 分钟执行一次
+    taskpool.executeDelayed(10 * 60 * 1000, PlayerAbilityStage.task, taskpool.Priority.LOW)
+      .then((result) => {
+        PlayerAbilityStage.doPeriodJob()
+      })
+  }
 
   async onCreate(): Promise<void> {
     PlayerAbilityStage.superContext = this.context
     await DB.init(this.context)
     PreferenceContext.load(this.context)
     SystemContext.start()
+    PlayerAbilityStage.doPeriodJob()
   }
 
   onDestroy(): void {
     PreferenceContext.save(this.context)
     SystemContext.stop()
+    taskpool.cancel(PlayerAbilityStage.task)
   }
 
   onAcceptWant(want: Want): string {
@@ -32,8 +50,4 @@ export default class PlayerAbilityStage extends AbilityStage {
   public static getContext(): Context {
     return PlayerAbilityStage.superContext!!
   }
-}
-
-export function superContext(): Context {
-  return PlayerAbilityStage.getContext()
 }

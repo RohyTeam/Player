@@ -7,6 +7,7 @@
   "license": "",
   "dependencies": {
     "libplayer.so": "file:./src/main/cpp/types/libplayer",
-    "librohy_metadata.so": "file:./src/main/cpp/types/librohy_metadata"
+    "librohy_metadata.so": "file:./src/main/cpp/types/librohy_metadata",
+    "librohy_subtitle.so": "file:./src/main/cpp/types/librohy_subtitle"
   }
 }

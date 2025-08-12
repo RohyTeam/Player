@@ -1,3 +1,4 @@
+import { RohyAssSubtitleRenderer } from 'librohy_subtitle.so';
 import { AVSessionContext } from '../../../context/AVSessionContext';
 import { Sys } from '../../../context/SystemContext';
 import { AvPlayer, IjkPlayer } from '../../../player/Player';
@@ -8,6 +9,7 @@ import { AbilityStorage } from '../../../storage/AbilityStorage';
 import { Modifiers } from '../../attributemodifier/Modifiers';
 import { AvXComponent } from './AvXComponent';
 import { IjkXComponent } from './IjkXComponent';
+import { AssSubtitleView } from './subtitle/AssSubtitleView';
 
 @ComponentV2
 export struct PlayerPage {
@@ -17,12 +19,7 @@ export struct PlayerPage {
   @Consumer("playerController")
   playerController: PlayerController = new PlayerController()
   @Local
-  playerContext: PlayerContext = AbilityStorage.connect(
-    this.getUIContext(),
-    PlayerContext,
-    "player_context",
-    () => new PlayerContext()
-  )!
+  playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
 
   aboutToAppear(): void {
     if (this.videoSource.type() == VideoSourceType.Photos) {
@@ -48,12 +45,14 @@ export struct PlayerPage {
     })
     this.playerContext.player.onPositionChange((time) => {
       this.playerContext.currentPosition = time
+      this.playerContext.subtitlePositionUpdater(time)
       if (!Sys.isPC()) {
         AVSessionContext.updateSession(this.getUIContext())
       }
     })
     this.playerContext.player.onSeekComplete((time) => {
       this.playerContext.currentPosition = time
+      this.playerContext.subtitlePositionUpdater(time)
       if (!Sys.isPC()) {
         AVSessionContext.updateSession(this.getUIContext())
       }
@@ -67,6 +66,15 @@ export struct PlayerPage {
   build() {
     Stack() {
       Column() {
+        if (this.playerContext.selectedSubtitle != undefined && this.playerContext.selectedSubtitle >= 0 && this.playerContext.selectedSubtitle < this.playerContext.subtitles.length) {
+          if (this.playerContext.subtitles[this.playerContext.selectedSubtitle].type == 'ass') {
+            AssSubtitleView()
+          }
+        }
+      }
+      .attributeModifier(Modifiers.surfaceFilling(this.videoSource.metadata(), this.playerContext.surfaceFillingMode))
+      .zIndex(2)
+      Column() {
         if (this.videoSource.type() == VideoSourceType.Photos) {
           AvXComponent({
             videoSource: this.videoSource,
@@ -79,7 +87,15 @@ export struct PlayerPage {
           })
         }
       }
+      .id('player_view')
+      .onAreaChange((_, newArea) => {
+        this.playerContext.playerWidthVp = Number(newArea.width)
+        this.playerContext.playerHeightVp = Number(newArea.height)
+        this.playerContext.playerWidthPx = vp2px(this.playerContext.playerWidthVp)
+        this.playerContext.playerHeightPx = vp2px(this.playerContext.playerHeightVp)
+      })
       .attributeModifier(Modifiers.surfaceFilling(this.videoSource.metadata(), this.playerContext.surfaceFillingMode))
+      .zIndex(1)
     }
     .width("100%")
     .height("100%")

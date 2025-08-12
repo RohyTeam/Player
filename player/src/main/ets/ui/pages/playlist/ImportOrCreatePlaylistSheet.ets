@@ -7,7 +7,7 @@ import { InnerContainerDivider } from '../../component/inner/InnerContainerDivid
 import { InnerDivider } from '../../component/inner/InnerDivider'
 
 @ComponentV2
-export struct ImportVideoSheet {
+export struct ImportOrCreatePlaylistSheet {
   @Event
   hideChooser: () => void = () => {
   }
@@ -21,29 +21,27 @@ export struct ImportVideoSheet {
     }) {
       InnerComponentSet() {
         InnerButtonWithImage({
-          image: getIcon($r("app.media.filemanager_icon")),
-          title: $r("app.string.create_folder"),
+          image: $r("app.media.hidisk_icon_folder"),
+          title: $r("app.string.create_playlist"),
           imageOutline: false,
           clickCallback: () => {
           }
         })
       }
-
       InnerContainerDivider()
       InnerComponentSet() {
         InnerButtonWithImage({
           image: getIcon($r("app.media.filemanager_icon")),
-          title: $r("app.string.file_manager"),
+          title: $r("app.string.import_folder"),
+          subtitle: $r("app.string.pc_tablet_only"),
           imageOutline: false,
-          showGoToIcon: true,
           clickCallback: () => {
           }
         })
         InnerDivider()
         InnerButtonWithImage({
-          image: getIcon($r("app.media.photos_icon")),
-          title: $r("app.string.images"),
-          showGoToIcon: true,
+          image: getIcon($r("app.media.webdav_icon")),
+          title: $r("app.string.import_webdav"),
           clickCallback: () => {
           }
         })

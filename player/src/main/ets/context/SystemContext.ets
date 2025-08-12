@@ -36,6 +36,10 @@ export class SystemContext {
     return deviceInfo.deviceType == "2in1" // || deviceInfo.deviceType == "tablet" // todo: remove tablet after debug
   }
 
+  public isTablet(): boolean {
+    return deviceInfo.deviceType == "tablet"
+  }
+
   private static started: boolean = false
   private static task: taskpool.Task = new taskpool.Task(updateSystemInfo)
 

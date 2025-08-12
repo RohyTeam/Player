@@ -6,6 +6,7 @@ import { PlayerContext } from './PlayerContext';
 import { IjkMediaPlayer } from '@ohos/ijkplayer';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { fileIo, fileUri } from '@kit.CoreFileKit';
+import { Win, WindowContext } from '../context/WindowContext';
 
 export interface Player {
 
@@ -45,6 +46,8 @@ export interface Player {
   enableHardwareEncoding(): void
 
   disableHardwareEncoding(): void
+
+  getWindowContext(): WindowContext
 
   onPositionChange(callback: (time: number) => void): void
 
@@ -121,6 +124,10 @@ abstract class AbstractPlayer implements Player {
         () => new PlayerContext()
       )!.playSpeed
     )
+  }
+
+  getWindowContext(): WindowContext {
+    return Win.get(this.context!)
   }
 
   isPaused(): boolean {

@@ -6,7 +6,7 @@ import { AbilityStorage } from '../../../storage/AbilityStorage';
 import { CircleIconButton } from '../../button/CircleIconButton';
 import { OpenVideoSheet } from '../playlist/OpenVideoSheet';
 import { fileUri } from '@kit.CoreFileKit';
-import { ImportVideoSheet } from '../playlist/ImportVideoSheet';
+import { ImportOrCreatePlaylistSheet } from '../playlist/ImportOrCreatePlaylistSheet';
 import { SettingsSheet } from '../playlist/SettingsSheet';
 
 @ComponentV2
@@ -40,7 +40,7 @@ export struct IndexMenuButtons {
       })
         .bindSheet(
           this.showImportVideoSheet!!,
-          this.ImportVideoSheet,
+          this.ImportOrCreatePlaylistSheet,
           {
             backgroundColor: $r("app.color.rohy_background"),
             height: SheetSize.FIT_CONTENT,
@@ -54,7 +54,7 @@ export struct IndexMenuButtons {
               this.showImportVideoSheet = false
             },
             title: {
-              title: $r("app.string.import_video"),
+              title: $r("app.string.import_or_create_playlist"),
               subtitle: $r("app.string.not_implemented")
             }
           }
@@ -136,8 +136,8 @@ export struct IndexMenuButtons {
   }
 
   @Builder
-  private ImportVideoSheet() {
-    ImportVideoSheet({
+  private ImportOrCreatePlaylistSheet() {
+    ImportOrCreatePlaylistSheet({
       hideChooser: () => {
         this.showOpenVideoSheet = false
       },

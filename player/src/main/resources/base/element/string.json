@@ -163,6 +163,42 @@
     {
       "name": "open_video",
       "value": "Open video"
+    },
+    {
+      "name": "create_playlist",
+      "value": "Create playlist"
+    },
+    {
+      "name": "import_folder",
+      "value": "Import folder"
+    },
+    {
+      "name": "pc_only",
+      "value": "PC/2in1 only"
+    },
+    {
+      "name": "pc_tablet_only",
+      "value": "PC/2in1 and tablet only"
+    },
+    {
+      "name": "import_or_create_playlist",
+      "value": "Import or create playlist"
+    },
+    {
+      "name": "import_webdav",
+      "value": "Connect WebDAV server"
+    },
+    {
+      "name": "no_subtitle",
+      "value": "No subtitle"
+    },
+    {
+      "name": "import_subtitle",
+      "value": "Import subtitle"
+    },
+    {
+      "name": "open_subtitle",
+      "value": "Open subtitle"
     }
   ]
 }

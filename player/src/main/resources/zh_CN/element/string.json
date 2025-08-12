@@ -163,6 +163,42 @@
     {
       "name": "open_video",
       "value": "打开视频"
+    },
+    {
+      "name": "create_playlist",
+      "value": "创建播放列表"
+    },
+    {
+      "name": "import_folder",
+      "value": "导入文件夹"
+    },
+    {
+      "name": "pc_only",
+      "value": "仅 PC/2in1 设备"
+    },
+    {
+      "name": "pc_tablet_only",
+      "value": "仅 PC/2in1 设备及平板"
+    },
+    {
+      "name": "import_or_create_playlist",
+      "value": "导入或创建播放列表"
+    },
+    {
+      "name": "import_webdav",
+      "value": "连接 WebDAV 服务器"
+    },
+    {
+      "name": "no_subtitle",
+      "value": "不显示字幕"
+    },
+    {
+      "name": "import_subtitle",
+      "value": "导入字幕"
+    },
+    {
+      "name": "open_subtitle",
+      "value": "打开字幕"
     }
   ]
 }

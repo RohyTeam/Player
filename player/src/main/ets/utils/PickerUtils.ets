@@ -61,6 +61,44 @@ export function pickVideoFiles(context: UIContext | Context, limit: number): Pro
   })
 }
 
+export function pickSingleSubtitleFile(context: UIContext | Context): Promise<string | undefined> {
+  return new Promise(async (resultReturner) => {
+    let documentViewPicker = new picker.DocumentViewPicker(ensureContext(context));
+    const documentSelectOptions = new picker.DocumentSelectOptions();
+    documentSelectOptions.maxSelectNumber = 1;
+    documentSelectOptions.fileSuffixFilters = [
+      '全部字幕文件|.ass,.srt,',
+      'ass 字幕文件|.ass',
+      'srt 字幕文件|.srt'
+    ];
+
+    let documentSelectResult = await documentViewPicker.select(documentSelectOptions)
+
+    if (documentSelectResult.length > 0) {
+      resultReturner(documentSelectResult[0])
+    } else {
+      resultReturner(undefined)
+    }
+  })
+}
+
+export function pickSubtitleFiles(context: UIContext | Context, limit: number): Promise<string[]> {
+  return new Promise(async (resultReturner) => {
+    let documentViewPicker = new picker.DocumentViewPicker(ensureContext(context));
+    const documentSelectOptions = new picker.DocumentSelectOptions();
+    documentSelectOptions.maxSelectNumber = limit;
+    documentSelectOptions.fileSuffixFilters = [
+      '全部字幕文件|.ass,.srt,',
+      'ass 字幕文件|.ass',
+      'srt 字幕文件|.srt'
+    ];
+
+    let documentSelectResult = await documentViewPicker.select(documentSelectOptions)
+
+    resultReturner(documentSelectResult)
+  })
+}
+
 export function pickPhotosVideoFiles(context: UIContext | Context,
   limit: number): Promise<photoAccessHelper.PhotoAsset[]> {
   return new Promise(async (resultReturner) => {

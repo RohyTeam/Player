@@ -6,6 +6,7 @@ import { PlayerPage } from '../PlayerPage'
 import { GeneralControlPanel } from './GeneralControlPanel'
 import { window } from '@kit.ArkUI'
 import { AVSessionContext } from '../../../../context/AVSessionContext'
+import { Sys } from '../../../../context/SystemContext'
 
 @ComponentV2
 export struct GeneralPlayerPage {
@@ -29,7 +30,7 @@ export struct GeneralPlayerPage {
     WindowManager.setNavigationIndicator(this.getUIContext(), false)
 
     let metadata = this.playerContext.videoSource?.metadata()!
-    if (metadata.width >= metadata.height) {
+    if (metadata.width >= metadata.height && !Sys.isTablet()) {
       WindowManager.setOrientation(this.getUIContext(), window.Orientation.AUTO_ROTATION_LANDSCAPE)
       this.landscape = true
     }
@@ -38,11 +39,7 @@ export struct GeneralPlayerPage {
   }
 
   aboutToDisappear(): void {
-    WindowManager.setFullscreen(this.getUIContext(), false)
-    WindowManager.setStatusBar(this.getUIContext(), true)
-    WindowManager.setNavigationIndicator(this.getUIContext(), true)
-
-    if (this.landscape) {
+    if (this.landscape && !Sys.isTablet()) {
       WindowManager.setOrientation(this.getUIContext(), window.Orientation.PORTRAIT)
     }
 

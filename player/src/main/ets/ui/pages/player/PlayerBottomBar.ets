@@ -5,7 +5,12 @@ import { AbilityStorage } from '../../../storage/AbilityStorage'
 import { Modifiers } from '../../attributemodifier/Modifiers'
 import { CircleIconButton } from '../../button/CircleIconButton'
 import { PlayerProgressBar } from './PlayerProgressBar'
-import { SymbolGlyphModifier } from '@kit.ArkUI'
+import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI'
+import { TrackMetadata } from '../../../metadata/TrackMetadata'
+import { pickSingleSubtitleFile } from '../../../utils/PickerUtils'
+import { fileIo, fileUri } from '@kit.CoreFileKit'
+import { compile } from '../../../lib/ass_compiler'
+import { SubtitleInfo } from '../../../subtitle/SubtitleInfo'
 
 @ComponentV2
 export struct PlayerBottomBar {
@@ -20,6 +25,9 @@ export struct PlayerBottomBar {
     "player_context",
     () => new PlayerContext()
   )!
+
+  @Local
+  showSubtitlesMenu: boolean = false
   @Local
   showSpeedMenu: boolean = false
 
@@ -50,6 +58,22 @@ export struct PlayerBottomBar {
         })
         Blank()
           .layoutWeight(1)
+        CircleIconButton({
+          icon: $r("sys.symbol.questionmark_circle"),
+          buttonMargin: {
+            right: 16,
+            bottom: 12
+          },
+          clickCallback: () => {
+            this.showSubtitlesMenu = false // refresh menu status
+            this.showSubtitlesMenu = true
+          }
+        })
+          .bindMenu(this.showSubtitlesMenu!!, this.subtitlesMenu, {
+            onDisappear: () => {
+              this.showSubtitlesMenu = false
+            }
+          })
         CircleIconButton({
           icon: $r("sys.symbol.chevron_left_2"),
           buttonMargin: {
@@ -142,6 +166,68 @@ export struct PlayerBottomBar {
         }
       })
     }
+  }
+
+  @Builder
+  private subtitlesMenu() {
+    Menu() {
+      MenuItemGroup() {
+        MenuItem({
+          content: $r('app.string.no_subtitle'),
+          symbolEndIcon: this.playerContext.selectedSubtitle == undefined ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+        })
+          .onClick(() => {
+            if (this.playerContext.selectedSubtitle == undefined)
+              return
+            this.playerContext.selectedSubtitle = undefined
+          })
+      }
+      if (this.playerContext.subtitles.length > 0) {
+        MenuItemGroup() {
+          ForEach(this.playerContext.subtitles, (subtitle: SubtitleInfo, index) => {
+            MenuItem({
+              content: subtitle.title,
+              symbolEndIcon: this.playerContext.selectedSubtitle === index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+            })
+              .onClick(() => {
+                if (this.playerContext.selectedSubtitle == index)
+                  return
+                this.playerContext.selectedSubtitle = index
+              })
+          })
+        }
+      }
+      MenuItemGroup() {
+        MenuItem({
+          content: $r('app.string.open_subtitle')
+        })
+          .onClick(() => {
+            pickSingleSubtitleFile(this.getUIContext())
+              .then((file) => {
+                if (file == undefined)
+                  return
+                if (!file.endsWith(".ass"))
+                  return
+                let compiledASS = compile(fileIo.readTextSync(new fileUri.FileUri(file).path), void 0)
+                let title = compiledASS.info.Title
+                if (title == undefined || title == "")
+                  title = new fileUri.FileUri(file).name
+                this.playerContext.subtitles.push({
+                  title: title,
+                  language: undefined,
+                  url: file,
+                  type: 'ass'
+                })
+              })
+          })
+      }
+    }
+    .menuItemGroupDivider({
+      color: $r("sys.color.comp_background_tertiary"),
+      strokeWidth: LengthMetrics.vp(8),
+      startMargin: LengthMetrics.vp(0),
+      endMargin: LengthMetrics.vp(0)
+    })
   }
 
   private speedToText(speed: number): ResourceStr {

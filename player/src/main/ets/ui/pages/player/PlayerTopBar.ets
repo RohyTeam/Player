@@ -4,6 +4,7 @@ import { AbilityStorage } from '../../../storage/AbilityStorage'
 import { Modifiers } from '../../attributemodifier/Modifiers'
 import { TopAvoidArea } from '../../avoidarea/TopAvoidArea'
 import { CircleIconButton } from '../../button/CircleIconButton'
+import { WindowManager } from '../../manager/WindowManager'
 
 @ComponentV2
 export struct PlayerTopBar {
@@ -35,6 +36,9 @@ export struct PlayerTopBar {
             bottom: 12
           },
           clickCallback: () => {
+            WindowManager.setFullscreen(this.getUIContext(), false)
+            WindowManager.setStatusBar(this.getUIContext(), true)
+            WindowManager.setNavigationIndicator(this.getUIContext(), true)
             this.indexNavigator.pop()
           }
         })

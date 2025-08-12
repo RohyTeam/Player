@@ -1,6 +1,11 @@
 import { UIContext, window } from '@kit.ArkUI';
 import { common, Context } from '@kit.AbilityKit';
 import PlayerAbility from '../application/ability/PlayerAbility';
+import PlayerAbilityStage from '../application/abilitystage/PlayerAbilityStage';
+
+export function superContext(): Context {
+  return PlayerAbilityStage.getContext()
+}
 
 export function abilityKey(context: UIContext | Context): string {
   let identifier = ability(context).getIdentifier()
