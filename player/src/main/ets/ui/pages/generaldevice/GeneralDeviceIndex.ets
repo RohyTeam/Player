@@ -1,3 +1,4 @@
+import { Pref } from '../../../context/PreferenceContext'
 import { Wanter } from '../../../context/WantAnnouncer'
 import { PlayerContext } from '../../../player/PlayerContext'
 import { AbilityStorage } from '../../../storage/AbilityStorage'
@@ -9,12 +10,7 @@ export struct GeneralDeviceIndex {
   @Provider("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
   @Local
-  playerContext: PlayerContext = AbilityStorage.connect(
-    this.getUIContext(),
-    PlayerContext,
-    "player_context",
-    () => new PlayerContext()
-  )!
+  playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
 
   onDidBuild(): void {
     if (this.playerContext.video && this.playerContext.videoSource != undefined) {

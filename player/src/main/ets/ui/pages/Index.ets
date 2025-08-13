@@ -1,15 +1,12 @@
 import { PCIndex } from './2in1/PCIndex';
 import { GeneralDeviceIndex } from './generaldevice/GeneralDeviceIndex';
 import { Sys } from '../../context/SystemContext';
-import { PreferenceContext } from '../../context/PreferenceContext';
+import { Pref, PreferenceContext } from '../../context/PreferenceContext';
 import { AppStorageV2 } from '@kit.ArkUI';
 
 @Entry
 @ComponentV2
 struct Index {
-  @Local
-  preferenceContext: PreferenceContext =
-    AppStorageV2.connect(PreferenceContext, "preferences", () => new PreferenceContext())!
 
   build() {
     RelativeContainer() {
@@ -19,6 +16,9 @@ struct Index {
         GeneralDeviceIndex()
       }
     }
+    .width("100%")
+    .height("100%")
     .backgroundColor($r("app.color.rohy_background"))
   }
+
 }

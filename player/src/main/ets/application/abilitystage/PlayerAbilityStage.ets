@@ -1,10 +1,11 @@
 import { AbilityStage, Want } from '@kit.AbilityKit'
-import { PreferenceContext } from '../../context/PreferenceContext'
+import { Pref, PreferenceContext } from '../../context/PreferenceContext'
 import { Sys, SystemContext } from '../../context/SystemContext'
 import { DB } from '../../database/DatabaseManager'
 import { randomString } from '../../utils/StringUtils'
 import { taskpool } from '@kit.ArkTS'
 import { superContext } from '../../utils/AbilityUtils'
+import { setColorMode } from '../../utils/ConfigurationUtils'
 
 @Concurrent
 function periodJob(): void {

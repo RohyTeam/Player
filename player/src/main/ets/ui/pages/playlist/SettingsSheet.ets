@@ -1,4 +1,4 @@
-import { PreferenceContext } from '../../../context/PreferenceContext'
+import { Pref, PreferenceContext } from '../../../context/PreferenceContext'
 import { InnerButton } from '../../component/inner/InnerButton'
 import { InnerSegment } from '../../component/inner/InnerSegment'
 import { InnerComponentSet } from '../../component/inner/InnerComponentSet'
@@ -7,15 +7,13 @@ import { InnerContainerDivider } from '../../component/inner/InnerContainerDivid
 import { AppStorageV2 } from '@kit.ArkUI'
 import { InnerSwitch } from '../../component/inner/InnerSwitch'
 import { InnerDivider } from '../../component/inner/InnerDivider'
+import { setColorMode } from '../../../utils/ConfigurationUtils'
 
 @ComponentV2
 export struct SettingsSheet {
   @Event
   close: () => void = () => {
   }
-  @Local
-  preferenceContext: PreferenceContext =
-    AppStorageV2.connect(PreferenceContext, "preferences", () => new PreferenceContext())!
 
   build() {
     InnerContainer({
@@ -35,24 +33,27 @@ export struct SettingsSheet {
       InnerComponentSet() {
         InnerSegment({
           title: $r("app.string.color_mode"),
-          initialSelected: this.preferenceContext.colorMode,
+          initialSelected: Pref.colorMode,
           choices: [
             {
               title: $r("app.string.color_mode_system"),
               action: () => {
-                this.preferenceContext.colorMode = ThemeColorMode.SYSTEM
+                Pref.colorMode = ThemeColorMode.SYSTEM
+                // setColorMode(this.getUIContext(), ThemeColorMode.SYSTEM)
               }
             },
             {
               title: $r("app.string.color_mode_light"),
               action: () => {
-                this.preferenceContext.colorMode = ThemeColorMode.LIGHT
+                Pref.colorMode = ThemeColorMode.LIGHT
+                // setColorMode(this.getUIContext(), ThemeColorMode.LIGHT)
               }
             },
             {
               title: $r("app.string.color_mode_dark"),
               action: () => {
-                this.preferenceContext.colorMode = ThemeColorMode.DARK
+                Pref.colorMode = ThemeColorMode.DARK
+                // setColorMode(this.getUIContext(), ThemeColorMode.DARK)
               }
             }
           ]

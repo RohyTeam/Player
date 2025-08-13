@@ -10,6 +10,8 @@ import { MetadataCache } from '../../cache/MetadataCache';
 import { LocalFileVideoSource } from '../../player/VideoSource';
 import { fileUri } from '@kit.CoreFileKit';
 import { Wanter } from '../../context/WantAnnouncer';
+import { setColorMode } from '../../utils/ConfigurationUtils';
+import { Pref } from '../../context/PreferenceContext';
 
 export default class PlayerAbility extends UIAbility {
   private static contextToAbilityMappings: Map<common.UIAbilityContext, PlayerAbility> = new Map()
@@ -34,6 +36,8 @@ export default class PlayerAbility extends UIAbility {
     this.key = randomString(32)
     PlayerAbility.contextToAbilityMappings.set(this.context, this)
     await this.resolveWantUri(want.uri)
+
+    setColorMode(this.context, Pref.colorMode)
   }
 
   onDestroy(): void {
