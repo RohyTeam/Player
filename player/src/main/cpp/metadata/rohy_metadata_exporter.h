@@ -20,16 +20,7 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-struct AVFormatContextDeleter {
-    void operator()(AVFormatContext* ctx) const {
-        if (ctx) {
-            if (!(ctx->oformat->flags & AVFMT_NOFILE)) {
-                avio_closep(&ctx->pb);
-            }
-            avformat_free_context(ctx);
-        }
-    }
-};
+#include "rohy_metadata_shared.h"
 
 struct AVIOContextDeleter {
     void operator()(AVIOContext* ctx) const {
@@ -48,7 +39,7 @@ struct StreamExtractConfig {
 
 class RohyMetadataExporter {
 public:
-    static void extract_multiple_streams(const std::string& input_file, std::vector<StreamExtractConfig>& configs);
+    static void extract_multiple_streams(const std::string& url, std::vector<Header> headers, std::vector<StreamExtractConfig>& configs);
 };
 
 #endif //ROHYPLAYER_ROHY_METADATA_EXPORTER_H

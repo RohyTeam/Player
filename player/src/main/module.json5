@@ -26,9 +26,7 @@
         "exported": true,
         "continuable": true,
         "backgroundModes": [
-          "audioPlayback",
-          "taskKeeping",
-          "dataTransfer"
+          "audioPlayback"
         ],
         "removeMissionAfterTerminate": true,
         "skills": [
@@ -84,6 +82,9 @@
       },
       {
         name: "ohos.permission.FILE_ACCESS_PERSIST"
+      },
+      {
+        name: "ohos.permission.KEEP_BACKGROUND_RUNNING"
       },
       {
         name: "ohos.permission.DISTRIBUTED_DATASYNC",

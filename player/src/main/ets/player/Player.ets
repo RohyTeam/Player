@@ -61,6 +61,8 @@ export interface Player {
 
   onCompleted(callback: () => void): void
 
+  getContext(): Context
+
 }
 
 abstract class AbstractPlayer implements Player {
@@ -230,6 +232,10 @@ abstract class AbstractPlayer implements Player {
 
   onCompleted(callback: () => void): void {
     this.onCompletedCallback = callback
+  }
+
+  getContext(): Context {
+    return this.context!
   }
 }
 

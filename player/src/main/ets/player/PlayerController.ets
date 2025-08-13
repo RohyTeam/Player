@@ -1,3 +1,4 @@
+import { BackgroundTaskContext } from '../context/BackgroundTaskContext';
 import { WindowContext } from '../context/WindowContext';
 import { Player } from './Player';
 import { SurfaceFillingMode } from './SurfaceFillingMode';
@@ -62,7 +63,10 @@ export class PlayerController {
   }
 
   play(): void {
-    this.player?.play()
+    if (!this.player)
+      return
+    BackgroundTaskContext.startBackgroundTask(this.player.getContext(), this)
+    this.player.play()
   }
 
   pause(): void {

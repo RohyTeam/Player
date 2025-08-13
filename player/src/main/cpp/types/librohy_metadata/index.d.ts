@@ -1,1 +1,0 @@
-export const RohyMetedata_getMetadata: (path: string) => object | undefined;

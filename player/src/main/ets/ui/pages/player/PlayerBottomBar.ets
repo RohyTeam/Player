@@ -11,6 +11,7 @@ import { pickSingleSubtitleFile } from '../../../utils/PickerUtils'
 import { fileIo, fileUri } from '@kit.CoreFileKit'
 import { compile } from '../../../lib/ass_compiler'
 import { SubtitleInfo } from '../../../subtitle/SubtitleInfo'
+import { menuGroups, buildMenuGroup, RohyMenu, RohyMenuItem } from '../../component/menu/RohyMenu'
 
 @ComponentV2
 export struct PlayerBottomBar {
@@ -170,63 +171,67 @@ export struct PlayerBottomBar {
 
   @Builder
   private subtitlesMenu() {
-    Menu() {
-      MenuItemGroup() {
-        MenuItem({
-          content: $r('app.string.no_subtitle'),
-          symbolEndIcon: this.playerContext.selectedSubtitle == undefined ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
-        })
-          .onClick(() => {
-            if (this.playerContext.selectedSubtitle == undefined)
-              return
-            this.playerContext.selectedSubtitle = undefined
-          })
-      }
-      if (this.playerContext.subtitles.length > 0) {
-        MenuItemGroup() {
-          ForEach(this.playerContext.subtitles, (subtitle: SubtitleInfo, index) => {
-            MenuItem({
-              content: subtitle.title,
-              symbolEndIcon: this.playerContext.selectedSubtitle === index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
-            })
-              .onClick(() => {
+    RohyMenu({
+      groups: menuGroups(() => [
+        buildMenuGroup(() => [
+          {
+            options: {
+              content: $r('app.string.no_subtitle'),
+              symbolEndIcon: this.playerContext.selectedSubtitle == undefined ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+            },
+            action: () => {
+              if (this.playerContext.selectedSubtitle == undefined)
+                return
+              this.playerContext.selectedSubtitle = undefined
+            }
+          }
+        ]),
+        buildMenuGroup(() => {
+          if (this.playerContext.subtitles.length == 0)
+            return undefined
+          let items: RohyMenuItem[] = []
+          this.playerContext.subtitles.forEach((subtitle, index) => {
+            items.push({
+              options: {
+                content: subtitle.title,
+                symbolEndIcon: this.playerContext.selectedSubtitle === index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+              },
+              action: () => {
                 if (this.playerContext.selectedSubtitle == index)
                   return
                 this.playerContext.selectedSubtitle = index
-              })
+              }
+            })
           })
-        }
-      }
-      MenuItemGroup() {
-        MenuItem({
-          content: $r('app.string.open_subtitle')
-        })
-          .onClick(() => {
-            pickSingleSubtitleFile(this.getUIContext())
-              .then((file) => {
-                if (file == undefined)
-                  return
-                if (!file.endsWith(".ass"))
-                  return
-                let compiledASS = compile(fileIo.readTextSync(new fileUri.FileUri(file).path), void 0)
-                let title = compiledASS.info.Title
-                if (title == undefined || title == "")
-                  title = new fileUri.FileUri(file).name
-                this.playerContext.subtitles.push({
-                  title: title,
-                  language: undefined,
-                  url: file,
-                  type: 'ass'
+          return items
+        }),
+        buildMenuGroup(() => [
+          {
+            options: {
+              content: $r('app.string.open_subtitle')
+            },
+            action: () => {
+              pickSingleSubtitleFile(this.getUIContext())
+                .then((file) => {
+                  if (file == undefined)
+                    return
+                  if (!file.endsWith(".ass"))
+                    return
+                  let compiledASS = compile(fileIo.readTextSync(new fileUri.FileUri(file).path), void 0)
+                  let title = compiledASS.info.Title
+                  if (title == undefined || title == "")
+                    title = new fileUri.FileUri(file).name
+                  this.playerContext.subtitles.push({
+                    title: title,
+                    language: undefined,
+                    url: file,
+                    type: 'ass'
+                  })
                 })
-              })
-          })
-      }
-    }
-    .menuItemGroupDivider({
-      color: $r("sys.color.comp_background_tertiary"),
-      strokeWidth: LengthMetrics.vp(8),
-      startMargin: LengthMetrics.vp(0),
-      endMargin: LengthMetrics.vp(0)
+            }
+          }
+        ])
+      ])
     })
   }
 

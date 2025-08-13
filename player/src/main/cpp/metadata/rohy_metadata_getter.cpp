@@ -7,11 +7,6 @@ extern "C" {
 #include <libavutil/imgutils.h>
 }
 
-struct AVFormatContextDeleter {
-    void operator()(AVFormatContext* ctx) const {
-        if (ctx) avformat_close_input(&ctx);
-    }
-};
 using AVFormatContextPtr = std::unique_ptr<AVFormatContext, AVFormatContextDeleter>;
 
 struct AVCodecContextDeleter {
@@ -216,35 +211,60 @@ namespace {
     }
 }
 
-VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& filename) {
+VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& url, std::vector<Header> headers) {
     VideoMetadata meta;
     try {
         avformat_network_init();
         
-        AVFormatContext* raw_fmt_ctx = nullptr;
-        if (avformat_open_input(&raw_fmt_ctx, filename.c_str(), nullptr, nullptr) < 0) {
+        AVFormatContext* fmt_ctx = nullptr;
+        AVDictionary* options = nullptr;
+        
+        if (!headers.empty()) {
+            std::string header_str;
+            for (const auto& header : headers) {
+                if (header.key && header.value) {
+                    header_str += std::string(header.key) + ": " + header.value + "\r\n";
+                }
+            }
+            
+            if (!header_str.empty()) {
+                av_dict_set(&options, "headers", header_str.c_str(), 0);
+            }
+        }
+        if (url.find("http://") == 0 || url.find("https://") == 0) {
+            av_dict_set(&options, "rw_timeout", "5000000", 0);
+            av_dict_set(&options, "reconnect", "1", 0);
+            av_dict_set(&options, "reconnect_at_eof", "1", 0);
+            av_dict_set(&options, "reconnect_streamed", "1", 0);
+        }
+        
+        if (avformat_open_input(&fmt_ctx, url.c_str(), nullptr, &options) < 0) {
             meta.set_error(1, "无法打开文件");
             return meta;
         }
-        AVFormatContextPtr fmt_ctx(raw_fmt_ctx);
+        auto input_ctx_deleter = [&options](AVFormatContext* ctx) { 
+            avformat_close_input(&ctx); 
+            av_dict_free(&options);
+        };
+        std::unique_ptr<AVFormatContext, decltype(input_ctx_deleter)> fmt_ctx_ptr(fmt_ctx, input_ctx_deleter);
         
-        if (avformat_find_stream_info(fmt_ctx.get(), nullptr) < 0) {
+        if (avformat_find_stream_info(fmt_ctx_ptr.get(), nullptr) < 0) {
             meta.set_error(2, "无法获取流信息");
             return meta;
         }
         
-        if (fmt_ctx->duration != AV_NOPTS_VALUE) {
-            meta.duration = fmt_ctx->duration * 1000 / AV_TIME_BASE;
+        if (fmt_ctx_ptr->duration != AV_NOPTS_VALUE) {
+            meta.duration = fmt_ctx_ptr->duration * 1000 / AV_TIME_BASE;
         }
-        meta.bitrate = fmt_ctx->bit_rate;
+        meta.bitrate = fmt_ctx_ptr->bit_rate;
         
-        int video_stream_idx = av_find_best_stream(fmt_ctx.get(), AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+        int video_stream_idx = av_find_best_stream(fmt_ctx_ptr.get(), AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
         if (video_stream_idx < 0) {
             meta.set_error(3, "未找到视频流");
             return meta;
         }
         
-        AVStream* video_stream = fmt_ctx->streams[video_stream_idx];
+        AVStream* video_stream = fmt_ctx_ptr->streams[video_stream_idx];
         AVCodecParameters* codecpar = video_stream->codecpar;
         
         meta.width = codecpar->width;
@@ -260,11 +280,11 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
             meta.codec_full = codec->long_name ? codec->long_name : "";
         }
         
-        if (fmt_ctx->nb_chapters > 0) {
-            meta.chapters.reserve(fmt_ctx->nb_chapters);
+        if (fmt_ctx_ptr->nb_chapters > 0) {
+            meta.chapters.reserve(fmt_ctx_ptr->nb_chapters);
             
-            for (int i = 0; i < fmt_ctx->nb_chapters; i++) {
-                AVChapter* chapter = fmt_ctx->chapters[i];
+            for (int i = 0; i < fmt_ctx_ptr->nb_chapters; i++) {
+                AVChapter* chapter = fmt_ctx_ptr->chapters[i];
                 ChapterMetadata cm;
                 
                 cm.start = time_base_to_ms(chapter->time_base, chapter->start);
@@ -277,10 +297,10 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
             }
         }
         
-        meta.tracks.reserve(fmt_ctx->nb_streams);
+        meta.tracks.reserve(fmt_ctx_ptr->nb_streams);
         
-        for (int i = 0; i < fmt_ctx->nb_streams; i++) {
-            AVStream* stream = fmt_ctx->streams[i];
+        for (int i = 0; i < fmt_ctx_ptr->nb_streams; i++) {
+            AVStream* stream = fmt_ctx_ptr->streams[i];
             TrackMetadata track;
             
             track.index = i;
@@ -335,12 +355,12 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
             meta.tracks.push_back(std::move(track));
         }
         
-        int cover_stream_index = find_cover_track(fmt_ctx.get());
+        int cover_stream_index = find_cover_track(fmt_ctx_ptr.get());
         
         if (cover_stream_index >= 0) {
             AVPacketPtr pkt(av_packet_alloc());
             
-            if (av_read_frame(fmt_ctx.get(), pkt.get()) >= 0 && 
+            if (av_read_frame(fmt_ctx_ptr.get(), pkt.get()) >= 0 && 
                 pkt->stream_index == cover_stream_index) {
                 meta.cover.assign(pkt->data, pkt->data + pkt->size);
             }
@@ -348,10 +368,10 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
         
         if (meta.cover.empty()) {
             int video_stream_index = av_find_best_stream(
-                fmt_ctx.get(), AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+                fmt_ctx_ptr.get(), AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
                 
             if (video_stream_index >= 0) {
-                meta.cover = extract_cover_image(fmt_ctx.get(), video_stream_index);
+                meta.cover = extract_cover_image(fmt_ctx_ptr.get(), video_stream_index);
             }
         }
         
@@ -367,24 +387,50 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
     return meta;
 }
 
-int RohyMetadataGetter::extract_frame(const std::string& input_path, 
+int RohyMetadataGetter::extract_frame(const std::string& url, 
                   const std::string& output_path, 
-                  int64_t target_frame) {
-    AVFormatContext* raw_fmt_ctx = nullptr;
-    if (avformat_open_input(&raw_fmt_ctx, input_path.c_str(), nullptr, nullptr) != 0) {
-        fprintf(stderr, "Could not open video file: %s\n", input_path.c_str());
+                  int64_t target_frame, 
+                  std::vector<Header> headers) {
+    AVFormatContext* fmt_ctx = nullptr;
+    AVDictionary* options = nullptr;
+    
+    if (!headers.empty()) {
+        std::string header_str;
+        for (const auto& header : headers) {
+            if (header.key && header.value) {
+                header_str += std::string(header.key) + ": " + header.value + "\r\n";
+            }
+        }
+        
+        if (!header_str.empty()) {
+            av_dict_set(&options, "headers", header_str.c_str(), 0);
+        }
+    }
+    if (url.find("http://") == 0 || url.find("https://") == 0) {
+        av_dict_set(&options, "rw_timeout", "5000000", 0);
+        av_dict_set(&options, "reconnect", "1", 0);
+        av_dict_set(&options, "reconnect_at_eof", "1", 0);
+        av_dict_set(&options, "reconnect_streamed", "1", 0);
+    }
+    
+    if (avformat_open_input(&fmt_ctx, url.c_str(), nullptr, &options) < 0) {
+        fprintf(stderr, "Could not open video file: %s\n", url.c_str());
         return -1;
     }
-    AVFormatContextPtr fmt_ctx(raw_fmt_ctx);
+    auto input_ctx_deleter = [&options](AVFormatContext* ctx) { 
+        avformat_close_input(&ctx); 
+        av_dict_free(&options);
+    };
+    std::unique_ptr<AVFormatContext, decltype(input_ctx_deleter)> fmt_ctx_ptr(fmt_ctx, input_ctx_deleter);
     
-    if (avformat_find_stream_info(fmt_ctx.get(), nullptr) < 0) {
+    if (avformat_find_stream_info(fmt_ctx_ptr.get(), nullptr) < 0) {
         fprintf(stderr, "Could not find stream information\n");
         return -1;
     }
     
     int video_stream_index = -1;
-    for (int i = 0; i < fmt_ctx->nb_streams; i++) {
-        if (fmt_ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+    for (int i = 0; i < fmt_ctx_ptr->nb_streams; i++) {
+        if (fmt_ctx_ptr->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
             video_stream_index = i;
             break;
         }
@@ -395,7 +441,7 @@ int RohyMetadataGetter::extract_frame(const std::string& input_path,
         return -1;
     }
     
-    const AVCodecParameters* codec_params = fmt_ctx->streams[video_stream_index]->codecpar;
+    const AVCodecParameters* codec_params = fmt_ctx_ptr->streams[video_stream_index]->codecpar;
     const AVCodec* codec = avcodec_find_decoder(codec_params->codec_id);
     if (!codec) {
         fprintf(stderr, "Unsupported codec\n");
@@ -465,7 +511,7 @@ int RohyMetadataGetter::extract_frame(const std::string& input_path,
     int64_t current_frame = 0;
     bool frame_found = false;
     
-    while (av_read_frame(fmt_ctx.get(), pkt.get()) >= 0) {
+    while (av_read_frame(fmt_ctx_ptr.get(), pkt.get()) >= 0) {
         if (pkt->stream_index != video_stream_index) {
             av_packet_unref(pkt.get());
             continue;

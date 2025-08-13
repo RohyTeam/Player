@@ -10,12 +10,7 @@ export struct GeneralControlPanel {
   @Consumer("playerController")
   playerController: PlayerController = new PlayerController()
   @Local
-  playerContext: PlayerContext = AbilityStorage.connect(
-    this.getUIContext(),
-    PlayerContext,
-    "player_context",
-    () => new PlayerContext()
-  )!
+  playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
   @Local
   showControllerBar: boolean = false
 

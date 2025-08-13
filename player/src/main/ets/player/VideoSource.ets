@@ -1,6 +1,7 @@
 import { VideoMetadata } from '../metadata/VideoMetadata'
 import { hash } from '@kit.CoreFileKit'
 import { stringToBytes } from '../utils/StringUtils'
+import { sha256 } from '../utils/HashUtils'
 
 export interface VideoSource {
 
@@ -38,9 +39,7 @@ export class LocalFileVideoSource implements VideoSource {
   }
 
   identity(): string {
-    let hasher = hash.createHash("sha256")
-    hasher.update(stringToBytes(`files:${this.fileUrl}`).buffer)
-    return hasher.digest()
+    return sha256(`files:${this.fileUrl}`)
   }
 
   metadata(): VideoMetadata {

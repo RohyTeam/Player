@@ -10,6 +10,8 @@ import { AbilityStorage } from '../../../../storage/AbilityStorage'
 import { LocalFileVideoSource } from '../../../../player/VideoSource'
 import { PlayerController } from '../../../../player/PlayerController'
 import { MetadataCache } from '../../../../cache/MetadataCache'
+import { buildMenuGroup, menuGroups, RohyMenu, RohyMenuItem } from '../../../component/menu/RohyMenu'
+import { ability, ensureContext, ensureUIAbilityContext } from '../../../../utils/AbilityUtils'
 
 @ComponentV2
 export struct PCControlPanel {
@@ -75,44 +77,67 @@ export struct PCControlPanel {
 
   @Builder
   private RightClickContextMenu() {
-    Menu() {
-      MenuItemGroup() {
-        MenuItem({ content: $r('app.string.context_menu_open') })
-          .onClick(() => {
-            this.playerController.release()
-            pickSingleVideoFile(this.getUIContext())
-              .then(async (path) => {
-                if (path == undefined) {
-                  console.error(`metadata path: ${path}`)
-                  return
-                }
-                let metadata = await MetadataCache.getOrCreate(path)
-                this.playerContext.video = true
-                this.playerContext.videoSource = new LocalFileVideoSource(
-                  metadata,
-                  path,
-                  new fileUri.FileUri(path).name
-                )
-              })
-          })
-        if (this.playerContext.video) {
-          MenuItem({ content: $r('app.string.context_menu_open_subtitle') })
-            .onClick(() => {
-              // todo
-            })
-          MenuItem({ content: $r('app.string.context_menu_close_file') })
-            .onClick(() => {
-              this.playerController.release()
-            })
-        }
-      }
+    RohyMenu({
+      groups: menuGroups(() => [
+        buildMenuGroup(() => {
+          let items: RohyMenuItem[] = []
 
-      MenuItemGroup() {
-        MenuItem({ content: $r("app.string.context_menu_settings") })
-          .onClick(() => {
-            // todo
+          items.push({
+            options: {
+              content: $r('app.string.context_menu_open')
+            },
+            action: () => {
+              this.playerController.release()
+              pickSingleVideoFile(this.getUIContext())
+                .then(async (path) => {
+                  if (path == undefined) {
+                    console.error(`metadata path: ${path}`)
+                    return
+                  }
+                  let metadata = await MetadataCache.getOrCreate(path)
+                  this.playerContext.video = true
+                  this.playerContext.videoSource = new LocalFileVideoSource(
+                    metadata,
+                    path,
+                    new fileUri.FileUri(path).name
+                  )
+                })
+            }
           })
-      }
-    }
+
+          if (this.playerContext.video) {
+            items.push({
+              options: {
+                content: $r('app.string.context_menu_close_file')
+              },
+              action: () => {
+                this.playerController.release()
+              }
+            })
+          }
+
+          return items
+        }),
+        buildMenuGroup(() => [
+          {
+            options: {
+              content: $r("app.string.context_menu_settings")
+            },
+            action: () => {
+              // todo
+            }
+          },
+          {
+            options: {
+              content: $r("app.string.exit")
+            },
+            action: () => {
+              this.playerController.release()
+              ensureUIAbilityContext(this.getUIContext()).terminateSelf()
+            }
+          }
+        ])
+      ])
+    })
   }
 }

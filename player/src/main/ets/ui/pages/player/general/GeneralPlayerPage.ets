@@ -7,6 +7,7 @@ import { GeneralControlPanel } from './GeneralControlPanel'
 import { window } from '@kit.ArkUI'
 import { AVSessionContext } from '../../../../context/AVSessionContext'
 import { Sys } from '../../../../context/SystemContext'
+import { BackgroundTaskContext } from '../../../../context/BackgroundTaskContext'
 
 @ComponentV2
 export struct GeneralPlayerPage {
@@ -15,12 +16,7 @@ export struct GeneralPlayerPage {
   @Provider("playerController")
   playerController: PlayerController = new PlayerController()
   @Local
-  playerContext: PlayerContext = AbilityStorage.connect(
-    this.getUIContext(),
-    PlayerContext,
-    "player_context",
-    () => new PlayerContext()
-  )!
+  playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
   @Provider("landscape")
   landscape: boolean = false
 
@@ -36,6 +32,7 @@ export struct GeneralPlayerPage {
     }
 
     AVSessionContext.startSession(this.getUIContext(), this.playerContext.videoSource!, this.playerController)
+    BackgroundTaskContext.startBackgroundTask(this.getUIContext(), this.playerController)
   }
 
   aboutToDisappear(): void {
@@ -43,6 +40,7 @@ export struct GeneralPlayerPage {
       WindowManager.setOrientation(this.getUIContext(), window.Orientation.PORTRAIT)
     }
 
+    BackgroundTaskContext.stopBackgroundTask(this.getUIContext())
     AVSessionContext.stopSession()
   }
 

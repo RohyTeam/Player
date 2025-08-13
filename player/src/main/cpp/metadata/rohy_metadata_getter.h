@@ -7,6 +7,7 @@
 #ifndef ROHYPLAYER_ROHY_METADATA_EXPORTER_H
 #define ROHYPLAYER_ROHY_METADATA_EXPORTER_H
 
+#include "metadata/rohy_metadata_shared.h"
 #include <memory>
 #include <vector>
 #include <string>
@@ -83,10 +84,11 @@ public:
 
 class RohyMetadataGetter {
 public:
-    static int extract_frame(const std::string& input_path, 
+    static int extract_frame(const std::string& url, 
                   const std::string& output_path, 
-                  int64_t target_frame);
-    static VideoMetadata extract_metadata_and_cover(const std::string& filename);
+                  int64_t target_frame, 
+                  std::vector<Header> headers);
+    static VideoMetadata extract_metadata_and_cover(const std::string& url, std::vector<Header> headers);
 };
 
 #endif //ROHYPLAYER_ROHY_METADATA_EXPORTER_H

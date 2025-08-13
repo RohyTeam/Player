@@ -14,11 +14,11 @@ export class MetadataCache {
     return MetadataCache.cache.get(new fileUri.FileUri(uriOrPath).path)!
   }
 
-  public static async getOrCreate(uriOrPath: string): Promise<VideoMetadata> {
+  public static async getOrCreate(uriOrPath: string, headers?: Record<string, string>): Promise<VideoMetadata> {
     let metadata = MetadataCache.cache.get(new fileUri.FileUri(uriOrPath).path)
     if (metadata === undefined) {
       let uri = new fileUri.FileUri(uriOrPath).path
-      let tempMetadata = RohyMetadata.RohyMetedata_getMetadata(uri)
+      let tempMetadata = RohyMetadata.RohyMetedata_getMetadata(uri, headers)
       if (!tempMetadata) {
         throw Error("metadata is undefined")
       }

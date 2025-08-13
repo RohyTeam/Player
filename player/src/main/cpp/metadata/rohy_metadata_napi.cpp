@@ -1,22 +1,62 @@
+#include <cstdint>
 #include <stdio.h>
 #include <string.h>
 #include "hilog/log.h"
+#include "metadata/rohy_metadata_shared.h"
 #include "utils/napi_utils.h"
 #include "rohy_metadata_getter.h"
 
 napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "GetMetadata", "Starting getting metadata");
-    size_t argc = 1;
-    napi_value args[1] = {nullptr};
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
     if (napi_ok != napi_get_cb_info(env, info, &argc, args, nullptr, nullptr)) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ParseId", "GetContext napi_get_cb_info failed");
         return nullptr;
     }
     std::string fileUrl;
     NapiUtils::JsValueToString(env, args[0], 2048, fileUrl);
+    
+    napi_valuetype headersType;
+    napi_typeof(env, args[1], &headersType);
+    
+    std::vector<Header> headers;
+    
+    if (headersType != napi_undefined) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "GetMetadata", "processing headers");
+        
+        napi_value jsHeaders = args[1];
+        
+        napi_value property_names;
+        napi_get_property_names(env, jsHeaders, &property_names);
+        
+        uint32_t properties_size; 
+        napi_get_array_length(env, property_names, &properties_size);
+        
+        for (int i = 0; i < properties_size; i++) {
+            napi_value element;
+            napi_get_element(env, property_names, i, &element);
+            
+            std::string key;
+            NapiUtils::JsValueToString(env, element, 2048, key);
+            
+            napi_value jsValue;
+            napi_get_named_property(env, jsHeaders, key.c_str(), &jsValue);
+            
+            std::string value;
+            NapiUtils::JsValueToString(env, jsValue, 2048, value);
+            
+            headers.push_back(Header {
+                .key = key.c_str(),
+                .value = value.c_str()
+            });
+        }
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "GetMetadata", "headers processed");
+    }
 
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "GetMetadata", "Starting extracting");
-    VideoMetadata meta = RohyMetadataGetter::extract_metadata_and_cover(fileUrl.c_str());
+    VideoMetadata meta = RohyMetadataGetter::extract_metadata_and_cover(fileUrl.c_str(), headers);
+    
     if (!meta.success) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractVideoMetadata", "Failed to extract metadata");
         return nullptr;

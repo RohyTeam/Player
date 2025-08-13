@@ -139,16 +139,36 @@ void prepare_stream_output(AVFormatContext* input_ctx, StreamExtractConfig& conf
     }
 }
 
-void RohyMetadataExporter::extract_multiple_streams(const std::string& input_file, std::vector<StreamExtractConfig>& configs) {
+void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std::vector<Header> headers, std::vector<StreamExtractConfig>& configs) {
     AVFormatContext* input_ctx = nullptr;
     AVDictionary* options = nullptr;
     
     av_dict_set(&options, "probesize", "100000000", 0);
     av_dict_set(&options, "analyzeduration", "10000000", 0);
     
-    int ret = avformat_open_input(&input_ctx, input_file.c_str(), nullptr, &options);
+    if (!headers.empty()) {
+        std::string header_str;
+        for (const auto& header : headers) {
+            if (header.key && header.value) {
+                header_str += std::string(header.key) + ": " + header.value + "\r\n";
+            }
+        }
+        
+        if (!header_str.empty()) {
+            av_dict_set(&options, "headers", header_str.c_str(), 0);
+        }
+    }
+    
+    if (url.find("http://") == 0 || url.find("https://") == 0) {
+        av_dict_set(&options, "rw_timeout", "5000000", 0);
+        av_dict_set(&options, "reconnect", "1", 0);
+        av_dict_set(&options, "reconnect_at_eof", "1", 0);
+        av_dict_set(&options, "reconnect_streamed", "1", 0);
+    }
+    
+    int ret = avformat_open_input(&input_ctx, url.c_str(), nullptr, &options);
     if (ret < 0) {
-        throw std::runtime_error("无法打开输入文件 '" + input_file + "': " + std::to_string(ret));
+        throw std::runtime_error("无法打开输入文件 '" + url + "': " + std::to_string(ret));
     }
     
     auto input_ctx_deleter = [&options](AVFormatContext* ctx) { 
@@ -162,7 +182,7 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& input_fil
         throw std::runtime_error("无法获取流信息: " + std::to_string(ret));
     }
 
-    av_dump_format(input_ctx, 0, input_file.c_str(), 0);
+    av_dump_format(input_ctx, 0, url.c_str(), 0);
     
     for (auto& config : configs) {
         if (config.stream_index < 0 || config.stream_index >= input_ctx->nb_streams) {

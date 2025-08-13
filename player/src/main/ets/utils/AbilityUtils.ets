@@ -25,6 +25,14 @@ export function ensureContext(context: UIContext | Context): Context {
   }
 }
 
+export function ensureUIAbilityContext(context: UIContext | Context): common.UIAbilityContext {
+  if (context instanceof UIContext) {
+    return context.getHostContext()! as common.UIAbilityContext
+  } else {
+    return context as common.UIAbilityContext
+  }
+}
+
 export function ability(context: UIContext | Context): PlayerAbility {
   let realContext: Context
   if (context instanceof UIContext) {
