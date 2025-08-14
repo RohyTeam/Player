@@ -1,11 +1,5 @@
-//
-// Created on 2025/8/7.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
-
-#ifndef ROHYPLAYER_ROHY_METADATA_EXPORTER_H
-#define ROHYPLAYER_ROHY_METADATA_EXPORTER_H
+#ifndef ROHYPLAYER_ROHY_METADATA_GETTER_H
+#define ROHYPLAYER_ROHY_METADATA_GETTER_H
 
 #include "metadata/rohy_metadata_shared.h"
 #include <memory>
@@ -91,4 +85,4 @@ public:
     static VideoMetadata extract_metadata_and_cover(const std::string& url, std::vector<Header> headers);
 };
 
-#endif //ROHYPLAYER_ROHY_METADATA_EXPORTER_H
+#endif //ROHYPLAYER_ROHY_METADATA_GETTER_H

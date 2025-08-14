@@ -1,26 +1,36 @@
 import { TrackMetadata } from '../metadata/TrackMetadata';
 import { AbilityStorage } from '../storage/AbilityStorage';
-import { SubtitleInfo } from '../subtitle/SubtitleInfo';
+import { SubtitleInfo } from './subtitle/SubtitleInfo';
 import { Player } from './Player';
 import { SurfaceFillingMode } from './SurfaceFillingMode';
 import { VideoSource } from './VideoSource';
+import { AudioInfo } from './audio/AudioInfo';
 
 @ObservedV2
 export class PlayerContext {
+  // play info
   @Trace
   video: boolean = false
   @Trace
-  paused: boolean = true
-  @Trace
   videoSource: VideoSource | undefined = undefined
+
+  // player
   @Trace
   player: Player | undefined = undefined
+
+  // player properties
   @Trace
   playSpeed: number = 1
+
+  // position status
+  @Trace
+  paused: boolean = true
   @Trace
   currentPosition: number = 0
   @Trace
   maxDuration: number = 0
+
+  // ui properties
   @Trace
   playerWidthPx: number = 0
   @Trace
@@ -29,10 +39,18 @@ export class PlayerContext {
   playerWidthVp: number = 0
   @Trace
   playerHeightVp: number = 0
+
+  // track infos
+  @Trace
+  audios: AudioInfo[] = []
+  @Trace
+  selectedAudio: number = 0
   @Trace
   subtitles: SubtitleInfo[] = []
   @Trace
   selectedSubtitle: number | undefined = undefined
+
+  // preferences
   @Trace
   surfaceFillingMode: SurfaceFillingMode = SurfaceFillingMode.Fit
   @Trace

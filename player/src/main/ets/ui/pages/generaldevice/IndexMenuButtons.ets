@@ -8,6 +8,9 @@ import { OpenVideoSheet } from '../playlist/OpenVideoSheet';
 import { fileUri } from '@kit.CoreFileKit';
 import { ImportOrCreatePlaylistSheet } from '../playlist/ImportOrCreatePlaylistSheet';
 import { SettingsSheet } from '../playlist/SettingsSheet';
+import { SavedVideoMetadata } from '../../../metadata/SavedVideoMetadata';
+import { VideoMetadataManager } from '../../../file/VideoMetadataManager';
+import { sha256 } from '../../../utils/HashUtils';
 
 @ComponentV2
 export struct IndexMenuButtons {
@@ -154,19 +157,41 @@ export struct IndexMenuButtons {
         this.showOpenVideoSheet = false
       },
       onPick: async (file) => {
+        let savedMetadata: SavedVideoMetadata
         if (file.source == LocalFiles) {
-          let metadata = await MetadataCache.getOrCreate(file.url)
+          if (VideoMetadataManager.exists(sha256(`files:${file.url}`))) {
+            savedMetadata = VideoMetadataManager.load(sha256(`files:${file.url}`))!
+          } else {
+            let metadata = await MetadataCache.getOrCreate(file.url)
+            savedMetadata = VideoMetadataManager.save(
+              sha256(`files:${file.url}`),
+              false,
+              file.url,
+              metadata
+            )!
+          }
           this.playerContext.video = true
           this.playerContext.videoSource = new LocalFileVideoSource(
-            metadata,
+            false,
+            savedMetadata,
             file.url,
             new fileUri.FileUri(file.url).name
           )
         } else if (file.source == Photos) {
-          let metadata = await MetadataCache.getOrCreate(file.url)
+          if (VideoMetadataManager.exists(sha256(`photos:${file.url}`))) {
+            savedMetadata = VideoMetadataManager.load(sha256(`photos:${file.url}`))!
+          } else {
+            let metadata = await MetadataCache.getOrCreate(file.url)
+            savedMetadata = VideoMetadataManager.save(
+              sha256(`photos:${file.url}`),
+              false,
+              file.url,
+              metadata
+            )!
+          }
           this.playerContext.video = true
           this.playerContext.videoSource = new PhotosVideoSource(
-            metadata,
+            savedMetadata,
             file.url,
             file.title ?? new fileUri.FileUri(file.url).name
           )

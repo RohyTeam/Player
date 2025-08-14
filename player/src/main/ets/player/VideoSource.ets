@@ -2,20 +2,23 @@ import { VideoMetadata } from '../metadata/VideoMetadata'
 import { hash } from '@kit.CoreFileKit'
 import { stringToBytes } from '../utils/StringUtils'
 import { sha256 } from '../utils/HashUtils'
+import { SavedVideoMetadata } from '../metadata/SavedVideoMetadata'
 
 export interface VideoSource {
+
+  database(): boolean
 
   name(): string
 
   identity(): string
 
-  metadata(): VideoMetadata
+  metadata(): SavedVideoMetadata
 
   type(): VideoSourceType
 
   url(): string
 
-  headers(): Map<string, string> | undefined
+  headers(): Record<string, string> | undefined
 
   isNetwork(): boolean
 
@@ -24,14 +27,20 @@ export interface VideoSource {
 }
 
 export class LocalFileVideoSource implements VideoSource {
-  private videoMetadata: VideoMetadata
+  private fromDatabase: boolean
+  private videoMetadata: SavedVideoMetadata
   private fileUrl: string
   private videoName: string
 
-  constructor(videoMetadata: VideoMetadata, fileUrl: string, videoName: string) {
+  constructor(fromDatabase: boolean, videoMetadata: SavedVideoMetadata, fileUrl: string, videoName: string) {
+    this.fromDatabase = fromDatabase
     this.videoMetadata = videoMetadata
     this.fileUrl = fileUrl
     this.videoName = videoName
+  }
+
+  database(): boolean {
+    return this.fromDatabase
   }
 
   name(): string {
@@ -42,7 +51,7 @@ export class LocalFileVideoSource implements VideoSource {
     return sha256(`files:${this.fileUrl}`)
   }
 
-  metadata(): VideoMetadata {
+  metadata(): SavedVideoMetadata {
     return this.videoMetadata
   }
 
@@ -54,7 +63,7 @@ export class LocalFileVideoSource implements VideoSource {
     return this.fileUrl
   }
 
-  headers(): Map<string, string> | undefined {
+  headers(): Record<string, string> | undefined {
     return undefined
   }
 
@@ -64,17 +73,22 @@ export class LocalFileVideoSource implements VideoSource {
 
   prepare(): void {
   }
+
 }
 
 export class PhotosVideoSource implements VideoSource {
-  private videoMetadata: VideoMetadata
+  private videoMetadata: SavedVideoMetadata
   private fileUrl: string
   private videoName: string
 
-  constructor(videoMetadata: VideoMetadata, fileUrl: string, videoName: string) {
+  constructor(videoMetadata: SavedVideoMetadata, fileUrl: string, videoName: string) {
     this.videoMetadata = videoMetadata
     this.fileUrl = fileUrl
     this.videoName = videoName
+  }
+
+  database(): boolean {
+    return false
   }
 
   name(): string {
@@ -82,12 +96,10 @@ export class PhotosVideoSource implements VideoSource {
   }
 
   identity(): string {
-    let hasher = hash.createHash("sha256")
-    hasher.update(stringToBytes(`files:${this.fileUrl}`).buffer)
-    return hasher.digest()
+    return sha256(`photos:${this.fileUrl}`)
   }
 
-  metadata(): VideoMetadata {
+  metadata(): SavedVideoMetadata {
     return this.videoMetadata
   }
 
@@ -99,7 +111,7 @@ export class PhotosVideoSource implements VideoSource {
     return this.fileUrl
   }
 
-  headers(): Map<string, string> | undefined {
+  headers(): Record<string, string> | undefined {
     return undefined
   }
 

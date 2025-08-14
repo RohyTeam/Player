@@ -12,6 +12,9 @@ import { fileUri } from '@kit.CoreFileKit';
 import { Wanter } from '../../context/WantAnnouncer';
 import { setColorMode } from '../../utils/ConfigurationUtils';
 import { Pref } from '../../context/PreferenceContext';
+import { SavedVideoMetadata } from '../../metadata/SavedVideoMetadata';
+import { VideoMetadataManager } from '../../file/VideoMetadataManager';
+import { sha256 } from '../../utils/HashUtils';
 
 export default class PlayerAbility extends UIAbility {
   private static contextToAbilityMappings: Map<common.UIAbilityContext, PlayerAbility> = new Map()
@@ -79,16 +82,23 @@ export default class PlayerAbility extends UIAbility {
     if (url.startsWith("file://media")) {
       return false
     }
-    let playerContext = AbilityStorage.connect(
-      this.context,
-      PlayerContext,
-      "player_context",
-      () => new PlayerContext()
-    )!
-    let metadata = await MetadataCache.getOrCreate(url)
+    let playerContext = PlayerContext.reach(this.context)
+    let savedMetadata: SavedVideoMetadata
+    if (VideoMetadataManager.exists(sha256(`files:${url}`))) {
+      savedMetadata = VideoMetadataManager.load(sha256(`files:${url}`))!
+    } else {
+      let metadata = await MetadataCache.getOrCreate(url)
+      savedMetadata = VideoMetadataManager.save(
+        sha256(`files:${url}`),
+        false,
+        url,
+        metadata
+      )!
+    }
     playerContext.video = true
     playerContext.videoSource = new LocalFileVideoSource(
-      metadata,
+      false,
+      savedMetadata,
       url,
       new fileUri.FileUri(url).name
     )

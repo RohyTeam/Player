@@ -17,7 +17,7 @@ export class AVSessionContext {
     let context = ensureContext(rawContext)
     let session = await avSession.createAVSession(context, 'rohy_player', 'video')
     AVSessionContext.session = session
-    let videoMetadata = source.metadata()
+    let videoMetadata = source.metadata().metadata
     let cover: image.PixelMap | undefined
     if (videoMetadata.cover != null) {
       cover = image.createImageSource(videoMetadata.cover).createPixelMapSync()

@@ -16,7 +16,17 @@ export function stringToBytes(value: string): Uint8Array {
   return encoder.encodeInto(value)
 }
 
+export function stringToBase64(value: string): string {
+  let base64helper = new util.Base64Helper()
+  return base64helper.encodeToStringSync(stringToBytes(value))
+}
+
 export function bytesToString(src: Uint8Array): string {
   const textDecoder = util.TextDecoder.create('utf-8', { ignoreBOM: true })
   return textDecoder.decodeToString(src, { stream: true });
+}
+
+export function bufferToString(src: ArrayBuffer): string {
+  const textDecoder = util.TextDecoder.create('utf-8', { ignoreBOM: true })
+  return textDecoder.decodeToString(new Uint8Array(src), { stream: true });
 }

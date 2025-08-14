@@ -2,8 +2,8 @@ import { LengthMetricsUnit } from "@kit.ArkUI"
 import { RohyAssSubtitleRenderer } from "librohy_subtitle.so"
 import { PlayerContext } from "../../../../player/PlayerContext"
 import { fileIo } from "@kit.CoreFileKit"
-import { AssSubtitleImage } from "../../../../subtitle/AssSubtitleImage"
-import { rgbaBufferToPixelMap } from "../../../../utils/imageUtils"
+import { AssSubtitleImage } from "../../../../player/subtitle/AssSubtitleImage"
+import { rgbaBufferToPixelMap } from "../../../../utils/ImageUtils"
 import { JSON } from "@kit.ArkTS"
 
 @ObservedV2

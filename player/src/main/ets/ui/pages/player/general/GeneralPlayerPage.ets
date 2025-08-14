@@ -25,7 +25,7 @@ export struct GeneralPlayerPage {
     WindowManager.setStatusBar(this.getUIContext(), false)
     WindowManager.setNavigationIndicator(this.getUIContext(), false)
 
-    let metadata = this.playerContext.videoSource?.metadata()!
+    let metadata = this.playerContext.videoSource!.metadata()!.metadata
     if (metadata.width >= metadata.height && !Sys.isTablet()) {
       WindowManager.setOrientation(this.getUIContext(), window.Orientation.AUTO_ROTATION_LANDSCAPE)
       this.landscape = true

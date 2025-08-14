@@ -12,6 +12,9 @@ import { PlayerController } from '../../../../player/PlayerController'
 import { MetadataCache } from '../../../../cache/MetadataCache'
 import { buildMenuGroup, menuGroups, RohyMenu, RohyMenuItem } from '../../../component/menu/RohyMenu'
 import { ability, ensureContext, ensureUIAbilityContext } from '../../../../utils/AbilityUtils'
+import { SavedVideoMetadata } from '../../../../metadata/SavedVideoMetadata'
+import { VideoMetadataManager } from '../../../../file/VideoMetadataManager'
+import { sha256 } from '../../../../utils/HashUtils'
 
 @ComponentV2
 export struct PCControlPanel {
@@ -89,17 +92,32 @@ export struct PCControlPanel {
             action: () => {
               this.playerController.release()
               pickSingleVideoFile(this.getUIContext())
-                .then(async (path) => {
-                  if (path == undefined) {
-                    console.error(`metadata path: ${path}`)
+                .then(async (url) => {
+                  if (!url) {
                     return
                   }
-                  let metadata = await MetadataCache.getOrCreate(path)
+                  if (url.startsWith("file://media")) {
+                    Dialoger.alert(this.getUIContext(), "请不要用文件浏览器打开图库文件", undefined)
+                    return
+                  }
+                  let savedMetadata: SavedVideoMetadata
+                  if (VideoMetadataManager.exists(sha256(`files:${url}`))) {
+                    savedMetadata = VideoMetadataManager.load(sha256(`files:${url}`))!
+                  } else {
+                    let metadata = await MetadataCache.getOrCreate(url)
+                    savedMetadata = VideoMetadataManager.save(
+                      sha256(`files:${url}`),
+                      false,
+                      url,
+                      metadata
+                    )!
+                  }
                   this.playerContext.video = true
                   this.playerContext.videoSource = new LocalFileVideoSource(
-                    metadata,
-                    path,
-                    new fileUri.FileUri(path).name
+                    false,
+                    savedMetadata,
+                    url,
+                    new fileUri.FileUri(url).name
                   )
                 })
             }

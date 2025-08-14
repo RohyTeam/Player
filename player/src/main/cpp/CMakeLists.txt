@@ -27,7 +27,19 @@ endif()
 add_library(player SHARED napi_init.cpp utils/napi_utils.cpp)
 target_link_libraries(player PUBLIC libace_napi.z.so)
 
-add_library(rohy_subtitle SHARED subtitle/rohy_subtitle_napi.cpp subtitle/rohy_subtitle_utils.cpp subtitle/rohy_ass_subtitle_renderer.cpp utils/napi_utils.cpp)
+add_library(rohy_subtitle SHARED subtitle/rohy_subtitle_napi.cpp
+                            subtitle/rohy_subtitle_utils.cpp
+                            subtitle/rohy_ass_subtitle_renderer.cpp
+                            subtitle/rohy_pgs_subtitle_renderer.cpp
+                            utils/napi_utils.cpp
+                            subtitle/pgs/object_definition.cpp
+                            subtitle/pgs/pgs_util.cpp
+                            subtitle/pgs/palette_definition.cpp
+                            subtitle/pgs/presentation_composition.cpp
+                            subtitle/pgs/segment.cpp
+                            subtitle/pgs/segment_data.cpp
+                            subtitle/pgs/subtitle.cpp
+                            subtitle/pgs/window_definition.cpp)
 
 add_library(rohy_metadata SHARED metadata/rohy_metadata_napi.cpp metadata/rohy_metadata_getter.cpp metadata/rohy_metadata_exporter.cpp utils/napi_utils.cpp)
 

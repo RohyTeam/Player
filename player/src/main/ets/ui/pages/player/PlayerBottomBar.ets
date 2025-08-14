@@ -9,8 +9,8 @@ import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI'
 import { TrackMetadata } from '../../../metadata/TrackMetadata'
 import { pickSingleSubtitleFile } from '../../../utils/PickerUtils'
 import { fileIo, fileUri } from '@kit.CoreFileKit'
-import { compile } from '../../../lib/ass_compiler'
-import { SubtitleInfo } from '../../../subtitle/SubtitleInfo'
+import { compile } from '../../../lib/subtitle/ass_compiler'
+import { SubtitleInfo } from '../../../player/subtitle/SubtitleInfo'
 import { menuGroups, buildMenuGroup, RohyMenu, RohyMenuItem } from '../../component/menu/RohyMenu'
 
 @ComponentV2
@@ -27,6 +27,8 @@ export struct PlayerBottomBar {
     () => new PlayerContext()
   )!
 
+  @Local
+  showAudiosMenu: boolean = false
   @Local
   showSubtitlesMenu: boolean = false
   @Local
@@ -59,6 +61,22 @@ export struct PlayerBottomBar {
         })
         Blank()
           .layoutWeight(1)
+        CircleIconButton({
+          icon: $r("sys.symbol.questionmark_circle"),
+          buttonMargin: {
+            right: 16,
+            bottom: 12
+          },
+          clickCallback: () => {
+            this.showAudiosMenu = false // refresh menu status
+            this.showAudiosMenu = true
+          }
+        })
+          .bindMenu(this.showAudiosMenu!!, this.audiosMenu, {
+            onDisappear: () => {
+              this.showAudiosMenu = false
+            }
+          })
         CircleIconButton({
           icon: $r("sys.symbol.questionmark_circle"),
           buttonMargin: {
@@ -170,6 +188,42 @@ export struct PlayerBottomBar {
   }
 
   @Builder
+  private audiosMenu() {
+    RohyMenu({
+      groups: menuGroups(() => [
+        buildMenuGroup(() => {
+          let items: RohyMenuItem[] = []
+          this.playerContext.audios.forEach((audio, index) => {
+            items.push({
+              options: {
+                content: audio.title,
+                symbolEndIcon: this.playerContext.selectedAudio === index ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+              },
+              action: () => {
+                if (this.playerContext.selectedAudio == index)
+                  return
+
+                let deselect = this.playerContext.audios[this.playerContext.selectedAudio].index
+                this.playerContext.selectedAudio = index
+
+                let paused = this.playerContext.paused
+                if (!paused)
+                  this.playerController.pause()
+                this.playerController.deselectTrack(deselect)
+                this.playerController.selectTrack(audio.index)
+                this.playerController.seek(this.playerContext.currentPosition)
+                if (!paused)
+                  this.playerController.play()
+              }
+            })
+          })
+          return items
+        })
+      ])
+    })
+  }
+
+  @Builder
   private subtitlesMenu() {
     RohyMenu({
       groups: menuGroups(() => [
@@ -215,18 +269,35 @@ export struct PlayerBottomBar {
                 .then((file) => {
                   if (file == undefined)
                     return
-                  if (!file.endsWith(".ass"))
-                    return
-                  let compiledASS = compile(fileIo.readTextSync(new fileUri.FileUri(file).path), void 0)
-                  let title = compiledASS.info.Title
-                  if (title == undefined || title == "")
-                    title = new fileUri.FileUri(file).name
-                  this.playerContext.subtitles.push({
-                    title: title,
-                    language: undefined,
-                    url: file,
-                    type: 'ass'
-                  })
+                  if (file.endsWith(".ass")) {
+                    let compiledASS = compile(fileIo.readTextSync(new fileUri.FileUri(file).path), void 0)
+                    let title = compiledASS.info.Title
+                    if (title == undefined || title == "")
+                      title = new fileUri.FileUri(file).name
+                    this.playerContext.subtitles.push({
+                      title: title,
+                      language: undefined,
+                      url: file,
+                      type: 'ass',
+                      internal: false
+                    })
+                  } else if (file.endsWith(".sup")) {
+                    this.playerContext.subtitles.push({
+                      title: new fileUri.FileUri(file).name,
+                      language: undefined,
+                      url: file,
+                      type: 'pgs',
+                      internal: false
+                    })
+                  } else if (file.endsWith(".srt")) {
+                    this.playerContext.subtitles.push({
+                      title: new fileUri.FileUri(file).name,
+                      language: undefined,
+                      url: file,
+                      type: 'srt',
+                      internal: false
+                    })
+                  }
                 })
             }
           }

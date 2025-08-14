@@ -1,4 +1,5 @@
 #include "rohy_metadata_exporter.h"
+#include <hilog/log.h>
 
 const char* get_recommended_subtitle_extension(enum AVCodecID codec_id) {
     switch (codec_id) {
@@ -168,6 +169,7 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
     
     int ret = avformat_open_input(&input_ctx, url.c_str(), nullptr, &options);
     if (ret < 0) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Unable to open input file %{public}s: %{public}s", url.c_str(), std::to_string(ret).c_str());
         throw std::runtime_error("无法打开输入文件 '" + url + "': " + std::to_string(ret));
     }
     
@@ -179,6 +181,7 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
 
     ret = avformat_find_stream_info(input_ctx, nullptr);
     if (ret < 0) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Unable to get stream info: %{public}s", std::to_string(ret).c_str());
         throw std::runtime_error("无法获取流信息: " + std::to_string(ret));
     }
 
@@ -186,6 +189,7 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
     
     for (auto& config : configs) {
         if (config.stream_index < 0 || config.stream_index >= input_ctx->nb_streams) {
+            OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Invalid stream index: %{public}s (total: %{public}s)", std::to_string(config.stream_index).c_str(), std::to_string(input_ctx->nb_streams).c_str());
             throw std::runtime_error("无效的流索引 " + std::to_string(config.stream_index) + 
                                      " (总流数: " + std::to_string(input_ctx->nb_streams) + ")");
         }
@@ -193,8 +197,18 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
         AVStream* in_stream = input_ctx->streams[config.stream_index];
         const char* type_name = av_get_media_type_string(in_stream->codecpar->codec_type);
         const char* codec_name = avcodec_get_name(in_stream->codecpar->codec_id);
-        std::cout << "配置流 #" << config.stream_index << ": " << type_name 
-                  << " (" << codec_name << ") -> " << config.output_file << std::endl;
+        
+        OH_LOG_Print(
+            LOG_APP, 
+            LOG_ERROR,
+            0,
+            "ExtractTracks", 
+            "Configuring stream #%{public}d: %{public}s (%{public}s) -> %{public}s", 
+            config.stream_index,
+            type_name,
+            codec_name,
+            config.output_file.c_str()
+        );
     }
     
     for (auto& config : configs) {
@@ -209,6 +223,7 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
                 break;
             }
             std::cerr << "读取数据包失败: " << ret << "，跳过错误包" << std::endl;
+            OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Failed to read packet: %{public}d, skip", ret);
             continue;
         }
         
@@ -221,6 +236,7 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
                 AVPacket new_pkt;
                 ret = av_packet_ref(&new_pkt, &pkt);
                 if (ret < 0) {
+                    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Failed to copy packet: %{public}d", ret);
                     std::cerr << "无法复制数据包: " << ret << std::endl;
                     break;
                 }
@@ -235,6 +251,7 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
                 
                 ret = av_interleaved_write_frame(config.output_ctx.get(), &new_pkt);
                 if (ret < 0) {
+                    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Failed to write packet: %{public}d", ret);
                     std::cerr << "写入数据包失败: " << ret << std::endl;
                 } else {
                     config.packet_count++;
@@ -249,5 +266,15 @@ void RohyMetadataExporter::extract_multiple_streams(const std::string& url, std:
         std::cout << "成功提取流 #" << config.stream_index 
                   << ": " << config.packet_count << " 个数据包到: " 
                   << config.final_output_file << std::endl;
+        OH_LOG_Print(
+            LOG_APP, 
+            LOG_ERROR,
+            0,
+            "ExtractTracks", 
+            "Successfully extracted stream #%{public}d: %{public}d packets -> %{public}s", 
+            config.stream_index,
+            config.packet_count,
+            config.final_output_file.c_str()
+        );
     }
 }

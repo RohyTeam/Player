@@ -203,6 +203,14 @@
     {
       "name": "exit",
       "value": "Exit"
+    },
+    {
+      "name": "internal_subtitle",
+      "value": "Internal %s"
+    },
+    {
+      "name": "internal_audio",
+      "value": "Internal %s"
     }
   ]
 }

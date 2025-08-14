@@ -2,6 +2,7 @@ import { VideoMetadata } from '../metadata/VideoMetadata';
 import { fileIo, fileUri } from '@kit.CoreFileKit';
 import RohyMetadata from 'librohy_metadata.so';
 import { media } from '@kit.MediaKit';
+import { JSON } from '@kit.ArkTS';
 
 export class MetadataCache {
   private static cache: Map<string, VideoMetadata> = new Map()
@@ -22,6 +23,7 @@ export class MetadataCache {
       if (!tempMetadata) {
         throw Error("metadata is undefined")
       }
+      console.error(`metadata fetched: ${JSON.stringify(tempMetadata)}`)
       metadata = tempMetadata as VideoMetadata
       if (uri.startsWith("file://media")) {
         let file = fileIo.openSync(uri)

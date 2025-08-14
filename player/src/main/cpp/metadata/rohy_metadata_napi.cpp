@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "hilog/log.h"
+#include "metadata/rohy_metadata_exporter.h"
+#include "metadata/rohy_metadata_getter.h"
 #include "metadata/rohy_metadata_shared.h"
 #include "utils/napi_utils.h"
-#include "rohy_metadata_getter.h"
 
 napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "GetMetadata", "Starting getting metadata");
@@ -143,11 +144,107 @@ napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
     return video_metadata;
 } 
 
+
+napi_value RohyMetadata_ExtractTracks(napi_env env, napi_callback_info info) {
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Starting extracting tracks");
+    size_t argc = 3;
+    napi_value args[3] = {nullptr};
+    if (napi_ok != napi_get_cb_info(env, info, &argc, args, nullptr, nullptr)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ParseId", "GetContext napi_get_cb_info failed");
+        return nullptr;
+    }
+    
+    std::string fileUrl;
+    NapiUtils::JsValueToString(env, args[0], 2048, fileUrl);
+    
+    napi_value extractingTracks = args[1];
+    uint32_t tracks_size;
+    napi_get_array_length(env, extractingTracks, &tracks_size);
+    
+    if (tracks_size == 0)
+        return nullptr;
+    
+    std::vector<StreamExtractConfig> tracks;
+    
+    for (int i = 0; i < tracks_size; i++) {
+        napi_value track;
+        napi_get_element(env, extractingTracks, i, &track);
+        
+        napi_value jsTrackIndex;
+        napi_get_named_property(env, track, "index", &jsTrackIndex);
+        
+        int32_t trackIndex;
+        napi_get_value_int32(env, jsTrackIndex, &trackIndex);
+        
+        if (trackIndex < 0)
+            continue;
+        
+        napi_value jsDest;
+        napi_get_named_property(env, track, "dest", &jsDest);
+        
+        std::string dest;
+        NapiUtils::JsValueToString(env, jsDest, 2048, dest);
+        
+        tracks.push_back(StreamExtractConfig {
+            .stream_index = trackIndex,
+            .output_file = dest.c_str() 
+        });
+    }
+    
+    if (tracks.size() == 0) // because track index smaller than 0 will be ignored
+        return nullptr;
+    
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "There are tracks need to be extracted");
+    
+    napi_valuetype headersType;
+    napi_typeof(env, args[2], &headersType);
+    
+    std::vector<Header> headers;
+    
+    if (headersType != napi_undefined) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "processing headers");
+        
+        napi_value jsHeaders = args[2];
+        
+        napi_value property_names;
+        napi_get_property_names(env, jsHeaders, &property_names);
+        
+        uint32_t properties_size; 
+        napi_get_array_length(env, property_names, &properties_size);
+        
+        for (int i = 0; i < properties_size; i++) {
+            napi_value element;
+            napi_get_element(env, property_names, i, &element);
+            
+            std::string key;
+            NapiUtils::JsValueToString(env, element, 2048, key);
+            
+            napi_value jsValue;
+            napi_get_named_property(env, jsHeaders, key.c_str(), &jsValue);
+            
+            std::string value;
+            NapiUtils::JsValueToString(env, jsValue, 2048, value);
+            
+            headers.push_back(Header {
+                .key = key.c_str(),
+                .value = value.c_str()
+            });
+        }
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "GetMetadata", "headers processed");
+    }
+    
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Ready to extract tracks");
+    RohyMetadataExporter::extract_multiple_streams(fileUrl, headers, tracks);
+    
+    return nullptr;
+}
+
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
-        { "RohyMetedata_getMetadata", nullptr, RohyMetadata_GetMetadata, nullptr, nullptr, nullptr, napi_default, nullptr }
+        { "RohyMetedata_getMetadata", nullptr, RohyMetadata_GetMetadata, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "RohyMetadata_extractTracks", nullptr, RohyMetadata_ExtractTracks, nullptr, nullptr, nullptr, napi_default, nullptr }
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

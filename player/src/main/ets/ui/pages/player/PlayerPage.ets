@@ -10,6 +10,8 @@ import { Modifiers } from '../../attributemodifier/Modifiers';
 import { AvXComponent } from './AvXComponent';
 import { IjkXComponent } from './IjkXComponent';
 import { AssSubtitleView } from './subtitle/AssSubtitleView';
+import { PgsSubtitleView } from './subtitle/PgsSubtitleView';
+import { SrtSubtitleView } from './subtitle/SrtSubtitleView';
 
 @ComponentV2
 export struct PlayerPage {
@@ -22,6 +24,22 @@ export struct PlayerPage {
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
 
   aboutToAppear(): void {
+    this.playerContext.subtitles = []
+    this.playerContext.subtitles.push(...this.playerContext.videoSource!.metadata().subtitles)
+    this.playerContext.selectedSubtitle = undefined
+    this.playerContext.audios = []
+    let audioIndex = 1
+    for (let track of this.playerContext.videoSource!.metadata().metadata.tracks) {
+      if (track.type == 1) {
+        this.playerContext.audios.push({
+          index: track.index,
+          title: track.title ?? $r("app.string.internal_audio", `#${audioIndex}`),
+          language: track.language
+        })
+        audioIndex += 1
+      }
+    }
+    this.playerContext.selectedAudio = 0
     if (this.videoSource.type() == VideoSourceType.Photos) {
       this.playerContext.player = new AvPlayer()
     } else {
@@ -61,6 +79,10 @@ export struct PlayerPage {
 
   aboutToDisappear(): void {
     this.playerController.release()
+    this.playerContext.subtitles = []
+    this.playerContext.selectedSubtitle = undefined
+    this.playerContext.audios = []
+    this.playerContext.selectedAudio = 0
   }
 
   build() {
@@ -69,10 +91,14 @@ export struct PlayerPage {
         if (this.playerContext.selectedSubtitle != undefined && this.playerContext.selectedSubtitle >= 0 && this.playerContext.selectedSubtitle < this.playerContext.subtitles.length) {
           if (this.playerContext.subtitles[this.playerContext.selectedSubtitle].type == 'ass') {
             AssSubtitleView()
+          } else if (this.playerContext.subtitles[this.playerContext.selectedSubtitle].type == 'pgs') {
+            PgsSubtitleView()
+          } else if (this.playerContext.subtitles[this.playerContext.selectedSubtitle].type == 'srt') {
+            SrtSubtitleView()
           }
         }
       }
-      .attributeModifier(Modifiers.surfaceFilling(this.videoSource.metadata(), this.playerContext.surfaceFillingMode))
+      .attributeModifier(Modifiers.surfaceFilling(this.videoSource.metadata().metadata, this.playerContext.surfaceFillingMode))
       .zIndex(2)
       Column() {
         if (this.videoSource.type() == VideoSourceType.Photos) {
@@ -94,7 +120,7 @@ export struct PlayerPage {
         this.playerContext.playerWidthPx = vp2px(this.playerContext.playerWidthVp)
         this.playerContext.playerHeightPx = vp2px(this.playerContext.playerHeightVp)
       })
-      .attributeModifier(Modifiers.surfaceFilling(this.videoSource.metadata(), this.playerContext.surfaceFillingMode))
+      .attributeModifier(Modifiers.surfaceFilling(this.videoSource.metadata().metadata, this.playerContext.surfaceFillingMode))
       .zIndex(1)
     }
     .width("100%")

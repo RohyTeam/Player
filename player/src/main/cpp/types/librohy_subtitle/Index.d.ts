@@ -8,3 +8,13 @@ export class RohyAssSubtitleRenderer {
   release: () => void;
 
 }
+
+export class RohyPgsSubtitleRenderer {
+
+  constructor();
+
+  init: (path: string) => void;
+  render: (time: number) => Array<object> | undefined; // Array<PgsSubtitleImage> | undefined
+  release: () => void;
+
+}

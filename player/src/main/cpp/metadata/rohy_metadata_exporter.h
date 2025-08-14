@@ -1,9 +1,3 @@
-//
-// Created on 2025/8/7.
-//
-// Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
-// please include "napi/native_api.h".
-
 #ifndef ROHYPLAYER_ROHY_METADATA_EXPORTER_H
 #define ROHYPLAYER_ROHY_METADATA_EXPORTER_H
 
@@ -35,6 +29,9 @@ struct StreamExtractConfig {
     AVStream* out_stream = nullptr;
     std::string final_output_file;
     int packet_count = 0;
+    
+    bool is_attachment = false;
+    FILE* attachment_file = nullptr;
 };
 
 class RohyMetadataExporter {

@@ -203,6 +203,14 @@
     {
       "name": "exit",
       "value": "退出"
+    },
+    {
+      "name": "internal_subtitle",
+      "value": "内置字幕（%s）"
+    },
+    {
+      "name": "internal_audio",
+      "value": "内置音轨（%s）"
     }
   ]
 }

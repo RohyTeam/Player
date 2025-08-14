@@ -170,8 +170,8 @@ abstract class AbstractPlayer implements Player {
       () => new PlayerContext()
     )!
     playerContext.currentPosition = 0
-    playerContext.maxDuration = videoSource.metadata().duration
-    this.cachedMaxDuration = videoSource.metadata().duration
+    playerContext.maxDuration = videoSource.metadata().metadata.duration
+    this.cachedMaxDuration = videoSource.metadata().metadata.duration
   }
 
   setFillingMode(mode: SurfaceFillingMode): void {
@@ -419,7 +419,13 @@ export class IjkPlayer extends AbstractPlayer {
     ijkPlayer.native_setup();
 
     ijkPlayer.setDataSource(new fileUri.FileUri(source.url()).path)
-    let headers = source.headers()
+    let headers: Map<string, string> = new Map()
+    let sourceHeaders = source.headers()
+    if (sourceHeaders != undefined) {
+      for (let key of Object.keys(sourceHeaders)) {
+        headers.set(key, sourceHeaders[key])
+      }
+    }
     if (headers != null) {
       ijkPlayer.setDataSourceHeader(headers)
     }

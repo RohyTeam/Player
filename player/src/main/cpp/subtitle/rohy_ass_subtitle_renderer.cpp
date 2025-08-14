@@ -36,7 +36,7 @@ void RohyAssSubtitleRenderer::Finalize(napi_env env, void *native_object, [[mayb
 }
 
 napi_value RohyAssSubtitleRenderer::Func_New(napi_env env, napi_callback_info info) {
-    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "CreateAssRenderer", "creating subtitle renderer");
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "CreateAssRenderer", "creating ass subtitle renderer");
 
     napi_value new_target;
     napi_get_new_target(env, info, &new_target);
@@ -76,7 +76,7 @@ napi_value RohyAssSubtitleRenderer::Func_New(napi_env env, napi_callback_info in
 }
 
 napi_value RohyAssSubtitleRenderer::Func_Init(napi_env env, napi_callback_info info) {
-    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "AssSubtitleRenderer", "initializing ass font render");
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "AssSubtitleRenderer", "initializing ass subtitle render");
     
     size_t argc = 1;
     napi_value args[1] = {nullptr};
