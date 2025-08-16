@@ -253,6 +253,8 @@ export struct PlayerBottomBar {
               action: () => {
                 if (this.playerContext.selectedSubtitle == index)
                   return
+                // 先设置成 undefined 再设置成 index，要不然如果相同格式的字幕不会刷新字幕页
+                this.playerContext.selectedSubtitle = undefined
                 this.playerContext.selectedSubtitle = index
               }
             })

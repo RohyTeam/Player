@@ -142,8 +142,7 @@ napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
     napi_set_named_property(env, video_metadata, "tracks", tracksArray);
     
     return video_metadata;
-} 
-
+}
 
 napi_value RohyMetadata_ExtractTracks(napi_env env, napi_callback_info info) {
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "ExtractTracks", "Starting extracting tracks");

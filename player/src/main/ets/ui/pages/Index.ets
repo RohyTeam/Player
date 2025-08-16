@@ -8,6 +8,9 @@ import { AppStorageV2 } from '@kit.ArkUI';
 @ComponentV2
 struct Index {
 
+  /**
+   * ComponentV2 目前不支持 WithTheme
+   */
   build() {
     RelativeContainer() {
       if (Sys.isPC()) {
