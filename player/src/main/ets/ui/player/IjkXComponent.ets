@@ -1,8 +1,8 @@
-import { IjkPlayer } from '../../../player/Player'
-import { PlayerContext } from '../../../player/PlayerContext'
-import { VideoSource } from '../../../player/VideoSource'
-import { AbilityStorage } from '../../../storage/AbilityStorage'
-import { ensureContext } from '../../../utils/AbilityUtils'
+import { IjkPlayer } from '../../player/Player'
+import { PlayerContext } from '../../player/PlayerContext'
+import { VideoSource } from '../../player/VideoSource'
+import { AbilityStorage } from '../../storage/AbilityStorage'
+import { ensureContext } from '../../utils/AbilityUtils'
 
 @ComponentV2
 export struct IjkXComponent {

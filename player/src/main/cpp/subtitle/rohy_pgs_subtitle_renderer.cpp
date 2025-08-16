@@ -80,6 +80,9 @@ napi_value RohyPgsSubtitleRenderer::Func_Init(napi_env env, napi_callback_info i
     
     RohyPgsSubtitleRenderer* native_object;
     napi_unwrap(env, jsThis, reinterpret_cast<void**>(&native_object));
+
+    if (native_object->initialized)
+        return nullptr;
     
     std::string fileUrl;
     NapiUtils::JsValueToString(env, args[0], 2048, fileUrl);
@@ -94,6 +97,32 @@ napi_value RohyPgsSubtitleRenderer::Func_Init(napi_env env, napi_callback_info i
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PgsSubtitleRenderer", "successfully read pgs subtitle file, ready to decode");
     native_object->subtitles = Pgs::Subtitle::createAll(data, size);
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PgsSubtitleRenderer", "pgs subtitle file decoded");
+
+    std::vector<shared_ptr<Pgs::Subtitle>> currentSegment;
+
+    for (auto subtitle : native_object->subtitles) {
+        if (subtitle->containsImage()) {
+            currentSegment.push_back(subtitle);
+        } else {
+            if (!currentSegment.empty()) {
+                SubtitleRange range;
+                range.startMs = currentSegment.front()->getPresentationTimeMs();
+                range.endMs = subtitle->getPresentationTimeMs();
+                range.subtitles = currentSegment;
+                native_object->ranges.push_back(range);
+                currentSegment.clear();
+            }
+        }
+    }
+
+    currentSegment.clear();
+
+    std::sort(native_object->ranges.begin(), native_object->ranges.end(), 
+        [](const SubtitleRange& a, const SubtitleRange& b) {
+            return a.startMs < b.startMs;
+        });
+
+    native_object->initialized = true;
 
     return nullptr;
 }
@@ -113,25 +142,22 @@ napi_value RohyPgsSubtitleRenderer::Func_Render(napi_env env, napi_callback_info
     RohyPgsSubtitleRenderer* native_object;
     napi_unwrap(env, jsThis, reinterpret_cast<void**>(&native_object));
     
-    if (native_object->subtitles.empty())
+    if (!native_object->initialized || native_object->subtitles.empty())
         return nullptr;
     
     int64_t time;
     napi_get_value_int64(env, args[0], &time);
     
-    std::vector<shared_ptr<Pgs::Subtitle>> subtitles;
+    auto range = std::lower_bound(native_object->ranges.begin(), native_object->ranges.end(), time,
+        [](const SubtitleRange& seg, long pos) {
+            return seg.endMs < pos; // 查找第一个结束时间 >= positionMs 的区间
+        });
 
-    for (auto subtitle : native_object->subtitles) {
-        if (subtitle->getPresentationTimeMs() > time)
-            break;
-        if (!subtitle->containsImage()) {
-            subtitles.clear();
-            continue;
-        }
-        subtitles.push_back(subtitle);
+    if (range == native_object->ranges.end() || !range->contains(time)) {
+        return nullptr;
     }
 
-    if (subtitles.empty())
+    if (range->subtitles.empty())
         return nullptr;
     
     napi_value array;
@@ -139,7 +165,9 @@ napi_value RohyPgsSubtitleRenderer::Func_Render(napi_env env, napi_callback_info
 
     size_t i = 0;
 
-    for (auto subtitle : subtitles) {
+    for (auto subtitle : range->subtitles) {
+        if (!subtitle->containsImage())
+            continue;
         napi_value image_obj;
         napi_create_object(env, &image_obj);
 
@@ -187,7 +215,11 @@ napi_value RohyPgsSubtitleRenderer::Func_Release(napi_env env, napi_callback_inf
     RohyPgsSubtitleRenderer* native_object;
     napi_unwrap(env, jsThis, reinterpret_cast<void**>(&native_object));
 
+    if (!native_object->initialized)
+        return nullptr;
+
     native_object->subtitles.clear();
+    native_object->initialized = false;
     
     return nullptr;
 }

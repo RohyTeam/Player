@@ -1,11 +1,11 @@
 import { DropPage } from './DropPage'
-import { PCControlPanel } from '../player/pc/PCControlPanel'
+import { PCControlPanel } from '../../player/pc/PCControlPanel'
 import { curves } from '@kit.ArkUI'
 import { PlaylistSideBar } from './PlaylistSideBar'
 import { AbilityStorage } from '../../../storage/AbilityStorage'
 import { PlayerController } from '../../../player/PlayerController'
 import { PlayerContext } from '../../../player/PlayerContext'
-import { PlayerPage } from '../player/PlayerPage'
+import { PlayerPage } from '../../player/PlayerPage'
 import { PCKeyboardHandler } from '../../handler/PCKeyboardHandler'
 
 @ObservedV2

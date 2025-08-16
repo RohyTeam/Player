@@ -66,7 +66,6 @@ export class SystemContext {
         Sys.charging = info.charging
         SystemContext.updateSystemContext()
       })
-
   }
 }
 

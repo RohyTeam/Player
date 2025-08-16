@@ -2,7 +2,7 @@ import { Pref } from '../../../context/PreferenceContext'
 import { Wanter } from '../../../context/WantAnnouncer'
 import { PlayerContext } from '../../../player/PlayerContext'
 import { AbilityStorage } from '../../../storage/AbilityStorage'
-import { GeneralPlayerPage } from '../player/general/GeneralPlayerPage'
+import { GeneralPlayerPage } from '../../player/general/GeneralPlayerPage'
 import { IndexMenuButtons } from './IndexMenuButtons'
 
 @ComponentV2

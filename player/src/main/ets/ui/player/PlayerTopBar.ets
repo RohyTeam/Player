@@ -1,10 +1,10 @@
-import { PlayerContext } from '../../../player/PlayerContext'
-import { PlayerController } from '../../../player/PlayerController'
-import { AbilityStorage } from '../../../storage/AbilityStorage'
-import { Modifiers } from '../../attributemodifier/Modifiers'
-import { TopAvoidArea } from '../../avoidarea/TopAvoidArea'
-import { CircleIconButton } from '../../button/CircleIconButton'
-import { WindowManager } from '../../manager/WindowManager'
+import { PlayerContext } from '../../player/PlayerContext'
+import { PlayerController } from '../../player/PlayerController'
+import { AbilityStorage } from '../../storage/AbilityStorage'
+import { Modifiers } from '../attributemodifier/Modifiers'
+import { TopAvoidArea } from '../avoidarea/TopAvoidArea'
+import { CircleIconButton } from '../button/CircleIconButton'
+import { WindowManager } from '../manager/WindowManager'
 
 @ComponentV2
 export struct PlayerTopBar {

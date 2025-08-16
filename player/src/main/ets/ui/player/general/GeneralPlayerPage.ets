@@ -1,13 +1,13 @@
-import { PlayerContext } from '../../../../player/PlayerContext'
-import { PlayerController } from '../../../../player/PlayerController'
-import { AbilityStorage } from '../../../../storage/AbilityStorage'
-import { WindowManager } from '../../../manager/WindowManager'
+import { PlayerContext } from '../../../player/PlayerContext'
+import { PlayerController } from '../../../player/PlayerController'
+import { AbilityStorage } from '../../../storage/AbilityStorage'
+import { WindowManager } from '../../manager/WindowManager'
 import { PlayerPage } from '../PlayerPage'
 import { GeneralControlPanel } from './GeneralControlPanel'
 import { window } from '@kit.ArkUI'
-import { AVSessionContext } from '../../../../context/AVSessionContext'
-import { Sys } from '../../../../context/SystemContext'
-import { BackgroundTaskContext } from '../../../../context/BackgroundTaskContext'
+import { AVSessionContext } from '../../../context/AVSessionContext'
+import { Sys } from '../../../context/SystemContext'
+import { BackgroundTaskContext } from '../../../context/BackgroundTaskContext'
 
 @ComponentV2
 export struct GeneralPlayerPage {

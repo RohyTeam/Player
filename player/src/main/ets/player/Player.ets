@@ -364,6 +364,7 @@ export class AvPlayer extends AbstractPlayer {
 export class IjkPlayer extends AbstractPlayer {
   private ijkPlayer: IjkMediaPlayer | undefined = undefined
   private positionUpdater: number | undefined = undefined
+  private cachedCurrentPosition: number = -1
 
   pause(): void {
     this.ijkPlayer?.pause()
@@ -449,7 +450,11 @@ export class IjkPlayer extends AbstractPlayer {
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", "1");
 
     this.positionUpdater = setInterval(() => {
-      this.onPositionChangeCallback(this.ijkPlayer?.getCurrentPosition() || 0)
+      let currentPosition = this.ijkPlayer?.getCurrentPosition() || 0
+      if (currentPosition == this.cachedCurrentPosition)
+        return
+      this.cachedCurrentPosition = currentPosition
+      this.onPositionChangeCallback(currentPosition)
     }, 100);
     ijkPlayer.setOnSeekCompleteListener({
       onSeekComplete: () => {

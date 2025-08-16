@@ -1,14 +1,10 @@
 import { LengthMetricsUnit } from "@kit.ArkUI"
 import { RohyAssSubtitleRenderer } from "librohy_subtitle.so"
-import { PlayerContext } from "../../../../player/PlayerContext"
+import { PlayerContext } from "../../../player/PlayerContext"
 import { fileIo } from "@kit.CoreFileKit"
-import { AssSubtitleImage } from "../../../../player/subtitle/AssSubtitleImage"
-import { rgbaBufferToPixelMap } from "../../../../utils/ImageUtils"
+import { AssSubtitleImage } from "../../../player/subtitle/AssSubtitleImage"
+import { rgbaBufferToPixelMap } from "../../../utils/ImageUtils"
 import { JSON } from "@kit.ArkTS"
-
-@ObservedV2
-class Images extends Array<AssSubtitleImage> {
-}
 
 @ComponentV2
 export struct AssSubtitleView {
@@ -23,9 +19,6 @@ export struct AssSubtitleView {
 
   @Local
   ready: boolean = false
-
-  @Local
-  images: Images = []
 
   aboutToAppear(): void {
     getContext(this).resourceManager.getRawFileContent('HarmonyOS_Sans_SC_Regular.ttf')
@@ -46,7 +39,7 @@ export struct AssSubtitleView {
             return
 
           console.error(`player width: ${this.playerContext.playerWidthPx}, height: ${this.playerContext.playerHeightPx}`)
-          this.images = this.subtitleRenderer.render(
+          let images = this.subtitleRenderer.render(
             position,
             this.playerContext.playerWidthPx,
             this.playerContext.playerHeightPx
@@ -54,7 +47,10 @@ export struct AssSubtitleView {
 
           this.context.reset()
 
-          for (let image of this.images) {
+          if (images.length == 0)
+            return
+
+          for (let image of images) {
             let pixelMap = rgbaBufferToPixelMap(image.buffer, image.width, image.height)
             if (!pixelMap)
               continue

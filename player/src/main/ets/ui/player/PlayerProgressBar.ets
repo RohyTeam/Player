@@ -1,7 +1,7 @@
-import { PlayerContext } from '../../../player/PlayerContext'
-import { PlayerController } from '../../../player/PlayerController'
-import { AbilityStorage } from '../../../storage/AbilityStorage'
-import { convertNumberToDurationString } from '../../../utils/NumberUtils'
+import { PlayerContext } from '../../player/PlayerContext'
+import { PlayerController } from '../../player/PlayerController'
+import { AbilityStorage } from '../../storage/AbilityStorage'
+import { convertNumberToDurationString } from '../../utils/NumberUtils'
 
 @ComponentV2
 export struct PlayerProgressBar {

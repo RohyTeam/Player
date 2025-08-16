@@ -10,6 +10,16 @@
 #include "napi/native_api.h"
 #include "subtitle/pgs/subtitle.hpp"
 
+struct SubtitleRange {
+    long startMs;
+    long endMs;
+    std::vector<shared_ptr<Pgs::Subtitle>> subtitles;
+
+    bool contains(long positionMs) const {
+        return positionMs >= startMs && positionMs <= endMs;
+    }
+};
+
 class RohyPgsSubtitleRenderer {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -26,7 +36,9 @@ private:
     napi_env _env;
     napi_ref _wrapper;
     
+    bool initialized = false;
     std::vector<shared_ptr<Pgs::Subtitle>> subtitles;
+    std::vector<SubtitleRange> ranges;
 };
 
 #endif //ROHYPLAYER_ROHY_PGS_SUBTITLE_RENDERER_H

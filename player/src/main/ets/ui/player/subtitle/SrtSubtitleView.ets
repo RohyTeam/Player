@@ -1,7 +1,7 @@
-import { parseSrtSubtitle, SrtSubtitleLine } from "../../../../lib/subtitle/srt/srt";
-import { PlayerContext } from "../../../../player/PlayerContext";
+import { parseSrtSubtitle, SrtSubtitleLine } from "../../../lib/subtitle/srt/srt";
+import { PlayerContext } from "../../../player/PlayerContext";
 import { fileIo } from "@kit.CoreFileKit";
-import { ensurePath } from "../../../../utils/FileUtils";
+import { ensurePath } from "../../../utils/FileUtils";
 import { LengthMetricsUnit } from "@kit.ArkUI";
 
 // FIXME: 由于使用 canvas 绘制，假如同一时间有多行字幕，将会重叠到一起
@@ -60,6 +60,8 @@ export struct SubtitleLine {
       .width('100%')
       .height('100%')
       .onReady(() => {
+        this.context.font = "16vp"
+
         let textMetrics = this.context.measureText(this.text)
 
         let x = (this.playerContext.playerWidthPx - textMetrics.width) / 2
