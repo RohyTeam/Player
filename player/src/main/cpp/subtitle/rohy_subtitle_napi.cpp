@@ -11,7 +11,7 @@ static napi_value Init(napi_env env, napi_value exports)
 }
 EXTERN_C_END
 
-static napi_module rohyMetadataModule = {
+static napi_module rohySubtitleModule = {
     .nm_version = 1,
     .nm_flags = 0,
     .nm_filename = nullptr,
@@ -23,5 +23,5 @@ static napi_module rohyMetadataModule = {
 
 extern "C" __attribute__((constructor)) void RegisterPlayerModule(void)
 {
-    napi_module_register(&rohyMetadataModule);
+    napi_module_register(&rohySubtitleModule);
 }

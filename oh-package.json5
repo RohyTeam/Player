@@ -4,7 +4,8 @@
   "dependencies": {
     "@ohos/ijkplayer": "^2.0.6",
     "@zxhhyj/storm": "^3.0.9",
-    "@ifbear/fast-xml-parser": "^5.2.5"
+    "@ifbear/fast-xml-parser": "^5.2.5",
+    "@pura/harmony-dialog": "1.1.1"
   },
   "devDependencies": {
     "@ohos/hypium": "1.0.21",

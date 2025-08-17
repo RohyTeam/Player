@@ -211,6 +211,42 @@
     {
       "name": "internal_audio",
       "value": "内置音轨（%s）"
+    },
+    {
+      "name": "please_type_playlist_name",
+      "value": "请输入播放列表的名称"
+    },
+    {
+      "name": "confirm",
+      "value": "确认"
+    },
+    {
+      "name": "cancel",
+      "value": "取消"
+    },
+    {
+      "name": "create_success",
+      "value": "创建成功"
+    },
+    {
+      "name": "name_cannot_be_blank",
+      "value": "名称不能为空"
+    },
+    {
+      "name": "name_duplicated",
+      "value": "当前名称已被占用"
+    },
+    {
+      "name": "please_type_folder_name",
+      "value": "请输入文件夹的名称"
+    },
+    {
+      "name": "not_implemented_below",
+      "value": "下方功能暂未实现"
+    },
+    {
+      "name": "photos_not_importable",
+      "value": "只能导入文件管理中的视频文件"
     }
   ]
 }

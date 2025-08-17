@@ -6,14 +6,14 @@ import { JSON } from '@kit.ArkTS';
 import { randomString } from '../../utils/StringUtils';
 import { AbilityStorage } from '../../storage/AbilityStorage';
 import { PlayerContext } from '../../player/PlayerContext';
-import { MetadataCache } from '../../cache/MetadataCache';
+import { MetadataFetcher } from '../../metadata/MetadataFetcher';
 import { LocalFileVideoSource } from '../../player/VideoSource';
 import { fileUri } from '@kit.CoreFileKit';
 import { Wanter } from '../../context/WantAnnouncer';
 import { setColorMode } from '../../utils/ConfigurationUtils';
 import { Pref } from '../../context/PreferenceContext';
 import { SavedVideoMetadata } from '../../metadata/SavedVideoMetadata';
-import { VideoMetadataManager } from '../../file/VideoMetadataManager';
+import { VideoMetadataManager } from '../../metadata/VideoMetadataManager';
 import { sha256 } from '../../utils/HashUtils';
 
 export default class PlayerAbility extends UIAbility {
@@ -87,7 +87,7 @@ export default class PlayerAbility extends UIAbility {
     if (VideoMetadataManager.exists(sha256(`files:${url}`))) {
       savedMetadata = VideoMetadataManager.load(sha256(`files:${url}`))!
     } else {
-      let metadata = await MetadataCache.getOrCreate(url)
+      let metadata = await MetadataFetcher.fetch(url)
       savedMetadata = VideoMetadataManager.save(
         sha256(`files:${url}`),
         false,

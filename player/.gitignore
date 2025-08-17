@@ -5,3 +5,4 @@
 /.cxx
 /.test
 /src/main/cpp/thirdparty/
+/src/main/cpp/cmake-build-debug-openharmony/

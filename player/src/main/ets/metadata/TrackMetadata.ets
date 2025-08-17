@@ -11,6 +11,7 @@ export interface TrackMetadata {
   width: number | undefined
   height: number | undefined
   duration: number | undefined
+  averageFramerate: number | undefined
   bitrate: number | undefined
   // audio
   sampleRate: number | undefined

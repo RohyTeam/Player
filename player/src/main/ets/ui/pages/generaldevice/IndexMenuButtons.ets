@@ -1,15 +1,15 @@
-import { MetadataCache } from '../../../cache/MetadataCache';
+import { MetadataFetcher } from '../../../metadata/MetadataFetcher';
 import { LocalFiles, Photos } from '../../../filemanagement/FileSource';
 import { PlayerContext } from '../../../player/PlayerContext';
 import { LocalFileVideoSource, PhotosVideoSource } from '../../../player/VideoSource';
 import { AbilityStorage } from '../../../storage/AbilityStorage';
 import { CircleIconButton } from '../../button/CircleIconButton';
-import { OpenVideoSheet } from '../playlist/OpenVideoSheet';
+import { OpenVideoSheet } from '../sheet/OpenVideoSheet';
 import { fileUri } from '@kit.CoreFileKit';
-import { ImportOrCreatePlaylistSheet } from '../playlist/ImportOrCreatePlaylistSheet';
-import { SettingsSheet } from '../playlist/SettingsSheet';
+import { ImportOrCreatePlaylistSheet } from '../sheet/ImportOrCreatePlaylistSheet';
+import { SettingsSheet } from '../sheet/SettingsSheet';
 import { SavedVideoMetadata } from '../../../metadata/SavedVideoMetadata';
-import { VideoMetadataManager } from '../../../file/VideoMetadataManager';
+import { VideoMetadataManager } from '../../../metadata/VideoMetadataManager';
 import { sha256 } from '../../../utils/HashUtils';
 
 @ComponentV2
@@ -23,12 +23,7 @@ export struct IndexMenuButtons {
   @Local
   private showSettingsSheet: boolean = false
   @Local
-  playerContext: PlayerContext = AbilityStorage.connect(
-    this.getUIContext(),
-    PlayerContext,
-    "player_context",
-    () => new PlayerContext()
-  )!
+  playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
 
   build() {
     Row() {
@@ -57,8 +52,7 @@ export struct IndexMenuButtons {
               this.showImportVideoSheet = false
             },
             title: {
-              title: $r("app.string.import_or_create_playlist"),
-              subtitle: $r("app.string.not_implemented")
+              title: $r("app.string.import_or_create_playlist")
             }
           }
         )
@@ -142,10 +136,7 @@ export struct IndexMenuButtons {
   private ImportOrCreatePlaylistSheet() {
     ImportOrCreatePlaylistSheet({
       hideChooser: () => {
-        this.showOpenVideoSheet = false
-      },
-      onPick: async (files) => {
-
+        this.showImportVideoSheet = false
       }
     })
   }
@@ -162,7 +153,7 @@ export struct IndexMenuButtons {
           if (VideoMetadataManager.exists(sha256(`files:${file.url}`))) {
             savedMetadata = VideoMetadataManager.load(sha256(`files:${file.url}`))!
           } else {
-            let metadata = await MetadataCache.getOrCreate(file.url)
+            let metadata = await MetadataFetcher.fetch(file.url)
             savedMetadata = VideoMetadataManager.save(
               sha256(`files:${file.url}`),
               false,
@@ -181,7 +172,7 @@ export struct IndexMenuButtons {
           if (VideoMetadataManager.exists(sha256(`photos:${file.url}`))) {
             savedMetadata = VideoMetadataManager.load(sha256(`photos:${file.url}`))!
           } else {
-            let metadata = await MetadataCache.getOrCreate(file.url)
+            let metadata = await MetadataFetcher.fetch(file.url)
             savedMetadata = VideoMetadataManager.save(
               sha256(`photos:${file.url}`),
               false,

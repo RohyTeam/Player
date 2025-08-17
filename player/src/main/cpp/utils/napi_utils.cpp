@@ -34,6 +34,12 @@ void NapiUtils::SetPropertyNumberValue(napi_env env, napi_value obj, const char*
     napi_set_named_property(env, obj, propertyName, jsValue);
 }
 
+void NapiUtils::SetPropertyDoubleValue(napi_env env, napi_value obj, const char* propertyName, double_t value) {
+    napi_value jsValue;
+    napi_create_double(env, value, &jsValue);
+    napi_set_named_property(env, obj, propertyName, jsValue);
+}
+
 void NapiUtils::SetPropertyBooleanValue(napi_env env, napi_value obj, const char* propertyName, bool value) {
     napi_value jsValue;
     napi_get_boolean(env, value, &jsValue);

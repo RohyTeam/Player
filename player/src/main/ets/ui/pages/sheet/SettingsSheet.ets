@@ -11,9 +11,11 @@ import { setColorMode } from '../../../utils/ConfigurationUtils'
 
 @ComponentV2
 export struct SettingsSheet {
+  @Consumer("indexNavigator")
+  private indexNavigator: NavPathStack = new NavPathStack()
+
   @Event
-  close: () => void = () => {
-  }
+  close: () => void
 
   build() {
     InnerContainer({
@@ -112,6 +114,18 @@ export struct SettingsSheet {
           }
         })
       }
+/*
+      InnerContainerDivider()
+      InnerComponentSet() {
+        InnerButton({
+          title: "debug",
+          showGoToIcon: true,
+          clickCallback: () => {
+            this.close()
+            this.indexNavigator.pushPath({ name: 'DebugPage' })
+          }
+        })
+      }*/
     }
   }
 }

@@ -9,11 +9,11 @@ import { PlayerContext } from '../../../player/PlayerContext'
 import { AbilityStorage } from '../../../storage/AbilityStorage'
 import { LocalFileVideoSource } from '../../../player/VideoSource'
 import { PlayerController } from '../../../player/PlayerController'
-import { MetadataCache } from '../../../cache/MetadataCache'
+import { MetadataFetcher } from '../../../metadata/MetadataFetcher'
 import { buildMenuGroup, menuGroups, RohyMenu, RohyMenuItem } from '../../component/menu/RohyMenu'
 import { ability, ensureContext, ensureUIAbilityContext } from '../../../utils/AbilityUtils'
 import { SavedVideoMetadata } from '../../../metadata/SavedVideoMetadata'
-import { VideoMetadataManager } from '../../../file/VideoMetadataManager'
+import { VideoMetadataManager } from '../../../metadata/VideoMetadataManager'
 import { sha256 } from '../../../utils/HashUtils'
 
 @ComponentV2
@@ -104,7 +104,7 @@ export struct PCControlPanel {
                   if (VideoMetadataManager.exists(sha256(`files:${url}`))) {
                     savedMetadata = VideoMetadataManager.load(sha256(`files:${url}`))!
                   } else {
-                    let metadata = await MetadataCache.getOrCreate(url)
+                    let metadata = await MetadataFetcher.fetch(url)
                     savedMetadata = VideoMetadataManager.save(
                       sha256(`files:${url}`),
                       false,

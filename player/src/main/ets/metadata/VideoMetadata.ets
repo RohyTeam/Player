@@ -5,12 +5,13 @@ export interface VideoMetadata {
 
   duration: number
   bitrate: number
+  averageFramerate: number
   width: number
   height: number
   hdr: boolean
   codec: string
   codecLong: string
-  cover: ArrayBuffer | undefined // jpeg
+  cover: ArrayBuffer | string | undefined // jpeg, if string, point to local saved picture path
 
   chapters: ChapterMetadata[]
   tracks: TrackMetadata[]
@@ -21,6 +22,7 @@ export function copyVideoMetadata(metadata: VideoMetadata): VideoMetadata {
   return {
     duration: metadata.duration,
     bitrate: metadata.bitrate,
+    averageFramerate: metadata.averageFramerate,
     width: metadata.width,
     height: metadata.height,
     hdr: metadata.hdr,
@@ -57,6 +59,7 @@ function copyTracks(tracks: TrackMetadata[]): TrackMetadata[] {
       width: track.width,
       height: track.height,
       duration: track.duration,
+      averageFramerate: track.averageFramerate,
       bitrate: track.bitrate,
       sampleRate: track.sampleRate,
       filename: track.filename,

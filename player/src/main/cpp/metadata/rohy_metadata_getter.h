@@ -32,6 +32,7 @@ struct TrackMetadata {
     int width = 0;
     int height = 0;
     int64_t duration = 0;
+    double averageFrameRate = -1;
     int bitrate = 0;
     
     int samplerate = 0;
@@ -48,6 +49,7 @@ public:
     int bitrate = 0;
     int width = 0;
     int height = 0;
+    double averageFrameRate = -1;
     bool hdr = false;
     std::string codec;
     std::string codec_full;

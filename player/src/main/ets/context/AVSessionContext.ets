@@ -5,6 +5,7 @@ import { image } from '@kit.ImageKit';
 import { PlayerController } from '../player/PlayerController';
 import { AbilityStorage } from '../storage/AbilityStorage';
 import { PlayerContext } from '../player/PlayerContext';
+import { ensurePath } from '../utils/FileUtils';
 
 export class AVSessionContext {
   private static session: avSession.AVSession | undefined = undefined
@@ -20,7 +21,11 @@ export class AVSessionContext {
     let videoMetadata = source.metadata().metadata
     let cover: image.PixelMap | undefined
     if (videoMetadata.cover != null) {
-      cover = image.createImageSource(videoMetadata.cover).createPixelMapSync()
+      if (typeof videoMetadata.cover == 'string') {
+        cover = image.createImageSource(ensurePath(videoMetadata.cover)).createPixelMapSync()
+      } else {
+        cover = image.createImageSource(videoMetadata.cover).createPixelMapSync()
+      }
     } else {
       cover = undefined
     }

@@ -1,21 +1,13 @@
-import { Playlist } from "./Playlist";
+import { PlaylistDao } from "../../database/dao/PlaylistDao";
+import { DatabaseManager, DB } from "../../database/DatabaseManager";
+import { Table_PlaylistDao } from "../../database/table/PlaylistTable";
+import { RDataSource } from "../RDataSource";
 
-export class PlaylistDataSource implements IDataSource {
+@ObservedV2
+export class PlaylistDataSource extends RDataSource<PlaylistDao> {
 
-  totalCount(): number {
-    throw new Error("Method not implemented.");
-  }
-
-  getData(index: number): Playlist {
-    throw new Error("Method not implemented.");
-  }
-
-  registerDataChangeListener(listener: DataChangeListener): void {
-    throw new Error("Method not implemented.");
-  }
-
-  unregisterDataChangeListener(listener: DataChangeListener): void {
-    throw new Error("Method not implemented.");
+  constructor() {
+    super(DB, Table_PlaylistDao, DB.playlistDao, (a, b) => a.name.localeCompare(b.name))
   }
 
 }

@@ -156,3 +156,11 @@ export function deleteInTemp(name: string) {
 export function ensurePath(uriOrPath: string): string {
   return new fileUri.FileUri(uriOrPath).path
 }
+
+export function ensureUri(uriOrPath: string): string {
+  return fileUri.getUriFromPath(ensurePath(uriOrPath))
+}
+
+export function fileName(uriOrPath: string): string {
+  return new fileUri.FileUri(uriOrPath).name
+}

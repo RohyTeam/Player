@@ -270,6 +270,8 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
         meta.width = codecpar->width;
         meta.height = codecpar->height;
         
+        meta.averageFrameRate = av_q2d(video_stream->avg_frame_rate);
+        
         meta.hdr = (codecpar->color_range == AVCOL_RANGE_JPEG) || 
                    (codecpar->color_trc == AVCOL_TRC_SMPTE2084) ||
                    (codecpar->color_primaries == AVCOL_PRI_BT2020);
@@ -326,6 +328,7 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                     track.width = stream->codecpar->width;
                     track.height = stream->codecpar->height;
                     track.bitrate = stream->codecpar->bit_rate;
+                    track.averageFrameRate = av_q2d(stream->avg_frame_rate);
                     break;
                     
                 case AVMEDIA_TYPE_AUDIO:

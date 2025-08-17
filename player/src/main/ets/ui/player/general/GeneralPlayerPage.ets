@@ -48,7 +48,7 @@ export struct GeneralPlayerPage {
     NavDestination() {
       Stack() {
         if (!this.playerContext.video || this.playerContext.videoSource == undefined) {
-          // 如果有其他原因（比如播控中心）及时将当前页面关闭
+          // 如果有其他原因导致视频停止播放（比如播控中心）及时将当前页面关闭
           Column()
             .onAppear(() => {
               this.indexNavigator.pop()
@@ -66,7 +66,7 @@ export struct GeneralPlayerPage {
     }
     .backgroundColor(Color.Black)
     .hideTitleBar(true)
-    .hideBackButton(true)
+    .hideToolBar(true)
     .hideBackButton(true)
   }
 }

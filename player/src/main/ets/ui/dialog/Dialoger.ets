@@ -1,9 +1,9 @@
 import { Sys } from '../../context/SystemContext'
 
 export class Dialoger {
+
   public static alert(context: UIContext, title: ResourceStr | undefined, message: ResourceStr | undefined,
-    onClose: () => void = () => {
-    }) {
+    onClose: () => void = () => {}) {
     context.showAlertDialog({
       title: title,
       message: message,
@@ -32,4 +32,5 @@ export class Dialoger {
       }
     })
   }
+
 }

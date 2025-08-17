@@ -211,6 +211,42 @@
     {
       "name": "internal_audio",
       "value": "Internal %s"
+    },
+    {
+      "name": "please_type_playlist_name",
+      "value": "Please type playlist name"
+    },
+    {
+      "name": "confirm",
+      "value": "Confirm"
+    },
+    {
+      "name": "cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "create_success",
+      "value": "Successfully created"
+    },
+    {
+      "name": "name_cannot_be_blank",
+      "value": "Name cannot be blank"
+    },
+    {
+      "name": "name_duplicated",
+      "value": "Name duplicated"
+    },
+    {
+      "name": "please_type_folder_name",
+      "value": "Please type folder name"
+    },
+    {
+      "name": "not_implemented_below",
+      "value": "Not implemented below"
+    },
+    {
+      "name": "photos_not_importable",
+      "value": "Videos in Photos are not importable"
     }
   ]
 }

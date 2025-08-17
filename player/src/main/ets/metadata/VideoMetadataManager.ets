@@ -1,4 +1,4 @@
-import { copyVideoMetadata, VideoMetadata } from "../metadata/VideoMetadata";
+import { copyVideoMetadata, VideoMetadata } from "./VideoMetadata";
 import { superContext } from "../utils/AbilityUtils";
 import {
   createFileInFiles,
@@ -6,6 +6,7 @@ import {
   deleteInFiles,
   deleteInTemp,
   ensurePath,
+  ensureUri,
   existsInFiles,
   existsInTemp,
   folderExistsInFiles,
@@ -25,7 +26,7 @@ import { JSON } from "@kit.ArkTS";
 import RohyMetadata from 'librohy_metadata.so';
 import { PhotosVideoSource, VideoSource, VideoSourceType } from "../player/VideoSource";
 import { Codec, CodecConstants } from "../constants/CodecConstants";
-import { SavedVideoMetadata } from "../metadata/SavedVideoMetadata";
+import { SavedVideoMetadata } from "./SavedVideoMetadata";
 import { data } from "@kit.TelephonyKit";
 import { SubtitleInfo } from "../player/subtitle/SubtitleInfo";
 
@@ -48,6 +49,14 @@ export class VideoMetadataManager {
 
   public static existsInTemp(identity: string): boolean {
     return folderExistsInTemp(`videos/${identity}`)
+  }
+
+  public static tempToFile(identity: string) {
+    if (!existsInTemp(identity))
+      return
+    if (existsInFiles(identity))
+      return
+    fileIo.copyDirSync(getPathInTemp(`videos/${identity}`), getPathInFiles(`videos/${identity}`), 1)
   }
 
   public static save(identity: string, database: boolean, url: string, metadata: VideoMetadata, headers?: Record<string, string>): SavedVideoMetadata | undefined { // if file url presented, save tracks
@@ -135,19 +144,17 @@ export class VideoMetadataManager {
     }
   }
 
+  public static loadAsync(identity: string): Promise<SavedVideoMetadata | undefined> {
+    return new Promise((resolver) => {
+      return resolver(VideoMetadataManager.load(identity))
+    })
+  }
+
   public static load(identity: string): SavedVideoMetadata | undefined {
     if (!VideoMetadataManager.exists(identity))
       return undefined
 
     let inFiles = VideoMetadataManager.existsInFiles(identity)
-
-    let openOrCreateFile = (path: string): fileIo.File => {
-      if (inFiles) {
-        return openOrCreateFileInFiles(path)
-      } else {
-        return openOrCreateFileInTemp(path)
-      }
-    }
 
     let fileExists = (path: string): boolean => {
       if (inFiles) {
@@ -185,12 +192,7 @@ export class VideoMetadataManager {
 
     let metadata: VideoMetadata = JSON.parse(fileIo.readTextSync(getPath(`videos/${identity}/metadata.json`))) as VideoMetadata
 
-    let coverFile = openOrCreateFile(`videos/${identity}/cover.jpg`)
-    let buffer = new ArrayBuffer(fileIo.statSync(coverFile.fd).size)
-    fileIo.read(coverFile.fd, buffer)
-    fileIo.closeSync(coverFile)
-
-    metadata.cover = buffer
+    metadata.cover = ensureUri(getPath(`videos/${identity}/cover.jpg`))
 
     let subtitleInfos: SubtitleInfo[] = []
 
