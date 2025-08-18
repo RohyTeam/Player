@@ -75,6 +75,9 @@ export struct PlayerPage {
         AVSessionContext.updateSession(this.getUIContext())
       }
     })
+    this.playerContext.player.onCompleted(() => {
+      this.playerController.pause()
+    })
   }
 
   aboutToDisappear(): void {

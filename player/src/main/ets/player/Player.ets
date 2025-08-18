@@ -271,6 +271,9 @@ export class AvPlayer extends AbstractPlayer {
   }
 
   play(): void {
+    if (this.currentPosition() == this.maxDuration()) {
+      this.seek(0)
+    }
     this.avPlayer?.play()
   }
 
@@ -372,6 +375,9 @@ export class IjkPlayer extends AbstractPlayer {
   }
 
   play(): void {
+    if (this.currentPosition() == this.maxDuration()) {
+      this.seek(0)
+    }
     this.ijkPlayer?.start()
     this.onPlayCallback()
   }
