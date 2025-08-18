@@ -1,26 +1,7 @@
 import { copyVideoMetadata, VideoMetadata } from "./VideoMetadata";
 import { superContext } from "../utils/AbilityUtils";
 import {
-  createFileInFiles,
-  createFileInTemp,
-  deleteInFiles,
-  deleteInTemp,
-  ensurePath,
-  ensureUri,
-  existsInFiles,
-  existsInTemp,
-  folderExistsInFiles,
-  folderExistsInTemp,
-  getPathInFiles,
-  getPathInTemp,
-  listFolderInFiles,
-  listFolderInTemp,
-  mkdirsInFiles,
-  mkdirsInTemp,
-  openOrCreateFileInFiles,
-  openOrCreateFileInTemp,
-  readBufferInFiles,
-  readTextInFiles } from "../utils/FileUtils";
+  ensurePath, ensureUri, fileName as getFileName, } from "../utils/FileUtils";
 import { fileIo } from "@kit.CoreFileKit";
 import { JSON } from "@kit.ArkTS";
 import RohyMetadata from 'librohy_metadata.so';
@@ -29,6 +10,7 @@ import { Codec, CodecConstants } from "../constants/CodecConstants";
 import { SavedVideoMetadata } from "./SavedVideoMetadata";
 import { data } from "@kit.TelephonyKit";
 import { SubtitleInfo } from "../player/subtitle/SubtitleInfo";
+import { appFileSystem, FileSystem } from "../filemanagement/FileSystem";
 
 interface ExportInfo {
   index: number
@@ -39,56 +21,59 @@ interface ExportInfo {
 
 export class VideoMetadataManager {
 
-  public static exists(identity: string): boolean {
-    return VideoMetadataManager.existsInFiles(identity) || VideoMetadataManager.existsInTemp(identity)
+  public static exists(identity: string, fs?: FileSystem): boolean {
+    return VideoMetadataManager.existsInFiles(identity, fs) || VideoMetadataManager.existsInTemp(identity, fs)
   }
 
-  public static existsInFiles(identity: string): boolean {
-    return folderExistsInFiles(`videos/${identity}`)
+  public static existsInFiles(identity: string, fs?: FileSystem): boolean {
+    return (fs ?? appFileSystem()).folderExistsInFiles(`videos/${identity}`)
   }
 
-  public static existsInTemp(identity: string): boolean {
-    return folderExistsInTemp(`videos/${identity}`)
+  public static existsInTemp(identity: string, fs?: FileSystem): boolean {
+    return (fs ?? appFileSystem()).folderExistsInTemp(`videos/${identity}`)
   }
 
-  public static tempToFile(identity: string) {
-    if (!existsInTemp(identity))
+  public static tempToFile(identity: string, fileSystem?: FileSystem) {
+    let fs = fileSystem ?? appFileSystem()
+    if (!fs.existsInTemp(identity))
       return
-    if (existsInFiles(identity))
+    if (fs.existsInFiles(identity))
       return
-    fileIo.copyDirSync(getPathInTemp(`videos/${identity}`), getPathInFiles(`videos/${identity}`), 1)
+    fileIo.copyDirSync(fs.getPathInTemp(`videos/${identity}`), fs.getPathInFiles(`videos/${identity}`), 1)
   }
 
-  public static save(identity: string, database: boolean, url: string, metadata: VideoMetadata, headers?: Record<string, string>): SavedVideoMetadata | undefined { // if file url presented, save tracks
+  public static save(identity: string, database: boolean, url: string, metadata: VideoMetadata, fileSystem?: FileSystem, headers?: Record<string, string>): SavedVideoMetadata | undefined { // if file url presented, save tracks
     if (!metadata.cover)
       return undefined
-    if (VideoMetadataManager.exists(identity))
+    if (VideoMetadataManager.exists(identity, fileSystem))
       return undefined
+
+    let fs = fileSystem ?? appFileSystem()
 
     let newMetadata = copyVideoMetadata(metadata)
     newMetadata.cover = undefined // 封面单独保存
 
     let openOrCreateFile = (path: string): fileIo.File => {
       if (database) {
-        return openOrCreateFileInFiles(path)
+        return fs.openOrCreateFileInFiles(path)
       } else {
-        return openOrCreateFileInTemp(path)
+        return fs.openOrCreateFileInTemp(path)
       }
     }
 
     let mkdirs = (path: string): void => {
       if (database) {
-        mkdirsInFiles(path)
+        fs.mkdirsInFiles(path)
       } else {
-        mkdirsInTemp(path)
+        fs.mkdirsInTemp(path)
       }
     }
 
     let getPath = (path: string): string => {
       if (database) {
-        return getPathInFiles(path)
+        return fs.getPathInFiles(path)
       } else {
-        return getPathInTemp(path)
+        return fs.getPathInTemp(path)
       }
     }
 
@@ -144,39 +129,41 @@ export class VideoMetadataManager {
     }
   }
 
-  public static loadAsync(identity: string): Promise<SavedVideoMetadata | undefined> {
+  public static loadAsync(identity: string, fs?: FileSystem): Promise<SavedVideoMetadata | undefined> {
     return new Promise((resolver) => {
-      return resolver(VideoMetadataManager.load(identity))
+      return resolver(VideoMetadataManager.load(identity, fs))
     })
   }
 
-  public static load(identity: string): SavedVideoMetadata | undefined {
-    if (!VideoMetadataManager.exists(identity))
+  public static load(identity: string, fileSystem?: FileSystem): SavedVideoMetadata | undefined {
+    if (!VideoMetadataManager.exists(identity, fileSystem))
       return undefined
 
-    let inFiles = VideoMetadataManager.existsInFiles(identity)
+    let inFiles = VideoMetadataManager.existsInFiles(identity, fileSystem)
+
+    let fs = fileSystem ?? appFileSystem()
 
     let fileExists = (path: string): boolean => {
       if (inFiles) {
-        return existsInFiles(path)
+        return fs.existsInFiles(path)
       } else {
-        return existsInTemp(path)
+        return fs.existsInTemp(path)
       }
     }
 
     let getPath = (path: string): string => {
       if (inFiles) {
-        return getPathInFiles(path)
+        return fs.getPathInFiles(path)
       } else {
-        return getPathInTemp(path)
+        return fs.getPathInTemp(path)
       }
     }
 
     let listFolder = (path: string): string[] => {
       if (inFiles) {
-        return listFolderInFiles(path)
+        return fs.listFolderInFiles(path)
       } else {
-        return listFolderInTemp(path)
+        return fs.listFolderInTemp(path)
       }
     }
 
@@ -228,6 +215,38 @@ export class VideoMetadataManager {
         })
     }
 
+    if (fileExists(`videos/${identity}/external_subtitles`)) {
+      listFolder(`videos/${identity}/external_subtitles`)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((fileName, index) => {
+          if (fileName.endsWith(".srt")) {
+            subtitleInfos.push({
+              title: getFileName(getPath(`videos/${identity}/external_subtitles/${fileName}`)),
+              language: undefined,
+              type: 'srt',
+              url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
+              internal: true
+            })
+          } else if (fileName.endsWith(".ass")) {
+            subtitleInfos.push({
+              title: getFileName(getPath(`videos/${identity}/external_subtitles/${fileName}`)),
+              language: undefined,
+              type: 'ass',
+              url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
+              internal: true
+            })
+          } else if (fileName.endsWith(".sup")) {
+            subtitleInfos.push({
+              title: getFileName(getPath(`videos/${identity}/external_subtitles/${fileName}`)),
+              language: undefined,
+              type: 'pgs',
+              url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
+              internal: true
+            })
+          }
+        })
+    }
+
     return {
       metadata: metadata,
       identity: identity,
@@ -235,9 +254,13 @@ export class VideoMetadataManager {
     }
   }
 
-  public static delete(identity: string) {
-    deleteInFiles(`videos/${identity}`)
-    deleteInTemp(`videos/${identity}`)
+  public static delete(identity: string, fs?: FileSystem) {
+    try {
+      (fs ?? appFileSystem()).deleteInFiles(`videos/${identity}`, true);
+    } catch {}
+    try {
+      (fs ?? appFileSystem()).deleteInTemp(`videos/${identity}`, true)
+    } catch {}
   }
 
 }

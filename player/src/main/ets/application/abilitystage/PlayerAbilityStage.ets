@@ -16,20 +16,12 @@ export default class PlayerAbilityStage extends AbilityStage {
   private static superContext: Context | undefined = undefined
   private static task: taskpool.Task = new taskpool.Task(periodJob)
 
-  private static doPeriodJob() {
-    // 10 分钟执行一次
-    taskpool.executeDelayed(10 * 60 * 1000, PlayerAbilityStage.task, taskpool.Priority.LOW)
-      .then((result) => {
-        PlayerAbilityStage.doPeriodJob()
-      })
-  }
-
   async onCreate(): Promise<void> {
     PlayerAbilityStage.superContext = this.context
     await DB.init(this.context)
     PreferenceContext.load(this.context)
     SystemContext.start()
-    PlayerAbilityStage.doPeriodJob()
+    taskpool.executePeriodically(10 * 60 * 1000, PlayerAbilityStage.task, taskpool.Priority.LOW)
   }
 
   onDestroy(): void {

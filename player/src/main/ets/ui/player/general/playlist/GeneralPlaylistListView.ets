@@ -1,8 +1,9 @@
-import { PlaylistDao } from "../../../database/dao/PlaylistDao";
-import { DataSources } from "../../../datasource/DataSources";
-import { Modifiers } from "../../attributemodifier/Modifiers";
+import { PlaylistDao } from "../../../../database/dao/PlaylistDao";
+import { DataSources } from "../../../../datasource/DataSources";
+import { Modifiers } from "../../../attributemodifier/Modifiers";
 import { curves } from "@kit.ArkUI";
-import { SimpleLoadingPage } from "../../component/page/SimpleLoadingPage";
+import { SimpleLoadingPage } from "../../../component/page/SimpleLoadingPage";
+import { PlaylistItem } from "./PlaylistItem";
 
 @ComponentV2
 export struct GeneralPlaylistView {
@@ -18,35 +19,9 @@ export struct GeneralPlaylistView {
       Grid(undefined, { regularSize: [1, 1] }) {
         LazyForEach(DataSources.PLAYLIST, (playlist: PlaylistDao) => {
           GridItem() {
-            Button() {
-              Column() {
-                Image($r("app.media.hidisk_icon_folder"))
-                  .aspectRatio(4 / 3)
-                  .width("100%")
-                  .margin({
-                    top: 8,
-                    left: 8,
-                    right: 8,
-                    bottom: 4
-                  })
-                Text(playlist.name)
-                  .margin({
-                    bottom: 8,
-                    left: 8,
-                    right: 8
-                  })
-              }
-            }
-            .onClick(() => {
-              let params: Record<string, object> = {
-                'dao': playlist,
-                'path': []
-              }
-              this.indexNavigator.pushPath({ name: `PlaylistView`, param: params })
+            PlaylistItem({
+              playlist: playlist
             })
-            .borderRadius(16)
-            .type(ButtonType.Normal)
-            .backgroundColor(Color.Transparent)
           }
           .transition(
             TransitionEffect.OPACITY

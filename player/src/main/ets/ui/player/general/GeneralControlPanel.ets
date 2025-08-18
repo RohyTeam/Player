@@ -1,9 +1,10 @@
 import { PlayerContext } from '../../../player/PlayerContext'
 import { PlayerController } from '../../../player/PlayerController'
 import { AbilityStorage } from '../../../storage/AbilityStorage'
-import { PlayerBottomBar } from '../PlayerBottomBar'
+import { BottomBarContext, PlayerBottomBar } from '../PlayerBottomBar'
 import { curves } from '@kit.ArkUI'
 import { PlayerTopBar } from '../PlayerTopBar'
+import { HandGestureModifier } from '../../gesture/HandGestureModifier'
 
 @ComponentV2
 export struct GeneralControlPanel {
@@ -12,26 +13,24 @@ export struct GeneralControlPanel {
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
   @Local
-  showControllerBar: boolean = false
+  bottomBarContext: BottomBarContext = new BottomBarContext()
 
   build() {
     Column() {
       PlayerTopBar()
         .focusable(false)
-        .visibility(this.showControllerBar ? Visibility.Visible : Visibility.Hidden)
+        .visibility(this.bottomBarContext.shown ? Visibility.Visible : Visibility.Hidden)
         .animation({
           curve: curves.springMotion(),
           duration: 200
         })
         .transition(TransitionEffect.move(TransitionEdge.TOP).combine(TransitionEffect.OPACITY))
       Blank()
-        .onClick(() => {
-          this.showControllerBar = !this.showControllerBar
-        })
+        .gestureModifier(new HandGestureModifier(this.playerController, this.bottomBarContext))
         .layoutWeight(1)
       PlayerBottomBar()
         .focusable(false)
-        .visibility(this.showControllerBar ? Visibility.Visible : Visibility.Hidden)
+        .visibility(this.bottomBarContext.shown ? Visibility.Visible : Visibility.Hidden)
         .animation({
           curve: curves.springMotion(),
           duration: 200

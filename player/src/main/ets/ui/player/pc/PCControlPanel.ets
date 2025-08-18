@@ -15,6 +15,7 @@ import { ability, ensureContext, ensureUIAbilityContext } from '../../../utils/A
 import { SavedVideoMetadata } from '../../../metadata/SavedVideoMetadata'
 import { VideoMetadataManager } from '../../../metadata/VideoMetadataManager'
 import { sha256 } from '../../../utils/HashUtils'
+import { ensurePath } from '../../../utils/FileUtils'
 
 @ComponentV2
 export struct PCControlPanel {
@@ -104,7 +105,7 @@ export struct PCControlPanel {
                   if (VideoMetadataManager.exists(sha256(`files:${url}`))) {
                     savedMetadata = VideoMetadataManager.load(sha256(`files:${url}`))!
                   } else {
-                    let metadata = await MetadataFetcher.fetch(url)
+                    let metadata = await MetadataFetcher.fetch(ensurePath(url), url.startsWith("files://media"))
                     savedMetadata = VideoMetadataManager.save(
                       sha256(`files:${url}`),
                       false,

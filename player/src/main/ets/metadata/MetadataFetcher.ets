@@ -7,14 +7,13 @@ import { ensurePath } from '../utils/FileUtils';
 
 export class MetadataFetcher {
 
-  public static async fetch(uriOrPath: string, headers?: Record<string, string>): Promise<VideoMetadata> {
-    let path = ensurePath(uriOrPath)
+  public static async fetch(path: string, isMedia: boolean, headers?: Record<string, string>): Promise<VideoMetadata> {
     let tempMetadata = RohyMetadata.RohyMetedata_getMetadata(path, headers)
     if (!tempMetadata) {
       throw Error("metadata is undefined")
     }
     let metadata = tempMetadata as VideoMetadata
-    if (path.startsWith("file://media")) {
+    if (isMedia) {
       // 对于图库中的文件，需要再用一下系统自带的 AVMetadataExtractor 来解决视频方向的问题
       let file = fileIo.openSync(path)
       let avMetadataExtractor = await media.createAVMetadataExtractor()

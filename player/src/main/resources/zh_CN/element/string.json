@@ -247,6 +247,38 @@
     {
       "name": "photos_not_importable",
       "value": "只能导入文件管理中的视频文件"
+    },
+    {
+      "name": "video_imported",
+      "value": "这个视频已经被导入到该播放列表了"
+    },
+    {
+      "name": "importing",
+      "value": "导入中（%s/%s）"
+    },
+    {
+      "name": "rename",
+      "value": "重命名"
+    },
+    {
+      "name": "delete",
+      "value": "删除"
+    },
+    {
+      "name": "delete_confirm",
+      "value": "确认删除吗？"
+    },
+    {
+      "name": "delete_confirm_desc",
+      "value": "删除后将无法恢复"
+    },
+    {
+      "name": "please_type_rename",
+      "value": "请输入新名称"
+    },
+    {
+      "name": "rename_success",
+      "value": "重命名成功"
     }
   ]
 }

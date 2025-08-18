@@ -397,9 +397,7 @@ export class IjkPlayer extends AbstractPlayer {
         () => new PlayerContext()
       )!.playSpeed = speed
     }
-    if (!this.longPressSpeeding) {
-      this.ijkPlayer?.setSpeed(`${speed}f`)
-    }
+    this.ijkPlayer?.setSpeed(`${speed}f`)
   }
 
   prepare(abilityContext: Context, context: object, idOrController: XComponentController | string,

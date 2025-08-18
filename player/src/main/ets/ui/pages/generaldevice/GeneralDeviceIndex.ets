@@ -7,7 +7,7 @@ import { GeneralPlayerPage } from '../../player/general/GeneralPlayerPage'
 import { PlaylistFolderView } from '../../player/general/playlist/PlaylistFolderView'
 import { DebugPage } from '../debug/DebugPage'
 import { RohyPlayerDebugPage } from '../debug/RohyPlayerDebugPage'
-import { GeneralPlaylistView } from './GeneralPlaylistListView'
+import { GeneralPlaylistView } from '../../player/general/playlist/GeneralPlaylistListView'
 import { IndexMenuButtons } from './IndexMenuButtons'
 
 @ComponentV2

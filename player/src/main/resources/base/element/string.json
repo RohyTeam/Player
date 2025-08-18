@@ -247,6 +247,38 @@
     {
       "name": "photos_not_importable",
       "value": "Videos in Photos are not importable"
+    },
+    {
+      "name": "video_imported",
+      "value": "The video has already been imported in this playlist"
+    },
+    {
+      "name": "importing",
+      "value": "Import (%s/%s)"
+    },
+    {
+      "name": "rename",
+      "value": "Rename"
+    },
+    {
+      "name": "delete",
+      "value": "Delete"
+    },
+    {
+      "name": "delete_confirm",
+      "value": "Are you sure to delete?"
+    },
+    {
+      "name": "delete_confirm_desc",
+      "value": "Once deleted, it cannot be reverted"
+    },
+    {
+      "name": "please_type_rename",
+      "value": "Please type new name"
+    },
+    {
+      "name": "rename_success",
+      "value": "Successfully renamed"
     }
   ]
 }

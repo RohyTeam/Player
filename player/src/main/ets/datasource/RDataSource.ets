@@ -48,12 +48,16 @@ export abstract class RDataSource<D extends RData> implements IDataSource {
   public async update(data: D, alreadyUpdate: boolean) {
     if (data.id == undefined || this.loadedData.findIndex((stored) => stored.id === data.id) < 0)
       return
-    let index = this.loadedData.findIndex((stored) => stored.id === data.id)
+    let oldIndex = this.loadedData.findIndex((stored) => stored.id === data.id)
     if (!alreadyUpdate) {
       await this.dao.update(data)
     }
+    if (this.sorter != undefined)
+      this.loadedData = this.loadedData.sort(this.sorter)
+    let newIndex = this.loadedData.findIndex((stored) => stored.id === data.id)
     this.dataChangeListeners.forEach((listener) => {
-      listener.onDataChange(index)
+      listener.onDataDelete(oldIndex)
+      listener.onDataAdd(newIndex)
     })
   }
 
@@ -61,7 +65,9 @@ export abstract class RDataSource<D extends RData> implements IDataSource {
     if (data.id == undefined || this.loadedData.findIndex((stored) => stored.id === data.id) < 0)
       return
     let index = this.loadedData.findIndex((stored) => stored.id === data.id)
-    this.loadedData = this.loadedData.splice(index, 1)
+    this.loadedData.splice(index, 1)
+
+    this.dao.delete(data)
 
     this.dataChangeListeners.forEach((listener) => {
       listener.onDataDelete(index)

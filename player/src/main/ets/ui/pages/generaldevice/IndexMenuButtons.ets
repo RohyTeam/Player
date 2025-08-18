@@ -11,6 +11,7 @@ import { SettingsSheet } from '../sheet/SettingsSheet';
 import { SavedVideoMetadata } from '../../../metadata/SavedVideoMetadata';
 import { VideoMetadataManager } from '../../../metadata/VideoMetadataManager';
 import { sha256 } from '../../../utils/HashUtils';
+import { ensurePath } from '../../../utils/FileUtils';
 
 @ComponentV2
 export struct IndexMenuButtons {
@@ -153,7 +154,7 @@ export struct IndexMenuButtons {
           if (VideoMetadataManager.exists(sha256(`files:${file.url}`))) {
             savedMetadata = VideoMetadataManager.load(sha256(`files:${file.url}`))!
           } else {
-            let metadata = await MetadataFetcher.fetch(file.url)
+            let metadata = await MetadataFetcher.fetch(ensurePath(file.url), file.url.startsWith("files://media"))
             savedMetadata = VideoMetadataManager.save(
               sha256(`files:${file.url}`),
               false,
@@ -172,7 +173,7 @@ export struct IndexMenuButtons {
           if (VideoMetadataManager.exists(sha256(`photos:${file.url}`))) {
             savedMetadata = VideoMetadataManager.load(sha256(`photos:${file.url}`))!
           } else {
-            let metadata = await MetadataFetcher.fetch(file.url)
+            let metadata = await MetadataFetcher.fetch(ensurePath(file.url), file.url.startsWith("files://media"))
             savedMetadata = VideoMetadataManager.save(
               sha256(`photos:${file.url}`),
               false,

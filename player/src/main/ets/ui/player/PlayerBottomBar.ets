@@ -13,6 +13,14 @@ import { compile } from '../../lib/subtitle/ass_compiler'
 import { SubtitleInfo } from '../../player/subtitle/SubtitleInfo'
 import { menuGroups, buildMenuGroup, RohyMenu, RohyMenuItem } from '../component/menu/RohyMenu'
 
+@ObservedV2
+export class BottomBarContext {
+
+  @Trace
+  shown: boolean = false
+
+}
+
 @ComponentV2
 export struct PlayerBottomBar {
   @Consumer("playerController")
@@ -261,51 +269,57 @@ export struct PlayerBottomBar {
           })
           return items
         }),
-        buildMenuGroup(() => [
-          {
-            options: {
-              content: $r('app.string.open_subtitle')
-            },
-            action: () => {
-              pickSingleSubtitleFile(this.getUIContext())
-                .then((file) => {
-                  if (file == undefined)
-                    return
-                  if (file.endsWith(".ass")) {
-                    let compiledASS = compile(fileIo.readTextSync(new fileUri.FileUri(file).path), void 0)
-                    let title = compiledASS.info.Title
-                    if (title == undefined || title == "")
-                      title = new fileUri.FileUri(file).name
-                    this.playerContext.subtitles.push({
-                      title: title,
-                      language: undefined,
-                      url: file,
-                      type: 'ass',
-                      internal: false
-                    })
-                  } else if (file.endsWith(".sup")) {
-                    this.playerContext.subtitles.push({
-                      title: new fileUri.FileUri(file).name,
-                      language: undefined,
-                      url: file,
-                      type: 'pgs',
-                      internal: false
-                    })
-                  } else if (file.endsWith(".srt")) {
-                    this.playerContext.subtitles.push({
-                      title: new fileUri.FileUri(file).name,
-                      language: undefined,
-                      url: file,
-                      type: 'srt',
-                      internal: false
-                    })
-                  }
-                })
-            }
-          }
-        ])
+        buildMenuGroup(() => {
+          return this.openSubtitleMenuItem()
+        })
       ])
     })
+  }
+
+  private openSubtitleMenuItem(): RohyMenuItem[] {
+    return [
+      {
+        options: {
+          content: $r('app.string.open_subtitle')
+        },
+        action: () => {
+          pickSingleSubtitleFile(this.getUIContext())
+            .then((file) => {
+              if (file == undefined)
+                return
+              if (file.endsWith(".ass")) {
+                let compiledASS = compile(fileIo.readTextSync(new fileUri.FileUri(file).path), void 0)
+                let title = compiledASS.info.Title
+                if (title == undefined || title == "")
+                  title = new fileUri.FileUri(file).name
+                this.playerContext.subtitles.push({
+                  title: title,
+                  language: undefined,
+                  url: file,
+                  type: 'ass',
+                  internal: false
+                })
+              } else if (file.endsWith(".sup")) {
+                this.playerContext.subtitles.push({
+                  title: new fileUri.FileUri(file).name,
+                  language: undefined,
+                  url: file,
+                  type: 'pgs',
+                  internal: false
+                })
+              } else if (file.endsWith(".srt")) {
+                this.playerContext.subtitles.push({
+                  title: new fileUri.FileUri(file).name,
+                  language: undefined,
+                  url: file,
+                  type: 'srt',
+                  internal: false
+                })
+              }
+            })
+        }
+      }
+    ]
   }
 
   private speedToText(speed: number): ResourceStr {
