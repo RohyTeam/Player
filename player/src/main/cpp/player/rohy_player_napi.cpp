@@ -48,14 +48,7 @@ napi_value RohyPlayer_Test(napi_env env, napi_callback_info info) {
     std::string path;
     NapiUtils::JsValueToString(env, args[1], 2048, path);
     
-    auto player = std::make_shared<RohyPlayer>(windowId);
-    
-    if (player->load(path)) {
-        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "RohyPlayer_Test", "FUCK: File loaded");
-        player->play();
-    } else {
-        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "RohyPlayer_Test", "FUCK: Failed to load file");
-    }
+    auto player = std::make_shared<RohyPlayer>();
     
     return nullptr;
 }

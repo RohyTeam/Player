@@ -1,14 +1,15 @@
-import { Pref } from '../../../context/PreferenceContext'
 import { Wanter } from '../../../context/WantAnnouncer'
 import { PlaylistDao } from '../../../database/dao/PlaylistDao'
 import { PlayerContext } from '../../../player/PlayerContext'
-import { AbilityStorage } from '../../../storage/AbilityStorage'
 import { GeneralPlayerPage } from '../../player/general/GeneralPlayerPage'
 import { PlaylistFolderView } from '../../player/general/playlist/PlaylistFolderView'
 import { DebugPage } from '../debug/DebugPage'
 import { RohyPlayerDebugPage } from '../debug/RohyPlayerDebugPage'
 import { GeneralPlaylistView } from '../../player/general/playlist/GeneralPlaylistListView'
 import { IndexMenuButtons } from './IndexMenuButtons'
+import { AboutPage } from '../misc/AboutPage'
+import { QnAPage } from '../misc/QnAPage'
+import { VisualStylePage } from './VisualStylePage'
 
 @ComponentV2
 export struct GeneralDeviceIndex {
@@ -27,7 +28,6 @@ export struct GeneralDeviceIndex {
     Navigation(this.indexNavigator) {
       if (Wanter.announced) {
         Column() {
-
         }
         .onAppear(() => {
           if (this.playerContext.video && this.playerContext.videoSource != undefined) {
@@ -74,6 +74,12 @@ export struct GeneralDeviceIndex {
       DebugPage()
     } else if (name == 'RohyPlayerDebugPage') {
       RohyPlayerDebugPage()
+    } else if (name == 'About') {
+      AboutPage()
+    } else if (name == 'QnA') {
+      QnAPage()
+    } else if (name == 'VisualStyle') {
+      VisualStylePage()
     }
   }
 }

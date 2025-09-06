@@ -1,36 +1,30 @@
-import { SavedVideoMetadata } from "../../../../metadata/SavedVideoMetadata"
-import { VideoMetadataManager } from "../../../../metadata/VideoMetadataManager"
-import { PlayerContext } from "../../../../player/PlayerContext"
-import { LocalFileVideoSource } from "../../../../player/VideoSource"
-import { PlaylistVideo } from "../../../../playlist/PlaylistStructure"
-import { SimpleLoadingPage } from "../../../component/page/SimpleLoadingPage"
-import { fileIo, fileShare } from "@kit.CoreFileKit"
-import { image } from "@kit.ImageKit"
-import { Modifiers } from "../../../attributemodifier/Modifiers"
-import { convertNumberToDurationString } from "../../../../utils/NumberUtils"
-import { buildMenuGroup, menuGroups, RohyMenu } from "../../../component/menu/RohyMenu"
-import { DialogHelper } from "@pura/harmony-dialog"
-import { isEmptyOrBlank } from "../../../../utils/StringUtils"
-import { promptAction } from "@kit.ArkUI"
-import { PlaylistFolderItemsDataSource } from "../../../../datasource/playlist/PlaylistFolderItemsDataSource"
-import { ensurePath } from "../../../../utils/FileUtils"
+import { SavedVideoMetadata } from '../../../../metadata/SavedVideoMetadata'
+import { VideoMetadataManager } from '../../../../metadata/VideoMetadataManager'
+import { PlayerContext } from '../../../../player/PlayerContext'
+import { LocalFileVideoSource } from '../../../../player/VideoSource'
+import { PlaylistVideo } from '../../../../playlist/PlaylistStructure'
+import { SimpleLoadingPage } from '../../../component/page/SimpleLoadingPage'
+import { fileIo, fileShare } from '@kit.CoreFileKit'
+import { Modifiers } from '../../../attributemodifier/Modifiers'
+import { convertNumberToDurationString } from '../../../../utils/NumberUtils'
+import { buildMenuGroup, menuGroups, RohyMenu } from '../../../component/menu/RohyMenu'
+import { DialogHelper } from '@pura/harmony-dialog'
+import { isEmptyOrBlank } from '../../../../utils/StringUtils'
+import { promptAction } from '@kit.ArkUI'
+import { PlaylistFolderItemsDataSource } from '../../../../datasource/playlist/PlaylistFolderItemsDataSource'
+import { ensurePath } from '../../../../utils/FileUtils'
 
 @ComponentV2
 export struct PlaylistVideoItem {
-
   @Consumer("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
-
   @Consumer("playlistFolderDataSource")
   playlistFolderDataSource?: PlaylistFolderItemsDataSource
-
   @Param
   @Require
   video: PlaylistVideo
-
   @Local
   metadata?: SavedVideoMetadata
-
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
 
@@ -76,6 +70,7 @@ export struct PlaylistVideoItem {
             bottom: 4
           })
           .borderRadius(8)
+
           Text(this.video.name)
             .margin({
               bottom: 8,
@@ -153,8 +148,9 @@ export struct PlaylistVideoItem {
                 defaultFocus: true,
                 onAction: (action: number, dialogId: string, rawValue: string): void => {
                   DialogHelper.closeDialog(dialogId)
-                  if (!this.playlistFolderDataSource)
+                  if (!this.playlistFolderDataSource) {
                     return
+                  }
                   // clicked confirm
                   if (action == -1) {
                     let value = rawValue.trim()
@@ -194,8 +190,9 @@ export struct PlaylistVideoItem {
               content: $r('app.string.delete')
             },
             action: () => {
-              if (!this.playlistFolderDataSource)
+              if (!this.playlistFolderDataSource) {
                 return
+              }
               DialogHelper.showAlertDialog({
                 primaryTitle: $r("app.string.delete_confirm"),
                 content: $r("app.string.delete_confirm_desc"),
@@ -220,5 +217,4 @@ export struct PlaylistVideoItem {
       ])
     })
   }
-
 }

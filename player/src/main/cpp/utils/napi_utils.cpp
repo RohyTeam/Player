@@ -81,3 +81,9 @@ void NapiUtils::SetPropertyStringValueOrUndefined(napi_env env, napi_value obj, 
     !value.empty() ? napi_create_string_utf8(env, value.c_str(), value.length(), &jsValue) : napi_get_undefined(env, &jsValue);
     napi_set_named_property(env, obj, propertyName, jsValue);
 }
+
+napi_value NapiUtils::Int32ToJsNumber(napi_env env, int value) {
+    napi_value jsValue;
+    napi_create_int32(env, value, &jsValue);
+    return jsValue;
+}

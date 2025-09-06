@@ -1,6 +1,5 @@
 @ComponentV2
 export struct SimpleLoadingPage {
-
   build() {
     Column() {
       Blank()
@@ -17,5 +16,4 @@ export struct SimpleLoadingPage {
     .height("100%")
     .width("100%")
   }
-
 }

@@ -129,10 +129,6 @@
       "value": "关于"
     },
     {
-      "name": "blur_effect",
-      "value": "模糊效果"
-    },
-    {
       "name": "continuation",
       "value": "流转/接续"
     },
@@ -279,6 +275,102 @@
     {
       "name": "rename_success",
       "value": "重命名成功"
+    },
+    {
+      "name": "version_info",
+      "value": "版本信息"
+    },
+    {
+      "name": "source_code",
+      "value": "开源地址"
+    },
+    {
+      "name": "open_source_projects_used",
+      "value": "使用的开源项目"
+    },
+    {
+      "name": "screen_forward_and_backward",
+      "value": "双击前进后退"
+    },
+    {
+      "name": "screen_forward_and_backward_tips",
+      "value": "开启此选项后，你可以双击左三分之一屏幕来回退，双击右三分之一屏幕来快进，双击中间三分之一屏幕仍然可以暂停和播放。"
+    },
+    {
+      "name": "adjusting_progress",
+      "value": "%s/%s"
+    },
+    {
+      "name": "speeding_up",
+      "value": "加速播放中"
+    },
+    {
+      "name": "adjusting_brightness",
+      "value": "亮度：%s"
+    },
+    {
+      "name": "adjusting_volume",
+      "value": "音量：%s"
+    },
+    {
+      "name": "forwarded",
+      "value": "前进 15 秒"
+    },
+    {
+      "name": "backwarded",
+      "value": "后退 15 秒"
+    },
+    {
+      "name": "untitled",
+      "value": "(未命名）"
+    },
+    {
+      "name": "chapter_list",
+      "value": "章节列表"
+    },
+    {
+      "name": "ui_update",
+      "value": "UI 更新（预览版）"
+    },
+    {
+      "name": "visual_style",
+      "value": "视觉风格"
+    },
+    {
+      "name": "blur_style",
+      "value": "模糊风格"
+    },
+    {
+      "name": "blur_level",
+      "value": "模糊等级（%s）"
+    },
+    {
+      "name": "blur_style_thin",
+      "value": "薄"
+    },
+    {
+      "name": "blur_style_regular",
+      "value": "常规"
+    },
+    {
+      "name": "blur_style_thick",
+      "value": "厚"
+    },
+    {
+      "name": "use_display_test_image",
+      "value": "使用显示测试图片"
+    },
+    {
+      "name": "inner_cornor_radius",
+      "value": "内部圆角"
+    },
+    {
+      "name": "outer_cornor_radius",
+      "value": "外部圆角"
+    },
+    {
+      "name": "enable",
+      "value": "启用"
     }
   ]
 }

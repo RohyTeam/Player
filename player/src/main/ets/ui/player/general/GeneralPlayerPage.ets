@@ -1,6 +1,5 @@
 import { PlayerContext } from '../../../player/PlayerContext'
 import { PlayerController } from '../../../player/PlayerController'
-import { AbilityStorage } from '../../../storage/AbilityStorage'
 import { WindowManager } from '../../manager/WindowManager'
 import { PlayerPage } from '../PlayerPage'
 import { GeneralControlPanel } from './GeneralControlPanel'
@@ -21,7 +20,7 @@ export struct GeneralPlayerPage {
   landscape: boolean = false
 
   aboutToAppear(): void {
-    WindowManager.setFullscreen(this.getUIContext(), true)
+    // WindowManager.setFullscreen(this.getUIContext(), true)
     WindowManager.setStatusBar(this.getUIContext(), false)
     WindowManager.setNavigationIndicator(this.getUIContext(), false)
 
@@ -36,6 +35,10 @@ export struct GeneralPlayerPage {
   }
 
   aboutToDisappear(): void {
+    // WindowManager.setFullscreen(this.getUIContext(), false)
+    WindowManager.setStatusBar(this.getUIContext(), true)
+    WindowManager.setNavigationIndicator(this.getUIContext(), true)
+
     if (this.landscape && !Sys.isTablet()) {
       WindowManager.setOrientation(this.getUIContext(), window.Orientation.PORTRAIT)
     }

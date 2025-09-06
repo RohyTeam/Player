@@ -7,6 +7,7 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     RohyAssSubtitleRenderer::Init(env, exports);
     RohyPgsSubtitleRenderer::Init(env, exports);
+    SendableRohyPgsSubtitleRenderer::Init(env, exports);
     return exports;
 }
 EXTERN_C_END

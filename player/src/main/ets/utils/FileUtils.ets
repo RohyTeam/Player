@@ -1,7 +1,6 @@
 import { fileIo, fileUri, picker } from '@kit.CoreFileKit';
 import { ensureContext, superContext } from './AbilityUtils';
 import { BusinessError } from '@kit.BasicServicesKit';
-import { image } from '@kit.ImageKit';
 
 export class Files {
   public static saveDownload(context: UIContext | Context, path: string, data: ArrayBuffer | string) {
@@ -36,7 +35,8 @@ export function listFolderInFiles(name: string, context?: Context): string[] {
 }
 
 export function openOrCreateFileInFiles(name: string, context?: Context): fileIo.File {
-  return fileIo.openSync(`${(context ?? superContext()).filesDir}/${name}`, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
+  return fileIo.openSync(`${(context ?? superContext()).filesDir}/${name}`,
+    fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
 }
 
 export function mkdirsInFiles(name: string, context?: Context) {
@@ -66,8 +66,9 @@ export function existsInFiles(name: string, context?: Context): boolean {
 
 export function folderExistsInFiles(name: string, context?: Context): boolean {
   let exists = fileIo.accessSync(`${(context ?? superContext()).filesDir}/${name}`, fileIo.AccessModeType.EXIST)
-  if (!exists)
+  if (!exists) {
     return false
+  }
   let file = fileIo.openSync(`${(context ?? superContext()).filesDir}/${name}`)
   let stat = fileIo.statSync(file.fd)
   let isDirectory = stat.isDirectory()
@@ -77,8 +78,9 @@ export function folderExistsInFiles(name: string, context?: Context): boolean {
 
 export function fileExistsInFiles(name: string, context?: Context): boolean {
   let exists = fileIo.accessSync(`${(context ?? superContext()).filesDir}/${name}`, fileIo.AccessModeType.EXIST)
-  if (!exists)
+  if (!exists) {
     return false
+  }
   let file = fileIo.openSync(`${(context ?? superContext()).filesDir}/${name}`)
   let stat = fileIo.statSync(file.fd)
   let isFile = stat.isFile()
@@ -99,7 +101,8 @@ export function listFolderInTemp(name: string, context?: Context): string[] {
 }
 
 export function openOrCreateFileInTemp(name: string, context?: Context): fileIo.File {
-  return fileIo.openSync(`${(context ?? superContext()).tempDir}/${name}`, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
+  return fileIo.openSync(`${(context ?? superContext()).tempDir}/${name}`,
+    fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
 }
 
 export function mkdirsInTemp(name: string, context?: Context) {
@@ -129,8 +132,9 @@ export function existsInTemp(name: string, context?: Context): boolean {
 
 export function folderExistsInTemp(name: string, context?: Context): boolean {
   let exists = fileIo.accessSync(`${(context ?? superContext()).tempDir}/${name}`, fileIo.AccessModeType.EXIST)
-  if (!exists)
+  if (!exists) {
     return false
+  }
   let file = fileIo.openSync(`${(context ?? superContext()).tempDir}/${name}`)
   let stat = fileIo.statSync(file.fd)
   let isDirectory = stat.isDirectory()
@@ -140,8 +144,9 @@ export function folderExistsInTemp(name: string, context?: Context): boolean {
 
 export function fileExistsInTemp(name: string, context?: Context): boolean {
   let exists = fileIo.accessSync(`${(context ?? superContext()).tempDir}/${name}`, fileIo.AccessModeType.EXIST)
-  if (!exists)
+  if (!exists) {
     return false
+  }
   let file = fileIo.openSync(`${(context ?? superContext()).tempDir}/${name}`)
   let stat = fileIo.statSync(file.fd)
   let isFile = stat.isFile()
@@ -163,4 +168,36 @@ export function ensureUri(uriOrPath: string): string {
 
 export function fileName(uriOrPath: string): string {
   return new fileUri.FileUri(uriOrPath).name
+}
+
+export function fileNameAndExtension(uriOrPath: string): string[] {
+  let baseName = new fileUri.FileUri(uriOrPath).name
+  if (baseName.indexOf(".") < 0)
+    return [baseName, ""]
+  else {
+    let index = baseName.lastIndexOf(".")
+    return [baseName.substring(0, index), baseName.substring(index + 1)]
+  }
+}
+
+export function fileNameWithoutExtension(uriOrPath: string): string {
+  let baseName = new fileUri.FileUri(uriOrPath).name
+  if (baseName.indexOf(".") < 0)
+    return baseName
+  else
+    return baseName.substring(0, baseName.lastIndexOf("."))
+}
+
+export function readBuffer(path: string): ArrayBuffer {
+  let file = fileIo.openSync(path, fileIo.OpenMode.READ_WRITE)
+  let arrayBuffer = new ArrayBuffer(fileIo.statSync(file.fd).size)
+  fileIo.readSync(file.fd, arrayBuffer)
+  fileIo.closeSync(file)
+  return arrayBuffer
+}
+
+export function writeDirectly(path: string, content: ArrayBuffer | string) {
+  let file = fileIo.openSync(path, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE)
+  fileIo.writeSync(file.fd, content)
+  fileIo.closeSync(file)
 }

@@ -1,6 +1,3 @@
-import { VideoMetadata } from '../metadata/VideoMetadata'
-import { hash } from '@kit.CoreFileKit'
-import { stringToBytes } from '../utils/StringUtils'
 import { sha256 } from '../utils/HashUtils'
 import { SavedVideoMetadata } from '../metadata/SavedVideoMetadata'
 
@@ -73,7 +70,6 @@ export class LocalFileVideoSource implements VideoSource {
 
   prepare(): void {
   }
-
 }
 
 export class PhotosVideoSource implements VideoSource {

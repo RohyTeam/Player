@@ -13,6 +13,7 @@
 #include <mutex>
 #include "decoder/video/video_decoder.h"
 #include "decoder/audio/audio_decoder.h"
+#include "player/renderer/rohy_player_opengl_renderer.h"
 #include "rohy_player_window_manager.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -22,37 +23,13 @@
 
 class RohyPlayer {
 public:
-    RohyPlayer(const std::string& windowId);
+    RohyPlayer();
     ~RohyPlayer();
-    
-    bool load(const std::string& filePath);
-    void play();
-    void pause();
-    void stop();
-    
+    void init(const std::string& windowId);
 private:
-    void renderLoop();
-    bool initEGL();
-    void renderFrame(GLuint texture);
-    void cleanup();
-
-    std::string windowId_;
-    std::unique_ptr<VideoDecoder> videoDecoder_;
-    std::unique_ptr<AudioDecoder> audioDecoder_;
-    std::thread renderThread_;
-    bool isPlaying_ = false;
-    bool stopRequested_ = false;
-    
-    // EGL相关成员
-    EGLDisplay eglDisplay_ = EGL_NO_DISPLAY;
-    EGLContext eglContext_ = EGL_NO_CONTEXT;
-    EGLSurface eglSurface_ = EGL_NO_SURFACE;
-    
-    // 原生窗口
-    std::shared_ptr<RohyPlayerNativeWindow> nativeWindow_;
-    
-    // 同步锁
-    std::mutex mutex_;
+    std::string _windowId;
+    std::shared_ptr<RohyPlayerNativeWindow> _nativeWindow;
+    std::shared_ptr<OpenGLRenderer> renderer;
 };
 
 #endif //ROHYPLAYER_ROHY_PLAYER_H

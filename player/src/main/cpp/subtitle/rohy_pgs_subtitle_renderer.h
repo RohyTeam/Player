@@ -31,10 +31,34 @@ private:
     static napi_value Func_New(napi_env env, napi_callback_info info);
     static napi_value Func_Init(napi_env env, napi_callback_info info);
     static napi_value Func_Render(napi_env env, napi_callback_info info);
+    static napi_value Func_GetMaxDuration(napi_env env, napi_callback_info info);
+    static napi_value Func_ListAllSubtitles(napi_env env, napi_callback_info info);
     static napi_value Func_Release(napi_env env, napi_callback_info info);
     
     napi_env _env;
     napi_ref _wrapper;
+    
+    bool initialized = false;
+    std::vector<shared_ptr<Pgs::Subtitle>> subtitles;
+    std::vector<SubtitleRange> ranges;
+};
+
+class SendableRohyPgsSubtitleRenderer {
+public:
+    static napi_value Init(napi_env env, napi_value exports);
+    static void Finalize(napi_env env, void* native_object, void* finalize_hint);
+private:
+    explicit SendableRohyPgsSubtitleRenderer();
+    ~SendableRohyPgsSubtitleRenderer();
+    
+    static napi_value Func_New(napi_env env, napi_callback_info info);
+    static napi_value Func_Init(napi_env env, napi_callback_info info);
+    static napi_value Func_Render(napi_env env, napi_callback_info info);
+    static napi_value Func_RenderByIndex(napi_env env, napi_callback_info info);
+    static napi_value Func_GetMaxDuration(napi_env env, napi_callback_info info);
+    static napi_value Func_Release(napi_env env, napi_callback_info info);
+    
+    napi_env _env;
     
     bool initialized = false;
     std::vector<shared_ptr<Pgs::Subtitle>> subtitles;

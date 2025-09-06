@@ -4,14 +4,21 @@ import { BottomAvoidArea } from '../../avoidarea/BottomAvoidArea'
 export struct InnerContainer {
   @Param
   bgColor: ResourceColor = $r("app.color.rohy_background")
+  @Param
+  edgeEffect: boolean = true
   @BuilderParam
   content: () => void
 
   build() {
-    Column() {
-      this.content()
-      BottomAvoidArea()
+    Scroll() {
+      Column() {
+        this.content()
+        BottomAvoidArea()
+      }
+      .width("100%")
+      .backgroundColor(this.bgColor)
     }
+    .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: this.edgeEffect })
     .width("100%")
     .backgroundColor(this.bgColor)
   }

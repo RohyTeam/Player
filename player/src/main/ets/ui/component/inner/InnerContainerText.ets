@@ -1,10 +1,8 @@
 @ComponentV2
 export struct InnerContainerText {
-
   @Param
   @Require
   text: ResourceStr
-
   @Param
   textColor?: ResourceColor = undefined
 
@@ -12,9 +10,12 @@ export struct InnerContainerText {
     Column() {
       Text(this.text)
         .fontColor(this.textColor)
+        .padding({
+          bottom: 2
+        })
     }
-    .width("90%")
+    .width("85%")
+    .alignItems(HorizontalAlign.Start)
     .backgroundColor(Color.Transparent)
   }
-
 }

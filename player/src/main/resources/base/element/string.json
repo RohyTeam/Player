@@ -129,10 +129,6 @@
       "value": "About"
     },
     {
-      "name": "blur_effect",
-      "value": "Blur effect"
-    },
-    {
       "name": "continuation",
       "value": "Continuation"
     },
@@ -279,6 +275,102 @@
     {
       "name": "rename_success",
       "value": "Successfully renamed"
+    },
+    {
+      "name": "version_info",
+      "value": "Version info"
+    },
+    {
+      "name": "source_code",
+      "value": "Source code"
+    },
+    {
+      "name": "open_source_projects_used",
+      "value": "Used open source projects"
+    },
+    {
+      "name": "screen_forward_and_backward",
+      "value": "Tap forward & backward"
+    },
+    {
+      "name": "screen_forward_and_backward_tips",
+      "value": "Enabled this option will allow you to go backward or forward 15s by double tapping the left one third of screen or the right one third of screen."
+    },
+    {
+      "name": "speeding_up",
+      "value": "Speeding up"
+    },
+    {
+      "name": "adjusting_progress",
+      "value": "%s/%s"
+    },
+    {
+      "name": "adjusting_brightness",
+      "value": "Brightness: %s"
+    },
+    {
+      "name": "adjusting_volume",
+      "value": "Volume: %s"
+    },
+    {
+      "name": "forwarded",
+      "value": "Forward 15s"
+    },
+    {
+      "name": "backwarded",
+      "value": "Backward 15s"
+    },
+    {
+      "name": "untitled",
+      "value": "(Untitled)"
+    },
+    {
+      "name": "chapter_list",
+      "value": "Chapters"
+    },
+    {
+      "name": "ui_update",
+      "value": "UI update (preview)"
+    },
+    {
+      "name": "visual_style",
+      "value": "Visual style"
+    },
+    {
+      "name": "blur_style",
+      "value": "Blur style"
+    },
+    {
+      "name": "blur_level",
+      "value": "Blur level (%s)"
+    },
+    {
+      "name": "blur_style_thin",
+      "value": "Thin"
+    },
+    {
+      "name": "blur_style_regular",
+      "value": "Regular"
+    },
+    {
+      "name": "blur_style_thick",
+      "value": "Thick"
+    },
+    {
+      "name": "use_display_test_image",
+      "value": "Use display test image"
+    },
+    {
+      "name": "inner_cornor_radius",
+      "value": "Inner cornor radius"
+    },
+    {
+      "name": "outer_cornor_radius",
+      "value": "Outer cornor radius"
+    },
+    {
+      "name": "enable",
+      "value": "Enable"
     }
   ]
 }

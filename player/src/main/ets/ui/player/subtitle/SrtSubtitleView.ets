@@ -1,16 +1,14 @@
-import { parseSrtSubtitle, SrtSubtitleLine } from "../../../lib/subtitle/srt/srt";
-import { PlayerContext } from "../../../player/PlayerContext";
-import { fileIo } from "@kit.CoreFileKit";
-import { ensurePath } from "../../../utils/FileUtils";
-import { LengthMetricsUnit } from "@kit.ArkUI";
+import { parseSrtSubtitle, SrtSubtitleLine } from '../../../lib/subtitle/srt/srt';
+import { PlayerContext } from '../../../player/PlayerContext';
+import { fileIo } from '@kit.CoreFileKit';
+import { ensurePath } from '../../../utils/FileUtils';
+import { LengthMetricsUnit } from '@kit.ArkUI';
 
 // FIXME: 由于使用 canvas 绘制，假如同一时间有多行字幕，将会重叠到一起
 @ComponentV2
 export struct SrtSubtitleView {
-
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
-
   @Local
   subtitles: SrtSubtitleLine[] = []
 
@@ -25,7 +23,8 @@ export struct SrtSubtitleView {
     Stack() {
       Column() {
         ForEach(this.subtitles, (subtitleLine: SrtSubtitleLine) => {
-          if (subtitleLine.start <= this.playerContext.currentPosition && subtitleLine.end >= this.playerContext.currentPosition) {
+          if (subtitleLine.start <= this.playerContext.currentPosition &&
+            subtitleLine.end >= this.playerContext.currentPosition) {
             SubtitleLine({
               text: subtitleLine.text,
               playerContext: this.playerContext
@@ -39,19 +38,16 @@ export struct SrtSubtitleView {
     .width("100%")
     .height("100%")
   }
-
 }
 
 @ComponentV2
 export struct SubtitleLine {
-
   @Param
   @Require
   text: string
   @Param
   @Require
   playerContext: PlayerContext
-
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings, LengthMetricsUnit.PX)
 

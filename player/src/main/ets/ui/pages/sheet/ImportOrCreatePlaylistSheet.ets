@@ -1,6 +1,5 @@
 import { DialogHelper } from '@pura/harmony-dialog'
 import { DataSources } from '../../../datasource/DataSources'
-import { PickedFile } from '../../../filemanagement/PickedFile'
 import { getIcon } from '../../../utils/ResourceUtils'
 import { isEmptyOrBlank } from '../../../utils/StringUtils'
 import { InnerButtonWithImage } from '../../component/inner/InnerButtonWithImage'
@@ -15,7 +14,6 @@ import { InnerContainerText } from '../../component/inner/InnerContainerText'
 
 @ComponentV2
 export struct ImportOrCreatePlaylistSheet {
-
   @Event
   hideChooser: () => void
 
@@ -81,6 +79,7 @@ export struct ImportOrCreatePlaylistSheet {
           }
         })
       }
+
       InnerContainerDivider()
       InnerContainerText({
         text: $r("app.string.not_implemented_below"),

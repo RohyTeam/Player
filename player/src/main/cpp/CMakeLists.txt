@@ -69,12 +69,15 @@ add_library(rohy_player SHARED player/rohy_player_napi.cpp
                             player/rohy_player.cpp
                             player/rohy_player_window_manager.cpp
                             player/decoder/video/ffmpeg_video_decoder.cpp
+                            player/demuxer/ffmpeg_demuxer.cpp
+                            player/renderer/rohy_player_opengl_renderer.cpp
                             utils/napi_utils.cpp)
 
 add_library(rohy_subtitle SHARED subtitle/rohy_subtitle_napi.cpp
                             subtitle/rohy_subtitle_utils.cpp
                             subtitle/rohy_ass_subtitle_renderer.cpp
                             subtitle/rohy_pgs_subtitle_renderer.cpp
+                            subtitle/sendable_rohy_pgs_subtitle_renderer.cpp
                             utils/napi_utils.cpp
                             subtitle/pgs/object_definition.cpp
                             subtitle/pgs/pgs_util.cpp
@@ -193,6 +196,7 @@ target_link_libraries(rohy_player EGL)
 target_link_libraries(rohy_player GLESv3)
 target_link_libraries(rohy_player ace_ndk.z)
 target_link_libraries(rohy_player uv)
+target_link_libraries(rohy_player native_drm)
 
 target_link_libraries(rohy_player ${THIRDPARTY_LIBRARY_DIR}/avisynth/${OHOS_ARCH}/lib/libavisynth.so.11)
 target_link_libraries(rohy_player ${THIRDPARTY_LIBRARY_DIR}/brotli/${OHOS_ARCH}/lib/libbrotlicommon-static.a)

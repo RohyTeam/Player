@@ -1,10 +1,8 @@
 @ComponentV2
 export struct ImportProgressOverlay {
-
   @Param
   @Require
   context: ImportProgressContext
-
   controller?: CustomDialogController
 
   build() {
@@ -33,21 +31,18 @@ export struct ImportProgressOverlay {
     .padding(12)
     .margin(16)
   }
-
 }
 
 @ObservedV2
 export class ImportProgressContext {
-
   @Trace
   current: number = 0
   @Trace
   total: number = 0
-
 }
 
 @Builder
-export function  ImportProgressOverlayBuilder(context: ImportProgressContext) {
+export function ImportProgressOverlayBuilder(context: ImportProgressContext) {
   ImportProgressOverlay({
     context: context
   })

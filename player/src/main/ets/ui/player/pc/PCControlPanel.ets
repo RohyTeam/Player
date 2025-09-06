@@ -11,7 +11,7 @@ import { LocalFileVideoSource } from '../../../player/VideoSource'
 import { PlayerController } from '../../../player/PlayerController'
 import { MetadataFetcher } from '../../../metadata/MetadataFetcher'
 import { buildMenuGroup, menuGroups, RohyMenu, RohyMenuItem } from '../../component/menu/RohyMenu'
-import { ability, ensureContext, ensureUIAbilityContext } from '../../../utils/AbilityUtils'
+import { ensureUIAbilityContext } from '../../../utils/AbilityUtils'
 import { SavedVideoMetadata } from '../../../metadata/SavedVideoMetadata'
 import { VideoMetadataManager } from '../../../metadata/VideoMetadataManager'
 import { sha256 } from '../../../utils/HashUtils'
@@ -105,6 +105,7 @@ export struct PCControlPanel {
                   if (VideoMetadataManager.exists(sha256(`files:${url}`))) {
                     savedMetadata = VideoMetadataManager.load(sha256(`files:${url}`))!
                   } else {
+                    // TODO: 用全新的 SendableVideoMetadataManager 来异步保存数据
                     let metadata = await MetadataFetcher.fetch(ensurePath(url), url.startsWith("files://media"))
                     savedMetadata = VideoMetadataManager.save(
                       sha256(`files:${url}`),

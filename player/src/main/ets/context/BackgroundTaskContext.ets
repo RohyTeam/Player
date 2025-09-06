@@ -1,18 +1,17 @@
-import { WantAgent, wantAgent } from "@kit.AbilityKit";
-import backgroundTaskManager from "@ohos.resourceschedule.backgroundTaskManager";
-import { ensureContext } from "../utils/AbilityUtils";
-import { Sys } from "./SystemContext";
-import { BusinessError } from "@kit.BasicServicesKit";
-import { hilog } from "@kit.PerformanceAnalysisKit";
-import { PlayerController } from "../player/PlayerController";
+import { wantAgent } from '@kit.AbilityKit';
+import backgroundTaskManager from '@ohos.resourceschedule.backgroundTaskManager';
+import { ensureContext } from '../utils/AbilityUtils';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { hilog } from '@kit.PerformanceAnalysisKit';
+import { PlayerController } from '../player/PlayerController';
 
 export class BackgroundTaskContext {
-
   private static started: boolean = false
 
   public static startBackgroundTask(context: UIContext | Context, playerController: PlayerController) {
-    if (BackgroundTaskContext.started)
+    if (BackgroundTaskContext.started) {
       return
+    }
     BackgroundTaskContext.started = true
     let wantAgentInfo: wantAgent.WantAgentInfo = {
       wants: [
@@ -28,16 +27,16 @@ export class BackgroundTaskContext {
 
     wantAgent.getWantAgent(wantAgentInfo)
       .then((wantAgentObj) => {
-      backgroundTaskManager.startBackgroundRunning(
-        ensureContext(context),
-        backgroundTaskManager.BackgroundMode.AUDIO_PLAYBACK,
-        wantAgentObj
-      ).then(() => {
-        hilog.info(0, 'backgroundTask', 'startBackgroundRunning succeeded');
-      }).catch((err: BusinessError) => {
-        hilog.error(-1, 'backgroundTask', `startBackgroundRunning failed Cause: ${err.code} - ${err.message}`);
+        backgroundTaskManager.startBackgroundRunning(
+          ensureContext(context),
+          backgroundTaskManager.BackgroundMode.AUDIO_PLAYBACK,
+          wantAgentObj
+        ).then(() => {
+          hilog.info(0, 'backgroundTask', 'startBackgroundRunning succeeded');
+        }).catch((err: BusinessError) => {
+          hilog.error(-1, 'backgroundTask', `startBackgroundRunning failed Cause: ${err.code} - ${err.message}`);
+        });
       });
-    });
     backgroundTaskManager.on("continuousTaskCancel", (info: backgroundTaskManager.ContinuousTaskCancelInfo) => {
       playerController.pause()
       BackgroundTaskContext.started = false
@@ -46,8 +45,9 @@ export class BackgroundTaskContext {
   }
 
   public static stopBackgroundTask(context: UIContext | Context): void {
-    if (!BackgroundTaskContext.started)
+    if (!BackgroundTaskContext.started) {
       return
+    }
     BackgroundTaskContext.started = false
     backgroundTaskManager.off('continuousTaskCancel')
     backgroundTaskManager.stopBackgroundRunning(ensureContext(context))
@@ -55,7 +55,6 @@ export class BackgroundTaskContext {
         hilog.info(0, 'backgroundTask', 'stopBackgroundRunning succeeded');
       }).catch((err: BusinessError) => {
       hilog.error(-1, 'backgroundTask', `stopBackgroundRunning failed Cause: ${err.code} - ${err.message}`);
-      });
+    });
   }
-
 }

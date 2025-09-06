@@ -1,12 +1,9 @@
 import { VideoMetadata } from './VideoMetadata';
-import { fileIo, fileUri } from '@kit.CoreFileKit';
+import { fileIo } from '@kit.CoreFileKit';
 import RohyMetadata from 'librohy_metadata.so';
 import { media } from '@kit.MediaKit';
-import { JSON } from '@kit.ArkTS';
-import { ensurePath } from '../utils/FileUtils';
 
 export class MetadataFetcher {
-
   public static async fetch(path: string, isMedia: boolean, headers?: Record<string, string>): Promise<VideoMetadata> {
     let tempMetadata = RohyMetadata.RohyMetedata_getMetadata(path, headers)
     if (!tempMetadata) {
@@ -41,5 +38,4 @@ export class MetadataFetcher {
     }
     return metadata
   }
-
 }

@@ -1,6 +1,6 @@
-import { InnerButton } from "../../component/inner/InnerButton"
-import { InnerComponentSet } from "../../component/inner/InnerComponentSet"
-import { InnerContainer } from "../../component/inner/InnerContainer"
+import { InnerButton } from '../../component/inner/InnerButton'
+import { InnerComponentSet } from '../../component/inner/InnerComponentSet'
+import { InnerContainer } from '../../component/inner/InnerContainer'
 
 @ComponentV2
 export struct DebugPage {
@@ -31,5 +31,4 @@ export struct DebugPage {
     .width("100%")
     .height("100%")
   }
-
 }

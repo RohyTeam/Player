@@ -1,29 +1,27 @@
-import { DialogHelper } from "@pura/harmony-dialog"
-import { PlaylistDao } from "../../../../database/dao/PlaylistDao"
-import { PlaylistFolderItemsDataSource } from "../../../../datasource/playlist/PlaylistFolderItemsDataSource"
-import { emptyPlaylistStructure, PlaylistFolder,
+import { DialogHelper } from '@pura/harmony-dialog'
+import { PlaylistDao } from '../../../../database/dao/PlaylistDao'
+import { PlaylistFolderItemsDataSource } from '../../../../datasource/playlist/PlaylistFolderItemsDataSource'
+import {
+  emptyPlaylistStructure,
+  PlaylistFolder,
   PlaylistItem,
   PlaylistStructure,
-  sortPlaylistItems} from "../../../../playlist/PlaylistStructure"
-import { isEmptyOrBlank } from "../../../../utils/StringUtils"
-import { buildMenuGroup, menuGroups, RohyMenu } from "../../../component/menu/RohyMenu"
-import { promptAction } from "@kit.ArkUI"
+  sortPlaylistItems
+} from '../../../../playlist/PlaylistStructure'
+import { isEmptyOrBlank } from '../../../../utils/StringUtils'
+import { buildMenuGroup, menuGroups, RohyMenu } from '../../../component/menu/RohyMenu'
+import { promptAction } from '@kit.ArkUI'
 
 @ComponentV2
 export struct PlaylistFolderItem {
-
   @Consumer("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
-
   @Consumer("structure")
   structure: PlaylistStructure = emptyPlaylistStructure()
-
   @Consumer("folder")
   folder?: PlaylistFolder
-
   @Consumer("playlistFolderDataSource")
   playlistFolderDataSource?: PlaylistFolderItemsDataSource
-
   @Param
   @Require
   data: PlaylistDao
@@ -106,8 +104,9 @@ export struct PlaylistFolderItem {
                 defaultFocus: true,
                 onAction: (action: number, dialogId: string, rawValue: string): void => {
                   DialogHelper.closeDialog(dialogId)
-                  if (!this.playlistFolderDataSource)
+                  if (!this.playlistFolderDataSource) {
                     return
+                  }
                   // clicked confirm
                   if (action == -1) {
                     let value = rawValue.trim()
@@ -147,8 +146,9 @@ export struct PlaylistFolderItem {
               content: $r('app.string.delete')
             },
             action: () => {
-              if (!this.playlistFolderDataSource)
+              if (!this.playlistFolderDataSource) {
                 return
+              }
               DialogHelper.showAlertDialog({
                 primaryTitle: $r("app.string.delete_confirm"),
                 content: $r("app.string.delete_confirm_desc"),
@@ -173,5 +173,4 @@ export struct PlaylistFolderItem {
       ])
     })
   }
-
 }

@@ -69,6 +69,7 @@ export function pickSingleSubtitleFile(context: UIContext | Context): Promise<st
     documentSelectOptions.fileSuffixFilters = [
       '全部字幕文件|.ass,.srt,',
       'ass 字幕文件|.ass',
+      'pgs 字幕文件|.sup',
       'srt 字幕文件|.srt'
     ];
 
@@ -90,6 +91,7 @@ export function pickSubtitleFiles(context: UIContext | Context, limit: number): 
     documentSelectOptions.fileSuffixFilters = [
       '全部字幕文件|.ass,.srt,',
       'ass 字幕文件|.ass',
+      'pgs 字幕文件|.sup',
       'srt 字幕文件|.srt'
     ];
 

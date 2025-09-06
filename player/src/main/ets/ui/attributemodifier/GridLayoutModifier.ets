@@ -1,7 +1,6 @@
-import { Win, WindowContext } from "../../context/WindowContext"
+import { Win, WindowContext } from '../../context/WindowContext'
 
 export class GridLayoutModifier implements AttributeModifier<GridAttribute> {
-
   private windowContext: WindowContext
 
   constructor(context: UIContext) {
@@ -23,5 +22,4 @@ export class GridLayoutModifier implements AttributeModifier<GridAttribute> {
       instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr")
     }
   }
-
 }

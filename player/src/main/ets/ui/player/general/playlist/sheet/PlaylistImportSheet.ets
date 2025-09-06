@@ -1,5 +1,4 @@
 import { DialogHelper } from '@pura/harmony-dialog'
-import { JSON, taskpool } from '@kit.ArkTS'
 import { InnerContainer } from '../../../../component/inner/InnerContainer'
 import { InnerComponentSet } from '../../../../component/inner/InnerComponentSet'
 import { InnerButtonWithImage } from '../../../../component/inner/InnerButtonWithImage'
@@ -8,16 +7,12 @@ import { isEmptyOrBlank } from '../../../../../utils/StringUtils'
 import { ComponentContent, promptAction } from '@kit.ArkUI'
 import { PlaylistFolderItemsDataSource } from '../../../../../datasource/playlist/PlaylistFolderItemsDataSource'
 import { pickSingleVideoFile } from '../../../../../utils/PickerUtils'
-import { SavedVideoMetadata } from '../../../../../metadata/SavedVideoMetadata'
 import { VideoMetadataManager } from '../../../../../metadata/VideoMetadataManager'
 import { sha256 } from '../../../../../utils/HashUtils'
 import { MetadataFetcher } from '../../../../../metadata/MetadataFetcher'
-import { ensurePath, ensureUri, fileName } from '../../../../../utils/FileUtils'
+import { ensurePath, fileName } from '../../../../../utils/FileUtils'
 import { fileShare } from '@kit.CoreFileKit'
-import { ImportProgressContext, ImportProgressOverlay,
-  ImportProgressOverlayBuilder } from '../../../../overlay/ImportProgressOverlay'
-import { superContext } from '../../../../../utils/AbilityUtils'
-import { FileSystem } from '../../../../../filemanagement/FileSystem'
+import { ImportProgressContext, ImportProgressOverlayBuilder } from '../../../../overlay/ImportProgressOverlay'
 import { VideoMetadata } from '../../../../../metadata/VideoMetadata'
 
 @Concurrent
@@ -27,13 +22,10 @@ async function importVideo(path: string): Promise<VideoMetadata> {
 
 @ComponentV2
 export struct PlaylistImportSheet {
-
   @Consumer("playlistFolderDataSource")
   playlistFolderDataSource?: PlaylistFolderItemsDataSource
-
   @Event
   hideChooser: () => void
-
   @Local
   importProgressContext: ImportProgressContext = new ImportProgressContext()
 
@@ -47,13 +39,15 @@ export struct PlaylistImportSheet {
           title: $r("app.string.import_video"),
           imageOutline: false,
           clickCallback: () => {
-            if (!this.playlistFolderDataSource)
+            if (!this.playlistFolderDataSource) {
               return
+            }
             this.hideChooser()
             pickSingleVideoFile(this.getUIContext())
               .then(async (url) => {
-                if (!url)
+                if (!url) {
                   return
+                }
                 if (!url.startsWith("file://docs")) {
                   promptAction.showToast({
                     message: $r('app.string.photos_not_importable')
@@ -102,51 +96,51 @@ export struct PlaylistImportSheet {
                   }
                 }
 
-/*
-                let closed: boolean = false
+                /*
+                                let closed: boolean = false
 
-                let taskGroup = new taskpool.TaskGroup()
+                                let taskGroup = new taskpool.TaskGroup()
 
-                // TODO: 未来替换成可以选择大量文件，然后遍历所有的 url
-                for (let uri of [url]) {
-                  let identity = sha256(`files:${uri}`)
-                  let task = new taskpool.Task(importVideo, [ensurePath(uri)])
-                  task.onReceiveData(async (metadata: VideoMetadata) => {
-                    await fileShare.persistPermission([{
-                      uri: uri,
-                      operationMode: fileShare.OperationMode.READ_MODE
-                    }])
-                    console.error(`FUCK: persisted`)
-                    VideoMetadataManager.save(identity, true, url, metadata)
-                    console.error(`FUCK: saved`)
-                    this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
-                  })
-                  task.onExecutionSucceeded(() => {
-                    console.error(`FUCK: sucess importing`)
-                    this.importProgressContext.current += 1
-                    if (this.importProgressContext.current >= this.importProgressContext.total && !closed) {
-                      closed = true
-                      this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                      importProgressOverlayComponent.dispose()
-                    }
-                  })
-                  // TODO: 未来要将所有的错误都添加到一个列表中，等所有任务执行完以后给用户展示
-                  task.onExecutionFailed((e: Error) => {
-                    this.importProgressContext.current += 1
-                    if (this.importProgressContext.current >= this.importProgressContext.total && !closed) {
-                      closed = true
-                      this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                      importProgressOverlayComponent.dispose()
-                    }
-                    console.error(`FUCK: error when importing: ${e.message}`)
-                  })
-                  taskGroup.addTask(task)
-                }
+                                // TODO: 未来替换成可以选择大量文件，然后遍历所有的 url
+                                for (let uri of [url]) {
+                                  let identity = sha256(`files:${uri}`)
+                                  let task = new taskpool.Task(importVideo, [ensurePath(uri)])
+                                  task.onReceiveData(async (metadata: VideoMetadata) => {
+                                    await fileShare.persistPermission([{
+                                      uri: uri,
+                                      operationMode: fileShare.OperationMode.READ_MODE
+                                    }])
+                                    console.error(`FUCK: persisted`)
+                                    VideoMetadataManager.save(identity, true, url, metadata)
+                                    console.error(`FUCK: saved`)
+                                    this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
+                                  })
+                                  task.onExecutionSucceeded(() => {
+                                    console.error(`FUCK: sucess importing`)
+                                    this.importProgressContext.current += 1
+                                    if (this.importProgressContext.current >= this.importProgressContext.total && !closed) {
+                                      closed = true
+                                      this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
+                                      importProgressOverlayComponent.dispose()
+                                    }
+                                  })
+                                  // TODO: 未来要将所有的错误都添加到一个列表中，等所有任务执行完以后给用户展示
+                                  task.onExecutionFailed((e: Error) => {
+                                    this.importProgressContext.current += 1
+                                    if (this.importProgressContext.current >= this.importProgressContext.total && !closed) {
+                                      closed = true
+                                      this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
+                                      importProgressOverlayComponent.dispose()
+                                    }
+                                    console.error(`FUCK: error when importing: ${e.message}`)
+                                  })
+                                  taskGroup.addTask(task)
+                                }
 
-                taskpool.execute(taskGroup)
-                  .then(() => {
-                    console.error(`finished all tasks, removing dialog`)
-                  })*/
+                                taskpool.execute(taskGroup)
+                                  .then(() => {
+                                    console.error(`finished all tasks, removing dialog`)
+                                  })*/
               })
           }
         })
@@ -156,8 +150,9 @@ export struct PlaylistImportSheet {
           title: $r("app.string.create_folder"),
           imageOutline: false,
           clickCallback: () => {
-            if (!this.playlistFolderDataSource)
+            if (!this.playlistFolderDataSource) {
               return
+            }
             this.hideChooser()
             DialogHelper.showTextInputDialog({
               primaryTitle: $r("app.string.create_folder"),
@@ -171,8 +166,9 @@ export struct PlaylistImportSheet {
               defaultFocus: true,
               onAction: (action: number, dialogId: string, rawValue: string): void => {
                 DialogHelper.closeDialog(dialogId)
-                if (!this.playlistFolderDataSource)
+                if (!this.playlistFolderDataSource) {
                   return
+                }
                 // clicked confirm
                 if (action == -1) {
                   let value = rawValue.trim()

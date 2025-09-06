@@ -5,7 +5,6 @@ import { GridLayoutModifier } from './GridLayoutModifier';
 import { SurfaceFillingModeModifier } from './SurfaceFillingModeModifier';
 
 export class Modifiers {
-
   public static backgroundBlur(): BackgroundBlurModifier {
     return new BackgroundBlurModifier()
   }
@@ -18,5 +17,4 @@ export class Modifiers {
   public static gridLayout(context: UIContext): GridLayoutModifier {
     return new GridLayoutModifier(context)
   }
-
 }

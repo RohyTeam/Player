@@ -1,13 +1,10 @@
 import { PCIndex } from './2in1/PCIndex';
 import { GeneralDeviceIndex } from './generaldevice/GeneralDeviceIndex';
 import { Sys } from '../../context/SystemContext';
-import { Pref, PreferenceContext } from '../../context/PreferenceContext';
-import { AppStorageV2 } from '@kit.ArkUI';
 
 @Entry
 @ComponentV2
 struct Index {
-
   /**
    * ComponentV2 目前不支持 WithTheme
    */
@@ -23,5 +20,4 @@ struct Index {
     .height("100%")
     .backgroundColor($r("app.color.rohy_background"))
   }
-
 }

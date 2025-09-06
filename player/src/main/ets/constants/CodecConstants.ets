@@ -7,7 +7,6 @@ export interface Codec {
 }
 
 export class CodecConstants {
-
   public static codecs(): Codec[] {
     return [
       CodecConstants.subtitle_pgs,
@@ -34,10 +33,10 @@ export class CodecConstants {
 
   public static getCodec(name: string): Codec | undefined {
     for (let codec of CodecConstants.codecs()) {
-      if (codec.names.indexOf(name) >= 0)
+      if (codec.names.indexOf(name) >= 0) {
         return codec
+      }
     }
     return undefined
   }
-
 }

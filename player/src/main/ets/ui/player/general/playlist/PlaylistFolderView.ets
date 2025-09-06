@@ -1,36 +1,34 @@
-import { PlaylistDao } from "../../../../database/dao/PlaylistDao"
-import { emptyPlaylistStructure,
+import { PlaylistDao } from '../../../../database/dao/PlaylistDao'
+import {
+  emptyPlaylistStructure,
   isPlaylistFolder,
   PlaylistFolder,
   PlaylistItem,
   PlaylistStructure,
   PlaylistVideo,
-  sortPlaylistItems} from "../../../../playlist/PlaylistStructure"
-import { JSON } from "@kit.ArkTS"
-import { PlaylistMenuButtons } from "./PlaylistMenuButtons"
-import { PlaylistFolderItemsDataSource } from "../../../../datasource/playlist/PlaylistFolderItemsDataSource"
-import { SimpleLoadingPage } from "../../../component/page/SimpleLoadingPage"
-import { Modifiers } from "../../../attributemodifier/Modifiers"
-import { curves } from "@kit.ArkUI"
-import { PlaylistVideoItem } from "./PlaylistVideoItem"
-import { PlaylistFolderItem } from "./PlaylistFolderItem"
+  sortPlaylistItems
+} from '../../../../playlist/PlaylistStructure'
+import { JSON } from '@kit.ArkTS'
+import { PlaylistMenuButtons } from './PlaylistMenuButtons'
+import { PlaylistFolderItemsDataSource } from '../../../../datasource/playlist/PlaylistFolderItemsDataSource'
+import { SimpleLoadingPage } from '../../../component/page/SimpleLoadingPage'
+import { Modifiers } from '../../../attributemodifier/Modifiers'
+import { curves } from '@kit.ArkUI'
+import { PlaylistVideoItem } from './PlaylistVideoItem'
+import { PlaylistFolderItem } from './PlaylistFolderItem'
 
 @ComponentV2
 export struct PlaylistFolderView {
-
   @Param
   @Require
   data: PlaylistDao
   @Param
   @Require
   path: number[]
-
   @Provider("structure")
   structure: PlaylistStructure = emptyPlaylistStructure()
-
   @Provider("folder")
   folder?: PlaylistFolder
-
   @Provider("playlistFolderDataSource")
   playlistFolderDataSource?: PlaylistFolderItemsDataSource
 
@@ -118,5 +116,4 @@ export struct PlaylistFolderView {
       return this.data.name
     }
   }
-
 }

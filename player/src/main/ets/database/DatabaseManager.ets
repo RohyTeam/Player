@@ -3,7 +3,6 @@ import { relationalStore } from '@kit.ArkData';
 import { Table_PlaylistDao } from './table/PlaylistTable';
 
 export class DatabaseManager extends Database {
-
   readonly playlistDao = DatabaseDao.form(this).select(Table_PlaylistDao)
 
   protected async initDb(context: Context): Promise<relationalStore.RdbStore> {

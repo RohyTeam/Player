@@ -12,8 +12,9 @@ export function randomString(
 }
 
 function isBlankChar(char: string): boolean {
-  if (char.length <= 0)
+  if (char.length <= 0) {
     return true
+  }
   return char == '\u0020' ||
     char == '\u00A0' ||
     char == '\u2000' ||
@@ -36,15 +37,17 @@ function isBlankChar(char: string): boolean {
 
 export function isBlank(value: string): boolean {
   for (let char of value) {
-    if (!isBlankChar(char))
+    if (!isBlankChar(char)) {
       return false
+    }
   }
   return true
 }
 
 export function isEmptyOrBlank(value: string): boolean {
-  if (value.length <= 0)
+  if (value.length <= 0) {
     return true
+  }
   return isBlank(value)
 }
 

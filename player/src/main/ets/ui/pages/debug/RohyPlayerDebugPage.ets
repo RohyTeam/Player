@@ -1,6 +1,6 @@
-import RohyPlayer from "librohy_player.so"
-import { ensurePath } from "../../../utils/FileUtils"
-import { pickSingleVideoFile } from "../../../utils/PickerUtils"
+import RohyPlayer from 'librohy_player.so'
+import { ensurePath } from '../../../utils/FileUtils'
+import { pickSingleVideoFile } from '../../../utils/PickerUtils'
 
 @ComponentV2
 export struct RohyPlayerDebugPage {
@@ -17,8 +17,9 @@ export struct RohyPlayerDebugPage {
           .onLoad(() => {
             pickSingleVideoFile(this.getUIContext())
               .then((url) => {
-                if (!url)
+                if (!url) {
                   return
+                }
                 RohyPlayer.RohyPlayer_test("rohyplayer_test", ensurePath(url))
               })
               .catch((err: Error) => {
@@ -41,5 +42,4 @@ export struct RohyPlayerDebugPage {
     .width("100%")
     .height("100%")
   }
-
 }

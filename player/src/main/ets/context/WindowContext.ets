@@ -1,8 +1,10 @@
 import { AbilityStorage } from '../storage/AbilityStorage'
-import { window } from '@kit.ArkUI'
+import { window as win } from '@kit.ArkUI'
 
 @ObservedV2
 export class WindowContext {
+  @Trace
+  window: win.Window
   @Trace
   widthBreakpoint: string = ''
   @Trace
@@ -20,16 +22,20 @@ export class WindowContext {
   @Trace
   topAvoid: number = 0
   @Trace
-  windowStatusType: window.WindowStatusType = window.WindowStatusType.UNDEFINED
+  windowStatusType: win.WindowStatusType = win.WindowStatusType.UNDEFINED
+
+  constructor(window: win.Window) {
+    this.window = window
+  }
 }
 
 export class Win {
-  public static get(context: UIContext | Context): WindowContext {
+  public static get(context: UIContext | Context, window?: win.Window): WindowContext {
     return AbilityStorage.connect(
       context,
       WindowContext,
       "window_context",
-      () => new WindowContext()
+      () => new WindowContext(window!)
     )!
   }
 }

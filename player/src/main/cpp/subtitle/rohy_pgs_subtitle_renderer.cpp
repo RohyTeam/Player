@@ -10,10 +10,81 @@
 #include "utils/napi_utils.h"
 #include <cstdint>
 #include <cstdint>
+#include <cstdio>
 #include <hilog/log.h>
 #include <fstream>
 
 static thread_local napi_ref g_ref = nullptr;
+
+napi_value singleImageToJs(napi_env env, std::shared_ptr<Pgs::Subtitle> subtitle) {
+    napi_value image_obj;
+    napi_create_object(env, &image_obj);
+
+    int32_t width;
+    int32_t height;
+    uint8_t* rgba_buffer = RohySubtitleUtils::GetPgsSubtitleImage(subtitle, &width, &height);
+    const int buffer_size = width * height * 4;
+
+    napi_value array_buffer;
+    void* buffer_data = nullptr;
+    napi_create_arraybuffer(env, buffer_size, &buffer_data, &array_buffer);
+    memcpy(buffer_data, rgba_buffer, buffer_size);
+    delete[] rgba_buffer;
+
+    napi_value js_screen_width, js_screen_height, js_width, js_height, js_x, js_y;
+    napi_create_int32(env, subtitle->getStreamWidth(), &js_screen_width);
+    napi_create_int32(env, subtitle->getStreamHeight(), &js_screen_height);
+    napi_create_int32(env, width, &js_width);
+    napi_create_int32(env, height, &js_height);
+    napi_create_int32(env, subtitle->getXOffset(), &js_x);
+    napi_create_int32(env, subtitle->getYOffset(), &js_y);
+
+    napi_set_named_property(env, image_obj, "buffer", array_buffer);
+    napi_set_named_property(env, image_obj, "screenWidth", js_screen_width);
+    napi_set_named_property(env, image_obj, "screenHeight", js_screen_height);
+    napi_set_named_property(env, image_obj, "width", js_width);
+    napi_set_named_property(env, image_obj, "height", js_height);
+    napi_set_named_property(env, image_obj, "x", js_x);
+    napi_set_named_property(env, image_obj, "y", js_y);
+
+    return image_obj;
+}
+
+napi_value saveImage(napi_env env, std::shared_ptr<Pgs::Subtitle> subtitle, std::string basePath, int id) {
+    std::string path = basePath + "/" + std::to_string(id) + ".bitmap";
+    
+    napi_value image_obj;
+    napi_create_object(env, &image_obj);
+
+    int32_t width;
+    int32_t height;
+    uint8_t* rgba_buffer = RohySubtitleUtils::GetPgsSubtitleImage(subtitle, &width, &height);
+    
+    std::ofstream writer(path.c_str(), std::ios::out | std::ios::binary);
+    writer.write(reinterpret_cast<const char*>(rgba_buffer), sizeof(rgba_buffer));
+    writer.flush();
+    writer.close();
+    
+    delete[] rgba_buffer;
+
+    napi_value js_screen_width, js_screen_height, js_width, js_height, js_x, js_y;
+    napi_create_int32(env, subtitle->getStreamWidth(), &js_screen_width);
+    napi_create_int32(env, subtitle->getStreamHeight(), &js_screen_height);
+    napi_create_int32(env, width, &js_width);
+    napi_create_int32(env, height, &js_height);
+    napi_create_int32(env, subtitle->getXOffset(), &js_x);
+    napi_create_int32(env, subtitle->getYOffset(), &js_y);
+
+    NapiUtils::SetPropertyStringValue(env, image_obj, "path", path);
+    napi_set_named_property(env, image_obj, "screenWidth", js_screen_width);
+    napi_set_named_property(env, image_obj, "screenHeight", js_screen_height);
+    napi_set_named_property(env, image_obj, "width", js_width);
+    napi_set_named_property(env, image_obj, "height", js_height);
+    napi_set_named_property(env, image_obj, "x", js_x);
+    napi_set_named_property(env, image_obj, "y", js_y);
+
+    return image_obj;
+}
 
 RohyPgsSubtitleRenderer::RohyPgsSubtitleRenderer() : _env(nullptr), _wrapper(nullptr) {}
 
@@ -95,6 +166,7 @@ napi_value RohyPgsSubtitleRenderer::Func_Init(napi_env env, napi_callback_info i
     const size_t size = buffer.size();
 
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PgsSubtitleRenderer", "successfully read pgs subtitle file, ready to decode");
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PgsSubtitleRenderer", "pgs file url: %{public}s, data size: %{public}zu", fileUrl.c_str(), size);
     native_object->subtitles = Pgs::Subtitle::createAll(data, size);
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PgsSubtitleRenderer", "pgs subtitle file decoded");
 
@@ -168,41 +240,85 @@ napi_value RohyPgsSubtitleRenderer::Func_Render(napi_env env, napi_callback_info
     for (auto subtitle : range->subtitles) {
         if (!subtitle->containsImage())
             continue;
-        napi_value image_obj;
-        napi_create_object(env, &image_obj);
-
-        int32_t width;
-        int32_t height;
-        uint8_t* rgba_buffer = RohySubtitleUtils::GetPgsSubtitleImage(subtitle, &width, &height);
-        const int buffer_size = width * height * 4;
-
-        napi_value array_buffer;
-        void* buffer_data = nullptr;
-        napi_create_arraybuffer(env, buffer_size, &buffer_data, &array_buffer);
-        memcpy(buffer_data, rgba_buffer, buffer_size);
-        delete[] rgba_buffer;
-
-        napi_value js_screen_width, js_screen_height, js_width, js_height, js_x, js_y;
-        napi_create_int32(env, subtitle->getStreamWidth(), &js_screen_width);
-        napi_create_int32(env, subtitle->getStreamHeight(), &js_screen_height);
-        napi_create_int32(env, width, &js_width);
-        napi_create_int32(env, height, &js_height);
-        napi_create_int32(env, subtitle->getXOffset(), &js_x);
-        napi_create_int32(env, subtitle->getYOffset(), &js_y);
-
-        napi_set_named_property(env, image_obj, "buffer", array_buffer);
-        napi_set_named_property(env, image_obj, "screenWidth", js_screen_width);
-        napi_set_named_property(env, image_obj, "screenHeight", js_screen_height);
-        napi_set_named_property(env, image_obj, "width", js_width);
-        napi_set_named_property(env, image_obj, "height", js_height);
-        napi_set_named_property(env, image_obj, "x", js_x);
-        napi_set_named_property(env, image_obj, "y", js_y);
-
+        napi_value image_obj = singleImageToJs(env, subtitle);
         napi_set_element(env, array, i, image_obj);
         i += 1;
     }
 
     return array;
+}
+
+napi_value RohyPgsSubtitleRenderer::Func_GetMaxDuration(napi_env env, napi_callback_info info) {
+    size_t argc = 0;
+    napi_value args[0];
+    
+    napi_value jsThis;
+    napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
+    
+    RohyPgsSubtitleRenderer* native_object;
+    napi_unwrap(env, jsThis, reinterpret_cast<void**>(&native_object));
+
+    return NapiUtils::Int32ToJsNumber(env, native_object->subtitles.back()->getPresentationTimeMs());
+}
+
+napi_value RohyPgsSubtitleRenderer::Func_ListAllSubtitles(napi_env env, napi_callback_info info) {
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PgsSubtitleRenderer", "listing all subtitles");
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    
+    napi_value jsThis;
+    napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
+    
+    RohyPgsSubtitleRenderer* native_object;
+    napi_unwrap(env, jsThis, reinterpret_cast<void**>(&native_object));
+
+    std::string basePath;
+    NapiUtils::JsValueToString(env, args[0], 2048, basePath);
+
+    napi_value subtitleArray;
+
+    napi_create_array(env, &subtitleArray);
+    
+    int index = 0;
+    int imageIndex = 0;
+
+    for (auto range : native_object->ranges) {
+        if (range.subtitles.size() == 0) {
+            continue;
+        }
+
+        napi_value subtitleObject;
+        napi_create_object(env, &subtitleObject);
+        napi_value start, end, images;
+        napi_create_array(env, &images);
+
+        int imageIndex = 0;
+
+        for (auto image : range.subtitles) {
+            if (!image || !image->containsImage()) {
+                continue;
+            }
+
+            napi_set_element(env, images, imageIndex, saveImage(env, image, basePath, imageIndex));
+            imageIndex += 1;
+        }
+        if (imageIndex == 0) {
+            continue;
+        }
+    
+        napi_create_int32(env, range.startMs, &start);
+        napi_create_int32(env, range.endMs, &end);
+
+        napi_set_named_property(env, subtitleObject, "start", start);
+        napi_set_named_property(env, subtitleObject, "end", end);
+        napi_set_named_property(env, subtitleObject, "images", images);
+
+        napi_set_element(env, subtitleArray, index, subtitleObject);
+        
+        index += 1;
+    }
+    
+    return subtitleArray;
 }
 
 napi_value RohyPgsSubtitleRenderer::Func_Release(napi_env env, napi_callback_info info) {
@@ -224,16 +340,17 @@ napi_value RohyPgsSubtitleRenderer::Func_Release(napi_env env, napi_callback_inf
     return nullptr;
 }
 
-
 napi_value RohyPgsSubtitleRenderer::Init(napi_env env, napi_value exports) {
     napi_property_descriptor desc[] = {
         { "init", nullptr, Func_Init, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "render", nullptr, Func_Render, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "getMaxDuration", nullptr, Func_GetMaxDuration, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "listAllSubtitles", nullptr, Func_ListAllSubtitles, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "release", nullptr, Func_Release, nullptr, nullptr, nullptr, napi_default, nullptr },
     };
     
     napi_value cons; // idk what does this mean, i just do what the doc tell me to do
-    napi_define_class(env, "RohyPgsSubtitleRenderer", NAPI_AUTO_LENGTH, Func_New, nullptr, 3, desc, &cons);
+    napi_define_class(env, "RohyPgsSubtitleRenderer", NAPI_AUTO_LENGTH, Func_New, nullptr, sizeof(desc) / sizeof(desc[0]), desc, &cons);
     napi_create_reference(env, cons, 1, &g_ref);
     napi_set_named_property(env, exports, "RohyPgsSubtitleRenderer", cons);
     

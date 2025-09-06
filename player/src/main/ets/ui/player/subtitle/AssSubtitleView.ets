@@ -1,22 +1,17 @@
-import { LengthMetricsUnit } from "@kit.ArkUI"
-import { RohyAssSubtitleRenderer } from "librohy_subtitle.so"
-import { PlayerContext } from "../../../player/PlayerContext"
-import { fileIo } from "@kit.CoreFileKit"
-import { AssSubtitleImage } from "../../../player/subtitle/AssSubtitleImage"
-import { rgbaBufferToPixelMap } from "../../../utils/ImageUtils"
-import { JSON } from "@kit.ArkTS"
+import { LengthMetricsUnit } from '@kit.ArkUI'
+import { RohyAssSubtitleRenderer } from 'librohy_subtitle.so'
+import { PlayerContext } from '../../../player/PlayerContext'
+import { fileIo } from '@kit.CoreFileKit'
+import { AssSubtitleImage } from '../../../player/subtitle/AssSubtitleImage'
+import { rgbaBufferToPixelMap } from '../../../utils/ImageUtils'
 
 @ComponentV2
 export struct AssSubtitleView {
-
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
-
   private subtitleRenderer: RohyAssSubtitleRenderer = new RohyAssSubtitleRenderer()
-
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings, LengthMetricsUnit.PX)
-
   @Local
   ready: boolean = false
 
@@ -25,7 +20,7 @@ export struct AssSubtitleView {
       .then((data) => {
         this.subtitleRenderer.addMemoryFont(
           "HarmonyOS Sans SC",
-          data.buffer
+          data.buffer as ArrayBuffer
         )
 
         let file = fileIo.openSync(this.playerContext.subtitles[this.playerContext.selectedSubtitle!].url)
@@ -35,8 +30,9 @@ export struct AssSubtitleView {
         this.subtitleRenderer.init(arrayBuffer)
 
         this.playerContext.subtitlePositionUpdater = (position: number) => {
-          if (!this.ready)
+          if (!this.ready) {
             return
+          }
 
           console.error(`player width: ${this.playerContext.playerWidthPx}, height: ${this.playerContext.playerHeightPx}`)
           let images = this.subtitleRenderer.render(
@@ -47,13 +43,15 @@ export struct AssSubtitleView {
 
           this.context.reset()
 
-          if (images.length == 0)
+          if (images.length == 0) {
             return
+          }
 
           for (let image of images) {
             let pixelMap = rgbaBufferToPixelMap(image.buffer, image.width, image.height)
-            if (!pixelMap)
+            if (!pixelMap) {
               continue
+            }
             this.context.drawImage(
               pixelMap,
               image.x,
@@ -71,7 +69,8 @@ export struct AssSubtitleView {
 
   aboutToDisappear(): void {
     this.subtitleRenderer.release()
-    this.playerContext.subtitlePositionUpdater = () => {}
+    this.playerContext.subtitlePositionUpdater = () => {
+    }
   }
 
   build() {
@@ -82,5 +81,4 @@ export struct AssSubtitleView {
       .width("100%")
       .height("100%")
   }
-
 }

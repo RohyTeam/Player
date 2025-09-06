@@ -95,7 +95,7 @@ napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
         napi_value chapter_object;
         napi_create_object(env, &chapter_object);
         
-        NapiUtils::SetPropertyStringValueOrUndefined(env, chapter_object, "title", nullptr);
+        NapiUtils::SetPropertyStringValueOrUndefined(env, chapter_object, "title", chapter.title);
         NapiUtils::SetPropertyNumberValue(env, chapter_object, "start", chapter.start);
         NapiUtils::SetPropertyNumberValue(env, chapter_object, "end", chapter.end);
         

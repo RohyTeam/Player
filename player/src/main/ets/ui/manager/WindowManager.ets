@@ -5,6 +5,7 @@ import { abilityWindow } from '../../utils/AbilityUtils';
 
 export class WindowManager {
   public static init(context: Context, windowObj: window.Window) {
+    Win.get(context, windowObj) // init window object
     let rect = windowObj.getWindowProperties().windowRect
     WindowManager.updateWindowSize(context, rect.width, rect.height)
     WindowManager.updateAvoidArea(

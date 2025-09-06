@@ -244,11 +244,11 @@ uint16_t Subtitle::getHeight() {
 }
 
 bool Subtitle::containsImage() const noexcept {
-    return this->numObjectDefinitions > 0;
+    return this->numObjectDefinitions > 0 && this->getPds();
 }
 
 vector<vector<array<uint8_t, 4>>> Subtitle::getImage(const ColorSpace &colorSpace) const {
-    if (this->numObjectDefinitions == 0) {
+    if (this->numObjectDefinitions == 0 || !this->getPds()) {
         throw std::runtime_error("Subtitle object does not contain any image data.");
     }
 
@@ -264,6 +264,7 @@ vector<vector<array<uint8_t, 4>>> Subtitle::getImage(const ColorSpace &colorSpac
     imageData.reserve(rawData.size());
 
     const auto &paletteEntries = this->paletteDefinition->getEntries();
+    
     for (const auto &rawLine: rawData) {
         vector<array<uint8_t, 4> > colorLine;
         colorLine.reserve(rawLine.size());

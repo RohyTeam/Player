@@ -1,15 +1,14 @@
-import { DialogHelper } from "@pura/harmony-dialog"
-import { PlaylistDao } from "../../../../database/dao/PlaylistDao"
-import { isEmptyOrBlank } from "../../../../utils/StringUtils"
-import { buildMenuGroup, menuGroups, RohyMenu } from "../../../component/menu/RohyMenu"
-import { promptAction } from "@kit.ArkUI"
-import { DataSources } from "../../../../datasource/DataSources"
+import { DialogHelper } from '@pura/harmony-dialog'
+import { PlaylistDao } from '../../../../database/dao/PlaylistDao'
+import { isEmptyOrBlank } from '../../../../utils/StringUtils'
+import { buildMenuGroup, menuGroups, RohyMenu } from '../../../component/menu/RohyMenu'
+import { promptAction } from '@kit.ArkUI'
+import { DataSources } from '../../../../datasource/DataSources'
 
 @ComponentV2
 export struct PlaylistItem {
   @Consumer("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
-
   @Param
   @Require
   playlist: PlaylistDao
@@ -134,5 +133,4 @@ export struct PlaylistItem {
       ])
     })
   }
-
 }

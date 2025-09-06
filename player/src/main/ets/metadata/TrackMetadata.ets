@@ -20,3 +20,72 @@ export interface TrackMetadata {
   mimetype: string | undefined
 
 }
+
+@Sendable
+export class SendableTrackMetadata {
+  type: number
+  index: number
+  title: string | undefined
+  language: string | undefined
+  codec: string | undefined
+  codecLong: string | undefined
+  width: number | undefined
+  height: number | undefined
+  duration: number | undefined
+  averageFramerate: number | undefined
+  bitrate: number | undefined
+  sampleRate: number | undefined
+  filename: string | undefined
+  mimetype: string | undefined
+
+  public constructor(
+    type: number,
+    index: number,
+    title: string | undefined,
+    language: string | undefined,
+    codec: string | undefined,
+    codecLong: string | undefined,
+    width: number | undefined,
+    height: number | undefined,
+    duration: number | undefined,
+    averageFramerate: number | undefined,
+    bitrate: number | undefined,
+    sampleRate: number | undefined,
+    filename: string | undefined,
+    mimetype: string | undefined,
+  ) {
+    this.type = type
+    this.index = index
+    this.title = title
+    this.language = language
+    this.codec = codec
+    this.codecLong = codecLong
+    this.width = width
+    this.height = height
+    this.duration = duration
+    this.averageFramerate = averageFramerate
+    this.bitrate = bitrate
+    this.sampleRate = sampleRate
+    this.filename = filename
+    this.mimetype = mimetype
+  }
+}
+
+export function sendableTrackMetadataToNormal(track: SendableTrackMetadata): TrackMetadata {
+  return {
+    type: track.type,
+    index: track.index,
+    title: track.title,
+    language: track.language,
+    codec: track.codec,
+    codecLong: track.codecLong,
+    width: track.width,
+    height: track.height,
+    duration: track.duration,
+    averageFramerate: track.averageFramerate,
+    bitrate: track.bitrate,
+    sampleRate: track.sampleRate,
+    filename: track.filename,
+    mimetype: track.mimetype
+  }
+}

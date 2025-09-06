@@ -2,7 +2,6 @@ import { MetadataFetcher } from '../../../metadata/MetadataFetcher';
 import { LocalFiles, Photos } from '../../../filemanagement/FileSource';
 import { PlayerContext } from '../../../player/PlayerContext';
 import { LocalFileVideoSource, PhotosVideoSource } from '../../../player/VideoSource';
-import { AbilityStorage } from '../../../storage/AbilityStorage';
 import { CircleIconButton } from '../../button/CircleIconButton';
 import { OpenVideoSheet } from '../sheet/OpenVideoSheet';
 import { fileUri } from '@kit.CoreFileKit';
@@ -12,6 +11,9 @@ import { SavedVideoMetadata } from '../../../metadata/SavedVideoMetadata';
 import { VideoMetadataManager } from '../../../metadata/VideoMetadataManager';
 import { sha256 } from '../../../utils/HashUtils';
 import { ensurePath } from '../../../utils/FileUtils';
+import { asyncSave } from '../../../metadata/SendableVideoMetadataManager';
+import { ensureContext } from '../../../utils/AbilityUtils';
+import { createSendableVideoMetadata } from '../../../metadata/VideoMetadata';
 
 @ComponentV2
 export struct IndexMenuButtons {
@@ -151,46 +153,69 @@ export struct IndexMenuButtons {
       onPick: async (file) => {
         let savedMetadata: SavedVideoMetadata
         if (file.source == LocalFiles) {
+          let playIt: () => void = () => {
+            this.playerContext.video = true
+            this.playerContext.videoSource = new LocalFileVideoSource(
+              false,
+              savedMetadata,
+              file.url,
+              new fileUri.FileUri(file.url).name
+            )
+            this.indexNavigator.pushPath({ name: "Player" })
+          }
           if (VideoMetadataManager.exists(sha256(`files:${file.url}`))) {
             savedMetadata = VideoMetadataManager.load(sha256(`files:${file.url}`))!
+            playIt()
           } else {
             let metadata = await MetadataFetcher.fetch(ensurePath(file.url), file.url.startsWith("files://media"))
-            savedMetadata = VideoMetadataManager.save(
+            asyncSave(
+              ensureContext(this.getUIContext()).tempDir,
+              ensureContext(this.getUIContext()).filesDir,
               sha256(`files:${file.url}`),
               false,
               file.url,
-              metadata
-            )!
+              createSendableVideoMetadata(metadata)
+            )
+              .then((saved) => {
+                if (saved) {
+                  savedMetadata = saved
+                  playIt()
+                }
+              })
           }
-          this.playerContext.video = true
-          this.playerContext.videoSource = new LocalFileVideoSource(
-            false,
-            savedMetadata,
-            file.url,
-            new fileUri.FileUri(file.url).name
-          )
         } else if (file.source == Photos) {
+          let playIt: () => void = () => {
+            this.playerContext.video = true
+            this.playerContext.videoSource = new PhotosVideoSource(
+              savedMetadata,
+              file.url,
+              file.title ?? new fileUri.FileUri(file.url).name
+            )
+            this.indexNavigator.pushPath({ name: "Player" })
+          }
           if (VideoMetadataManager.exists(sha256(`photos:${file.url}`))) {
             savedMetadata = VideoMetadataManager.load(sha256(`photos:${file.url}`))!
+            playIt()
           } else {
             let metadata = await MetadataFetcher.fetch(ensurePath(file.url), file.url.startsWith("files://media"))
-            savedMetadata = VideoMetadataManager.save(
+            asyncSave(
+              ensureContext(this.getUIContext()).tempDir,
+              ensureContext(this.getUIContext()).filesDir,
               sha256(`photos:${file.url}`),
               false,
               file.url,
-              metadata
-            )!
+              createSendableVideoMetadata(metadata)
+            )
+              .then((saved) => {
+                if (saved) {
+                  savedMetadata = saved
+                  playIt()
+                }
+              })
           }
-          this.playerContext.video = true
-          this.playerContext.videoSource = new PhotosVideoSource(
-            savedMetadata,
-            file.url,
-            file.title ?? new fileUri.FileUri(file.url).name
-          )
         } else {
           return
         }
-        this.indexNavigator.pushPath({ name: "Player" })
       }
     })
   }

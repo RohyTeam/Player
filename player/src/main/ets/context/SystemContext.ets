@@ -1,24 +1,49 @@
 import { taskpool } from '@kit.ArkTS'
 import { batteryInfo, deviceInfo } from '@kit.BasicServicesKit'
-import { getScreenBrightness } from '../utils/SystemSettings'
+import { audio } from '@kit.AudioKit'
 
 interface SystemInfo {
 
   battery: number
   time: number
   charging: boolean
-  screenBrightness: number
+  currentVolume: number
+  maxVolume: number
+  minVolume: number
 
 }
 
 @Concurrent
-function updateSystemInfo(): SystemInfo {
-  return {
+async function updateSystemInfo() {
+  let volumeGroupManager =
+    await audio.getAudioManager().getVolumeManager().getVolumeGroupManager(audio.DEFAULT_VOLUME_GROUP_ID)
+  let systemInfo: SystemInfo = {
     time: Date.now(),
     battery: batteryInfo.batterySOC,
     charging: batteryInfo.chargingStatus == batteryInfo.BatteryChargeState.ENABLE,
-    screenBrightness: getScreenBrightness()
+    currentVolume: volumeGroupManager.getVolumeSync(audio.AudioVolumeType.MEDIA),
+    maxVolume: volumeGroupManager.getMaxVolumeSync(audio.AudioVolumeType.MEDIA),
+    minVolume: volumeGroupManager.getMinVolumeSync(audio.AudioVolumeType.MEDIA)
   }
+  taskpool.Task.sendData(systemInfo)
+}
+
+function buildTask(): taskpool.Task {
+  let task = new taskpool.Task(updateSystemInfo)
+  task.onReceiveData((info: SystemInfo) => {
+    console.error(`updated system time: ${Sys.time}`)
+    Sys.time = info.time
+    Sys.battery = info.battery
+    Sys.charging = info.charging
+    Sys.currentVolume = info.currentVolume
+    Sys.maxVolume = info.maxVolume
+    Sys.minVolume = info.minVolume
+  })
+  task.onExecutionFailed((err: Error) => {
+    // 这里可以处理一下运行中出现的错误，但获取系统信息一般不会有问题
+    console.error(`error when fetching system info, message: ${err.message}`)
+  })
+  return task
 }
 
 @ObservedV2
@@ -30,24 +55,19 @@ export class SystemContext {
   @Trace
   charging: boolean = false
   @Trace
-  screenBrightness: number = 128 // middle value
-
-  public isPC(): boolean {
-    return deviceInfo.deviceType == "2in1" // || deviceInfo.deviceType == "tablet" // todo: remove tablet after debug
-  }
-
-  public isTablet(): boolean {
-    return deviceInfo.deviceType == "tablet"
-  }
-
+  currentVolume: number = 0
+  @Trace
+  maxVolume: number = 0
+  @Trace
+  minVolume: number = 0
   private static started: boolean = false
-  private static task: taskpool.Task = new taskpool.Task(updateSystemInfo)
+  private static task: taskpool.Task = buildTask()
 
   public static start() {
     if (SystemContext.started) {
       return
     }
-    SystemContext.updateSystemContext()
+    taskpool.executePeriodically(200, SystemContext.task, taskpool.Priority.HIGH)
   }
 
   public static stop() {
@@ -57,15 +77,12 @@ export class SystemContext {
     taskpool.cancel(SystemContext.task)
   }
 
-  private static updateSystemContext() {
-    taskpool.executeDelayed(200, SystemContext.task, taskpool.Priority.HIGH)
-      .then((result) => {
-        let info = result as SystemInfo
-        Sys.time = info.time
-        Sys.battery = info.battery
-        Sys.charging = info.charging
-        SystemContext.updateSystemContext()
-      })
+  public isPC(): boolean {
+    return deviceInfo.deviceType == "2in1" // || deviceInfo.deviceType == "tablet" // todo: remove tablet after debug
+  }
+
+  public isTablet(): boolean {
+    return deviceInfo.deviceType == "tablet"
   }
 }
 

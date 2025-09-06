@@ -1,21 +1,24 @@
-import { PlayerController } from "../../player/PlayerController";
-import { BottomBarContext } from "../player/PlayerBottomBar";
+import { Pref } from '../../context/PreferenceContext';
+import { Sys } from '../../context/SystemContext';
+import { PlayerContext } from '../../player/PlayerContext';
+import { PlayerController } from '../../player/PlayerController';
+import { ControlsContext } from '../player/PlayerBottomBar';
 
 export class HandGestureModifier implements GestureModifier {
-
   private controller: PlayerController
-  private bottomBarContext?: BottomBarContext
+  private playerContext: PlayerContext
+  private controlsContext?: ControlsContext
 
-  constructor(controller: PlayerController, bottomBarContext?: BottomBarContext) {
+  constructor(controller: PlayerController, playerContext: PlayerContext, controlsContext?: ControlsContext) {
     this.controller = controller
-    this.bottomBarContext = bottomBarContext
+    this.playerContext = playerContext
+    this.controlsContext = controlsContext
   }
 
   private brightnessOrVolume: boolean = true
   private fingerMovingDelta: number = 0
 
   applyGesture(event: UIGestureEvent): void {
-    // todo: 滑动屏幕跳转亮度和音量
     event.addGesture(
       new PanGestureHandler({ fingers: 1, direction: PanDirection.Vertical })
         .onActionStart((event: GestureEvent) => {
@@ -23,8 +26,9 @@ export class HandGestureModifier implements GestureModifier {
             return
           }
           let windowContext = this.controller.getWindowContext()
-          if (!windowContext)
+          if (!windowContext) {
             return
+          }
           this.fingerMovingDelta = 0
           let fingerInfo = event.fingerList[0]
           if (fingerInfo.globalX > windowContext.widthVp / 2) {
@@ -40,24 +44,26 @@ export class HandGestureModifier implements GestureModifier {
             return
           }
           let windowContext = this.controller.getWindowContext()
-          if (!windowContext)
+          if (!windowContext) {
             return
+          }
           let realOffset = event.offsetY - this.fingerMovingDelta
           this.fingerMovingDelta = event.offsetY
-          let delta = windowContext.heightVp / 100
           if (!this.brightnessOrVolume) {
+            let value = Math.abs(realOffset) / windowContext.heightVp * Sys.maxVolume
             // 右侧控制声音
             if (realOffset > 0) {
-              this.controller.decreaseVolume(Math.abs(realOffset) / delta)
+              this.controller.decreaseVolume(value)
             } else if (realOffset < 0) {
-              this.controller.increaseVolume(Math.abs(realOffset) / delta)
+              this.controller.increaseVolume(value)
             }
           } else {
+            let value = Math.abs(realOffset) / windowContext.heightVp * 255
             // 左侧控制亮度
             if (realOffset > 0) {
-              this.controller.decreaseScreenBrightness(Math.abs(realOffset) / delta)
+              this.controller.decreaseScreenBrightness(value)
             } else if (realOffset < 0) {
-              this.controller.increaseScreenBrightness(Math.abs(realOffset) / delta)
+              this.controller.increaseScreenBrightness(value)
             }
           }
         })
@@ -67,16 +73,67 @@ export class HandGestureModifier implements GestureModifier {
         })
     )
     event.addGesture(
+      new PanGestureHandler({ fingers: 1, direction: PanDirection.Horizontal })
+        .onActionStart((event: GestureEvent) => {
+          if (event.fingerList.length == 0) {
+            return
+          }
+          let windowContext = this.controller.getWindowContext()
+          if (!windowContext) {
+            return
+          }
+          this.fingerMovingDelta = 0
+          this.controller.startMovingPosition()
+        })
+        .onActionUpdate((event: GestureEvent) => {
+          if (event.fingerList.length == 0) {
+            return
+          }
+          let windowContext = this.controller.getWindowContext()
+          if (!windowContext) {
+            return
+          }
+          let realOffset = event.offsetX - this.fingerMovingDelta
+          this.fingerMovingDelta = event.offsetX
+          let value = realOffset / windowContext.heightVp / 4 * this.playerContext.maxDuration
+          this.playerContext.targetPosition += value
+        })
+        .onActionEnd((event: GestureEvent) => {
+          this.controller.seekTarget()
+          this.controller.stopMovingPosition()
+        })
+    )
+    event.addGesture(
       new TapGestureHandler({ count: 2, fingers: 1 })
         .onAction((event: GestureEvent) => {
-          this.controller.playOrPause()
+          if (Pref.screenForwardAndBackward) {
+            let windowContext = this.controller.getWindowContext()
+            if (!windowContext) {
+              return
+            }
+            let fingerInfo = event.fingerList[0]
+            if (fingerInfo.globalX < windowContext.widthVp / 3) { // 左三分之一屏
+              this.controller.goBackward(15 * 1000)
+            } else if (fingerInfo.globalX > windowContext.widthVp / 3 * 2) { // 右三分之一屏
+              this.controller.goForward(15 * 1000)
+            } else { // 中三分之一屏
+              this.controller.playOrPause()
+            }
+          } else {
+            this.controller.playOrPause()
+          }
         })
     )
     event.addGesture(
       new TapGestureHandler({ count: 1, fingers: 1 })
         .onAction((event: GestureEvent) => {
-          if (this.bottomBarContext)
-            this.bottomBarContext.shown = !this.bottomBarContext.shown
+          if (!this.controlsContext) {
+            return
+          }
+          this.controlsContext.showTopBarAndBottomBar = !this.controlsContext.showTopBarAndBottomBar
+          if (!this.controlsContext.showTopBarAndBottomBar) {
+            this.controlsContext.showChapterList = false
+          }
         })
     )
     event.addGesture(
@@ -92,5 +149,4 @@ export class HandGestureModifier implements GestureModifier {
         })
     )
   }
-
 }

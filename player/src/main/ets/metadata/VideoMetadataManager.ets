@@ -1,16 +1,12 @@
-import { copyVideoMetadata, VideoMetadata } from "./VideoMetadata";
-import { superContext } from "../utils/AbilityUtils";
-import {
-  ensurePath, ensureUri, fileName as getFileName, } from "../utils/FileUtils";
-import { fileIo } from "@kit.CoreFileKit";
-import { JSON } from "@kit.ArkTS";
+import { copyVideoMetadata, VideoMetadata } from './VideoMetadata';
+import { ensurePath, ensureUri, fileName as getFileName } from '../utils/FileUtils';
+import { fileIo } from '@kit.CoreFileKit';
+import { JSON } from '@kit.ArkTS';
 import RohyMetadata from 'librohy_metadata.so';
-import { PhotosVideoSource, VideoSource, VideoSourceType } from "../player/VideoSource";
-import { Codec, CodecConstants } from "../constants/CodecConstants";
-import { SavedVideoMetadata } from "./SavedVideoMetadata";
-import { data } from "@kit.TelephonyKit";
-import { SubtitleInfo } from "../player/subtitle/SubtitleInfo";
-import { appFileSystem, FileSystem } from "../filemanagement/FileSystem";
+import { Codec, CodecConstants } from '../constants/CodecConstants';
+import { SavedVideoMetadata } from './SavedVideoMetadata';
+import { SubtitleInfo } from '../player/subtitle/SubtitleInfo';
+import { appFileSystem, FileSystem } from '../filemanagement/FileSystem';
 
 interface ExportInfo {
   index: number
@@ -20,7 +16,6 @@ interface ExportInfo {
 }
 
 export class VideoMetadataManager {
-
   public static exists(identity: string, fs?: FileSystem): boolean {
     return VideoMetadataManager.existsInFiles(identity, fs) || VideoMetadataManager.existsInTemp(identity, fs)
   }
@@ -35,18 +30,23 @@ export class VideoMetadataManager {
 
   public static tempToFile(identity: string, fileSystem?: FileSystem) {
     let fs = fileSystem ?? appFileSystem()
-    if (!fs.existsInTemp(identity))
+    if (!fs.existsInTemp(identity)) {
       return
-    if (fs.existsInFiles(identity))
+    }
+    if (fs.existsInFiles(identity)) {
       return
+    }
     fileIo.copyDirSync(fs.getPathInTemp(`videos/${identity}`), fs.getPathInFiles(`videos/${identity}`), 1)
   }
 
-  public static save(identity: string, database: boolean, url: string, metadata: VideoMetadata, fileSystem?: FileSystem, headers?: Record<string, string>): SavedVideoMetadata | undefined { // if file url presented, save tracks
-    if (!metadata.cover)
+  public static save(identity: string, database: boolean, url: string, metadata: VideoMetadata, fileSystem?: FileSystem,
+    headers?: Record<string, string>): SavedVideoMetadata | undefined { // if file url presented, save tracks
+    if (!metadata.cover) {
       return undefined
-    if (VideoMetadataManager.exists(identity, fileSystem))
+    }
+    if (VideoMetadataManager.exists(identity, fileSystem)) {
       return undefined
+    }
 
     let fs = fileSystem ?? appFileSystem()
 
@@ -94,8 +94,9 @@ export class VideoMetadataManager {
     for (let track of metadata.tracks) {
       if (track.type == 2 && track.codec != undefined) {
         let codec = CodecConstants.getCodec(track.codec)
-        if (codec == undefined)
+        if (codec == undefined) {
           continue
+        }
         subtitles.push({
           index: track.index,
           dest: getPath(`videos/${identity}/subtitles/subtitle_${track.index}.${codec.extension}`),
@@ -104,18 +105,19 @@ export class VideoMetadataManager {
         })
       }
     }
+    mkdirs(`videos/${identity}/subtitles`)
     if (subtitles.length > 0) {
-      mkdirs(`videos/${identity}/subtitles`)
       RohyMetadata.RohyMetadata_extractTracks(ensurePath(url), subtitles, headers)
     }
 
     let subtitleInfos: SubtitleInfo[] = []
     subtitles.sort((a, b) => a.name.localeCompare(b.name))
       .forEach((exportInfo, index) => {
-        if (exportInfo.codec.id != 'ass' && exportInfo.codec.id != "srt" && exportInfo.codec.id != "pgs")
+        if (exportInfo.codec.id != 'ass' && exportInfo.codec.id != "srt" && exportInfo.codec.id != "pgs") {
           return
+        }
         subtitleInfos.push({
-          title: $r("app.string.internal_subtitle", `#${index + 1}`),
+          title: undefined,
           language: undefined,
           type: exportInfo.codec.id,
           url: exportInfo.dest,
@@ -136,8 +138,9 @@ export class VideoMetadataManager {
   }
 
   public static load(identity: string, fileSystem?: FileSystem): SavedVideoMetadata | undefined {
-    if (!VideoMetadataManager.exists(identity, fileSystem))
+    if (!VideoMetadataManager.exists(identity, fileSystem)) {
       return undefined
+    }
 
     let inFiles = VideoMetadataManager.existsInFiles(identity, fileSystem)
 
@@ -177,7 +180,8 @@ export class VideoMetadataManager {
       return undefined
     }
 
-    let metadata: VideoMetadata = JSON.parse(fileIo.readTextSync(getPath(`videos/${identity}/metadata.json`))) as VideoMetadata
+    let metadata: VideoMetadata =
+      JSON.parse(fileIo.readTextSync(getPath(`videos/${identity}/metadata.json`))) as VideoMetadata
 
     metadata.cover = ensureUri(getPath(`videos/${identity}/cover.jpg`))
 
@@ -189,7 +193,7 @@ export class VideoMetadataManager {
         .forEach((fileName, index) => {
           if (fileName.endsWith(".srt")) {
             subtitleInfos.push({
-              title: $r("app.string.internal_subtitle", `#${index + 1}`),
+              title: undefined,
               language: undefined,
               type: 'srt',
               url: getPath(`videos/${identity}/subtitles/${fileName}`),
@@ -197,15 +201,15 @@ export class VideoMetadataManager {
             })
           } else if (fileName.endsWith(".ass")) {
             subtitleInfos.push({
-              title: $r("app.string.internal_subtitle", `#${index + 1}`),
+              title: undefined,
               language: undefined,
               type: 'ass',
               url: getPath(`videos/${identity}/subtitles/${fileName}`),
               internal: true
             })
-          } else if (fileName.endsWith(".sup")) {
+          } else if (fileName.endsWith(".sup") || fileName.endsWith(".rohy_pgs")) {
             subtitleInfos.push({
-              title: $r("app.string.internal_subtitle", `#${index + 1}`),
+              title: undefined,
               language: undefined,
               type: 'pgs',
               url: getPath(`videos/${identity}/subtitles/${fileName}`),
@@ -214,18 +218,17 @@ export class VideoMetadataManager {
           }
         })
     }
-
     if (fileExists(`videos/${identity}/external_subtitles`)) {
       listFolder(`videos/${identity}/external_subtitles`)
         .sort((a, b) => a.localeCompare(b))
-        .forEach((fileName, index) => {
+        .forEach((fileName) => {
           if (fileName.endsWith(".srt")) {
             subtitleInfos.push({
               title: getFileName(getPath(`videos/${identity}/external_subtitles/${fileName}`)),
               language: undefined,
               type: 'srt',
               url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
-              internal: true
+              internal: false
             })
           } else if (fileName.endsWith(".ass")) {
             subtitleInfos.push({
@@ -233,15 +236,15 @@ export class VideoMetadataManager {
               language: undefined,
               type: 'ass',
               url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
-              internal: true
+              internal: false
             })
-          } else if (fileName.endsWith(".sup")) {
+          } else if (fileName.endsWith(".sup") || fileName.endsWith(".rohy_pgs")) {
             subtitleInfos.push({
               title: getFileName(getPath(`videos/${identity}/external_subtitles/${fileName}`)),
               language: undefined,
               type: 'pgs',
               url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
-              internal: true
+              internal: false
             })
           }
         })
@@ -257,10 +260,11 @@ export class VideoMetadataManager {
   public static delete(identity: string, fs?: FileSystem) {
     try {
       (fs ?? appFileSystem()).deleteInFiles(`videos/${identity}`, true);
-    } catch {}
+    } catch {
+    }
     try {
       (fs ?? appFileSystem()).deleteInTemp(`videos/${identity}`, true)
-    } catch {}
+    } catch {
+    }
   }
-
 }

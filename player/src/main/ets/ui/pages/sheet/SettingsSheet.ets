@@ -1,19 +1,15 @@
-import { Pref, PreferenceContext } from '../../../context/PreferenceContext'
+import { Pref } from '../../../context/PreferenceContext'
 import { InnerButton } from '../../component/inner/InnerButton'
-import { InnerSegment } from '../../component/inner/InnerSegment'
 import { InnerComponentSet } from '../../component/inner/InnerComponentSet'
 import { InnerContainer } from '../../component/inner/InnerContainer'
 import { InnerContainerDivider } from '../../component/inner/InnerContainerDivider'
-import { AppStorageV2 } from '@kit.ArkUI'
 import { InnerSwitch } from '../../component/inner/InnerSwitch'
 import { InnerDivider } from '../../component/inner/InnerDivider'
-import { setColorMode } from '../../../utils/ConfigurationUtils'
 
 @ComponentV2
 export struct SettingsSheet {
   @Consumer("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
-
   @Event
   close: () => void
 
@@ -21,6 +17,7 @@ export struct SettingsSheet {
     InnerContainer({
       bgColor: Color.Transparent
     }) {
+      /*
       InnerComponentSet() {
         InnerSwitch({
           title: $r("app.string.continuation"),
@@ -30,10 +27,11 @@ export struct SettingsSheet {
           }
         })
       }
-
       InnerContainerDivider()
+      */
       InnerComponentSet() {
-        InnerSegment({
+        // ComponentV2 现在还不支持 WithTheme，先屏蔽这个设置项
+        /*InnerSegment({
           title: $r("app.string.color_mode"),
           initialSelected: Pref.colorMode,
           choices: [
@@ -60,25 +58,38 @@ export struct SettingsSheet {
             }
           ]
         })
-        InnerDivider()
-        InnerButton({
-          title: $r("app.string.blur_effect"),
-          showGoToIcon: true,
-          clickCallback: () => {
+        InnerDivider()*/
+        InnerSwitch({
+          title: $r("app.string.ui_update"),
+          initialValue: Pref.uiUpdatePreview,
+          switch: (original) => {
+            Pref.uiUpdatePreview = !original
+            return !original
           }
         })
         InnerDivider()
-        InnerSwitch({
-          title: $r("app.string.less_cover"),
-          popup: $r("app.string.less_cover_tips"),
-          switch: (original) => {
-            return !original
+        InnerButton({
+          title: $r("app.string.visual_style"),
+          showGoToIcon: true,
+          clickCallback: () => {
+            this.close()
+            this.indexNavigator.pushPath({ name: "VisualStyle" })
           }
         })
       }
 
       InnerContainerDivider()
       InnerComponentSet() {
+        InnerSwitch({
+          title: $r("app.string.screen_forward_and_backward"),
+          popup: $r("app.string.screen_forward_and_backward_tips"),
+          initialValue: Pref.screenForwardAndBackward,
+          switch: (original) => {
+            Pref.screenForwardAndBackward = !original
+            return !original
+          }
+        })
+        InnerDivider()
         InnerSwitch({
           title: $r("app.string.hardware_decode"),
           popup: $r("app.string.hardware_decode_tips"),
@@ -88,7 +99,8 @@ export struct SettingsSheet {
         })
       }
 
-      InnerContainerDivider()
+      // 还没做，先屏蔽，等 PC 功能完成后一并添加
+      /*InnerContainerDivider()
       InnerComponentSet() {
         InnerButton({
           title: $r("app.string.font_management"),
@@ -96,7 +108,7 @@ export struct SettingsSheet {
           clickCallback: () => {
           }
         })
-      }
+      }*/
 
       InnerContainerDivider()
       InnerComponentSet() {
@@ -104,6 +116,8 @@ export struct SettingsSheet {
           title: $r("app.string.questions"),
           showGoToIcon: true,
           clickCallback: () => {
+            this.close()
+            this.indexNavigator.pushPath({ name: "QnA" })
           }
         })
         InnerDivider()
@@ -111,21 +125,24 @@ export struct SettingsSheet {
           title: $r("app.string.about"),
           showGoToIcon: true,
           clickCallback: () => {
+            this.close()
+            this.indexNavigator.pushPath({ name: "About" })
           }
         })
       }
-/*
-      InnerContainerDivider()
-      InnerComponentSet() {
-        InnerButton({
-          title: "debug",
-          showGoToIcon: true,
-          clickCallback: () => {
-            this.close()
-            this.indexNavigator.pushPath({ name: 'DebugPage' })
-          }
-        })
-      }*/
+
+      /*
+            InnerContainerDivider()
+            InnerComponentSet() {
+              InnerButton({
+                title: "debug",
+                showGoToIcon: true,
+                clickCallback: () => {
+                  this.close()
+                  this.indexNavigator.pushPath({ name: 'DebugPage' })
+                }
+              })
+            }*/
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "librohy_subtitle.so",
-  "types": "./Index.d.ts",
+  "types": "./Index.d.ets",
   "version": "1.0.0",
   "description": "Subtitle related api."
 }

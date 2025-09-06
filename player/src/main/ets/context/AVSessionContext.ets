@@ -36,7 +36,7 @@ export class AVSessionContext {
       duration: videoMetadata.duration
     })
     session.setAVPlaybackState({
-      state: avSession.PlaybackState.PLAYBACK_STATE_PLAY,
+      state: avSession.PlaybackState.PLAYBACK_STATE_PAUSE,
       speed: 1,
       position: {
         elapsedTime: 0,
@@ -46,6 +46,16 @@ export class AVSessionContext {
       videoWidth: videoMetadata.width,
       videoHeight: videoMetadata.height
     })
+    await session.activate()
+  }
+
+  public static async enableFunctions(rawContext: UIContext | Context, playerController: PlayerController) {
+    if (!AVSessionContext.session) {
+      return
+    }
+    let context = ensureContext(rawContext)
+    let session = AVSessionContext.session
+
     session.on('play', () => {
       playerController.play()
       session.setAVPlaybackState({
@@ -109,7 +119,6 @@ export class AVSessionContext {
         }
       })
     })
-    await session.activate()
   }
 
   public static async updateSession(rawContext: UIContext | Context) {

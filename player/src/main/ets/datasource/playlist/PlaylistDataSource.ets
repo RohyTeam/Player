@@ -1,16 +1,13 @@
-import { PlaylistDao } from "../../database/dao/PlaylistDao";
-import { DB } from "../../database/DatabaseManager";
-import { Table_PlaylistDao } from "../../database/table/PlaylistTable";
-import {
-  isPlaylistFolder,
-  PlaylistFolder, PlaylistStructure, PlaylistVideo } from "../../playlist/PlaylistStructure";
-import { RDataSource } from "../RDataSource";
-import { JSON } from "@kit.ArkTS";
-import { PlaylistCache } from "../../cache/PlaylistCache";
+import { PlaylistDao } from '../../database/dao/PlaylistDao';
+import { DB } from '../../database/DatabaseManager';
+import { Table_PlaylistDao } from '../../database/table/PlaylistTable';
+import { isPlaylistFolder, PlaylistFolder, PlaylistStructure, PlaylistVideo } from '../../playlist/PlaylistStructure';
+import { RDataSource } from '../RDataSource';
+import { JSON } from '@kit.ArkTS';
+import { PlaylistCache } from '../../cache/PlaylistCache';
 
 @ObservedV2
 export class PlaylistDataSource extends RDataSource<PlaylistDao> {
-
   constructor() {
     super(DB, Table_PlaylistDao, DB.playlistDao, (a, b) => a.name.localeCompare(b.name))
   }
@@ -46,5 +43,4 @@ export class PlaylistDataSource extends RDataSource<PlaylistDao> {
       }
     }
   }
-
 }

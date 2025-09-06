@@ -49,6 +49,8 @@ export interface Player {
 
   getWindowContext(): WindowContext
 
+  getPlayerContext(): PlayerContext
+
   onPositionChange(callback: (time: number) => void): void
 
   onSeekComplete(callback: (time: number) => void): void
@@ -130,6 +132,10 @@ abstract class AbstractPlayer implements Player {
 
   getWindowContext(): WindowContext {
     return Win.get(this.context!)
+  }
+
+  getPlayerContext(): PlayerContext {
+    return PlayerContext.reach(this.context!)
   }
 
   isPaused(): boolean {
@@ -455,8 +461,9 @@ export class IjkPlayer extends AbstractPlayer {
 
     this.positionUpdater = setInterval(() => {
       let currentPosition = this.ijkPlayer?.getCurrentPosition() || 0
-      if (currentPosition == this.cachedCurrentPosition)
+      if (currentPosition == this.cachedCurrentPosition) {
         return
+      }
       this.cachedCurrentPosition = currentPosition
       this.onPositionChangeCallback(currentPosition)
     }, 100);

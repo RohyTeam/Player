@@ -4,7 +4,6 @@ import { window } from '@kit.ArkUI';
 import { WindowManager } from '../../ui/manager/WindowManager';
 import { JSON } from '@kit.ArkTS';
 import { randomString } from '../../utils/StringUtils';
-import { AbilityStorage } from '../../storage/AbilityStorage';
 import { PlayerContext } from '../../player/PlayerContext';
 import { MetadataFetcher } from '../../metadata/MetadataFetcher';
 import { LocalFileVideoSource } from '../../player/VideoSource';
@@ -16,6 +15,8 @@ import { SavedVideoMetadata } from '../../metadata/SavedVideoMetadata';
 import { VideoMetadataManager } from '../../metadata/VideoMetadataManager';
 import { sha256 } from '../../utils/HashUtils';
 import { ensurePath } from '../../utils/FileUtils';
+import { asyncSave } from '../../metadata/SendableVideoMetadataManager';
+import { createSendableVideoMetadata } from '../../metadata/VideoMetadata';
 
 export default class PlayerAbility extends UIAbility {
   private static contextToAbilityMappings: Map<common.UIAbilityContext, PlayerAbility> = new Map()
@@ -85,24 +86,35 @@ export default class PlayerAbility extends UIAbility {
     }
     let playerContext = PlayerContext.reach(this.context)
     let savedMetadata: SavedVideoMetadata
+    let callback: () => void = () => {
+      playerContext.video = true
+      playerContext.videoSource = new LocalFileVideoSource(
+        false,
+        savedMetadata,
+        url,
+        new fileUri.FileUri(url).name
+      )
+    }
     if (VideoMetadataManager.exists(sha256(`files:${url}`))) {
       savedMetadata = VideoMetadataManager.load(sha256(`files:${url}`))!
+      callback()
     } else {
       let metadata = await MetadataFetcher.fetch(ensurePath(url), url.startsWith("files://media"))
-      savedMetadata = VideoMetadataManager.save(
+      asyncSave(
+        this.context.tempDir,
+        this.context.filesDir,
         sha256(`files:${url}`),
         false,
         url,
-        metadata
-      )!
+        createSendableVideoMetadata(metadata)
+      )
+        .then((saved) => {
+          if (saved) {
+            savedMetadata = saved
+            callback()
+          }
+        })
     }
-    playerContext.video = true
-    playerContext.videoSource = new LocalFileVideoSource(
-      false,
-      savedMetadata,
-      url,
-      new fileUri.FileUri(url).name
-    )
     return true
   }
 }

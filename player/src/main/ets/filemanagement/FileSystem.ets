@@ -1,9 +1,8 @@
-import { superContext } from "../utils/AbilityUtils"
-import { fileIo } from "@kit.CoreFileKit"
-import { ensurePath } from "../utils/FileUtils"
+import { superContext } from '../utils/AbilityUtils'
+import { fileIo } from '@kit.CoreFileKit'
+import { ensurePath } from '../utils/FileUtils'
 
 export class FileSystem {
-
   private tempDir: string
   private filesDir: string
 
@@ -45,14 +44,21 @@ export class FileSystem {
     return arrayBuffer
   }
 
+  writeBufferInFiles(name: string, buffer: ArrayBuffer | string) {
+    let file = this.openOrCreateFileInFiles(name)
+    fileIo.writeSync(file.fd, buffer)
+    fileIo.closeSync(file)
+  }
+
   existsInFiles(name: string): boolean {
     return fileIo.accessSync(`${this.filesDir}/${name}`, fileIo.AccessModeType.EXIST)
   }
 
   folderExistsInFiles(name: string): boolean {
     let exists = fileIo.accessSync(`${this.filesDir}/${name}`, fileIo.AccessModeType.EXIST)
-    if (!exists)
+    if (!exists) {
       return false
+    }
     let file = fileIo.openSync(`${this.filesDir}/${name}`)
     let stat = fileIo.statSync(file.fd)
     let isDirectory = stat.isDirectory()
@@ -62,8 +68,9 @@ export class FileSystem {
 
   fileExistsInFiles(name: string): boolean {
     let exists = fileIo.accessSync(`${this.filesDir}/${name}`, fileIo.AccessModeType.EXIST)
-    if (!exists)
+    if (!exists) {
       return false
+    }
     let file = fileIo.openSync(`${this.filesDir}/${name}`)
     let stat = fileIo.statSync(file.fd)
     let isFile = stat.isFile()
@@ -112,14 +119,21 @@ export class FileSystem {
     return arrayBuffer
   }
 
+  writeBufferInTemp(name: string, buffer: ArrayBuffer | string) {
+    let file = this.openOrCreateFileInTemp(name)
+    fileIo.writeSync(file.fd, buffer)
+    fileIo.closeSync(file)
+  }
+
   existsInTemp(name: string): boolean {
     return fileIo.accessSync(`${this.tempDir}/${name}`, fileIo.AccessModeType.EXIST)
   }
 
   folderExistsInTemp(name: string): boolean {
     let exists = fileIo.accessSync(`${this.tempDir}/${name}`, fileIo.AccessModeType.EXIST)
-    if (!exists)
+    if (!exists) {
       return false
+    }
     let file = fileIo.openSync(`${this.tempDir}/${name}`)
     let stat = fileIo.statSync(file.fd)
     let isDirectory = stat.isDirectory()
@@ -129,8 +143,9 @@ export class FileSystem {
 
   fileExistsInTemp(name: string): boolean {
     let exists = fileIo.accessSync(`${this.tempDir}/${name}`, fileIo.AccessModeType.EXIST)
-    if (!exists)
+    if (!exists) {
       return false
+    }
     let file = fileIo.openSync(`${this.tempDir}/${name}`)
     let stat = fileIo.statSync(file.fd)
     let isFile = stat.isFile()
@@ -145,7 +160,6 @@ export class FileSystem {
       fileIo.unlinkSync(`${this.tempDir}/${name}`)
     }
   }
-  
 }
 
 export function appFileSystem(): FileSystem {

@@ -6,6 +6,8 @@ export struct InnerButton {
   @Param
   larger: boolean = false
   @Param
+  italic: boolean = false
+  @Param
   subtitle: ResourceStr | undefined = undefined
   @Param
   popup: ResourceStr | undefined = undefined
@@ -35,6 +37,7 @@ export struct InnerButton {
         Row() {
           Column() {
             Text(this.title)
+              .fontStyle(this.italic ? FontStyle.Italic : FontStyle.Normal)
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
               .fontColor($r("sys.color.font_primary"))

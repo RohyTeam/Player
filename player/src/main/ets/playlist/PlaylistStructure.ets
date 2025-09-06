@@ -1,5 +1,3 @@
-import { PlaylistDao } from "../database/dao/PlaylistDao"
-import { VideoMetadata } from "../metadata/VideoMetadata"
 
 export interface PlaylistStructure {
 
@@ -13,7 +11,7 @@ export interface PlaylistItem {
 
 }
 
-export interface PlaylistVideo extends  PlaylistItem {
+export interface PlaylistVideo extends PlaylistItem {
 
   url: string
   identity: string
@@ -43,10 +41,11 @@ export function sortPlaylistItems(items: PlaylistItem[]): PlaylistItem[] {
   let copiedArray: PlaylistItem[] = []
   copiedArray.push(...items)
   return copiedArray.sort((a, b) => {
-    if (isPlaylistFolder(a) && isPlaylistVideo(b))
+    if (isPlaylistFolder(a) && isPlaylistVideo(b)) {
       return -1
-    else if (isPlaylistFolder(b) && isPlaylistVideo(a))
+    } else if (isPlaylistFolder(b) && isPlaylistVideo(a)) {
       return 1
+    }
     return a.name.localeCompare(b.name)
   })
 }

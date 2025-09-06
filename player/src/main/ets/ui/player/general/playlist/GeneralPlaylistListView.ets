@@ -1,9 +1,9 @@
-import { PlaylistDao } from "../../../../database/dao/PlaylistDao";
-import { DataSources } from "../../../../datasource/DataSources";
-import { Modifiers } from "../../../attributemodifier/Modifiers";
-import { curves } from "@kit.ArkUI";
-import { SimpleLoadingPage } from "../../../component/page/SimpleLoadingPage";
-import { PlaylistItem } from "./PlaylistItem";
+import { PlaylistDao } from '../../../../database/dao/PlaylistDao';
+import { DataSources } from '../../../../datasource/DataSources';
+import { Modifiers } from '../../../attributemodifier/Modifiers';
+import { curves } from '@kit.ArkUI';
+import { SimpleLoadingPage } from '../../../component/page/SimpleLoadingPage';
+import { PlaylistItem } from './PlaylistItem';
 
 @ComponentV2
 export struct GeneralPlaylistView {
@@ -53,5 +53,4 @@ export struct GeneralPlaylistView {
       SimpleLoadingPage()
     }
   }
-
 }

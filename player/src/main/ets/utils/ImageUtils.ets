@@ -1,8 +1,9 @@
-import image from "@ohos.multimedia.image";
+import image from '@ohos.multimedia.image';
 
 export function rgbaBufferToPixelMap(buffer: ArrayBuffer, width: number, height: number): image.PixelMap | undefined {
-  if (buffer.byteLength == 0)
+  if (buffer.byteLength == 0) {
     return undefined
+  }
   return image.createPixelMapSync(buffer, {
     srcPixelFormat: image.PixelMapFormat.RGBA_8888,
     pixelFormat: image.PixelMapFormat.RGBA_8888,

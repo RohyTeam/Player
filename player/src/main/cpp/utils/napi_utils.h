@@ -18,6 +18,7 @@ public:
     static void SetPropertyNumberValueOrUndefined(napi_env env, napi_value obj, const char* propertyName, int64_t* value);
     static void SetPropertyBooleanValueOrUndefined(napi_env env, napi_value obj, const char* propertyName, bool* value);
     static void JsValueToString(const napi_env &env, const napi_value &value, const int32_t bufLen, std::string &target);
+    static napi_value Int32ToJsNumber(napi_env env, int value);
     static napi_value CStringToJsString(napi_env env, const char* value);
 };
 
