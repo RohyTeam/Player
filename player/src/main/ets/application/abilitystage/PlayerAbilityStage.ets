@@ -5,6 +5,7 @@ import { DB } from '../../database/DatabaseManager'
 import { randomString } from '../../utils/StringUtils'
 import { taskpool } from '@kit.ArkTS'
 import { superContext } from '../../utils/AbilityUtils'
+import { fileIo } from '@kit.CoreFileKit'
 
 @Concurrent
 function periodJob(): void {
@@ -21,6 +22,11 @@ export default class PlayerAbilityStage extends AbilityStage {
     PreferenceContext.load(this.context)
     SystemContext.start()
     taskpool.executePeriodically(10 * 60 * 1000, PlayerAbilityStage.task, taskpool.Priority.LOW)
+
+    // 软件崩溃后不会清空 temp 文件夹，手动清空
+    if (fileIo.accessSync(this.context.tempDir, fileIo.AccessModeType.EXIST)) {
+      fileIo.rmdirSync(this.context.tempDir)
+    }
   }
 
   onDestroy(): void {

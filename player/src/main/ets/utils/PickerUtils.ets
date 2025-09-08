@@ -30,7 +30,9 @@ export function pickSingleVideoFile(context: UIContext | Context): Promise<strin
       '全部视频文件|.mp4,.mkv,.mov',
       'mp4 视频文件|.mp4',
       'mkv 视频文件|.mkv',
-      'mov 视频文件|.mov'
+      'mov 视频文件|.mov',
+      'avi 视频文件|.avi',
+      'flv 视频文件|.flv'
     ];
 
     let documentSelectResult = await documentViewPicker.select(documentSelectOptions)
@@ -52,7 +54,9 @@ export function pickVideoFiles(context: UIContext | Context, limit: number): Pro
       '全部视频文件|.mp4,.mkv,.mov',
       'mp4 视频文件|.mp4',
       'mkv 视频文件|.mkv',
-      'mov 视频文件|.mov'
+      'mov 视频文件|.mov',
+      'avi 视频文件|.avi',
+      'flv 视频文件|.flv'
     ];
 
     let documentSelectResult = await documentViewPicker.select(documentSelectOptions)

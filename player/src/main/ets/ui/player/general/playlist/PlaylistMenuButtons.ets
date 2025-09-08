@@ -146,7 +146,7 @@ export struct PlaylistMenuButtons {
                           continueJob()
                         })
                         .catch((err: BusinessError) => {
-                          console.error(`error occurs fucking: ${err.message} (${err.code})`)
+                          console.error(`error occurs: ${err.message} (${err.code})`)
                         })
                     }
                   } else {

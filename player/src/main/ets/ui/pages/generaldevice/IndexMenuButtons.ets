@@ -152,7 +152,7 @@ export struct IndexMenuButtons {
       },
       onPick: async (file) => {
         let savedMetadata: SavedVideoMetadata
-        if (file.source == LocalFiles) {
+        if (file.source === LocalFiles) {
           let playIt: () => void = () => {
             this.playerContext.video = true
             this.playerContext.videoSource = new LocalFileVideoSource(
@@ -167,7 +167,7 @@ export struct IndexMenuButtons {
             savedMetadata = VideoMetadataManager.load(sha256(`files:${file.url}`))!
             playIt()
           } else {
-            let metadata = await MetadataFetcher.fetch(ensurePath(file.url), file.url.startsWith("files://media"))
+            let metadata = await MetadataFetcher.fetch(ensurePath(file.url), false)
             asyncSave(
               ensureContext(this.getUIContext()).tempDir,
               ensureContext(this.getUIContext()).filesDir,
@@ -183,7 +183,7 @@ export struct IndexMenuButtons {
                 }
               })
           }
-        } else if (file.source == Photos) {
+        } else if (file.source === Photos) {
           let playIt: () => void = () => {
             this.playerContext.video = true
             this.playerContext.videoSource = new PhotosVideoSource(
@@ -197,7 +197,7 @@ export struct IndexMenuButtons {
             savedMetadata = VideoMetadataManager.load(sha256(`photos:${file.url}`))!
             playIt()
           } else {
-            let metadata = await MetadataFetcher.fetch(ensurePath(file.url), file.url.startsWith("files://media"))
+            let metadata = await MetadataFetcher.fetch(ensurePath(file.url), true)
             asyncSave(
               ensureContext(this.getUIContext()).tempDir,
               ensureContext(this.getUIContext()).filesDir,

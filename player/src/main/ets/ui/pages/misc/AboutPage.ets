@@ -6,7 +6,8 @@ import { InnerRow } from '../../component/inner/InnerRow'
 import { InnerDivider } from '../../component/inner/InnerDivider'
 import { InnerContainerDivider } from '../../component/inner/InnerContainerDivider'
 import { InnerContainerText } from '../../component/inner/InnerContainerText'
-import { openUrl } from '../../../utils/MiscUtils'
+import { shareUrl } from '../../../utils/MiscUtils'
+import { openEmail } from '../../../utils/AbilityUtils'
 
 @ComponentV2
 export struct AboutPage {
@@ -39,6 +40,15 @@ export struct AboutPage {
               subtitle: BuildProfile.VERSION_NAME,
               larger: true
             })
+            InnerDivider()
+            InnerButton({
+              title: $r("app.string.feedback_email"),
+              subtitle: "botrg@outlook.com",
+              larger: true,
+              clickCallback: () => {
+                openEmail(this.getUIContext(), "botrg@outlook.com", "Rohy 播放器问题反馈")
+              }
+            })
             /*InnerDivider()
             InnerButton({
               title: $r("app.string.source_code"),
@@ -60,7 +70,7 @@ export struct AboutPage {
               subtitle: "LGPL-2.1, GPL-2.0, GPL-3.0, LGPL-3.0",
               larger: true,
               clickCallback: () => {
-                openUrl(this.getUIContext(), "https://www.ffmpeg.org")
+                shareUrl(this.getUIContext(), "https://www.ffmpeg.org")
               }
             })
             InnerDivider()
@@ -69,7 +79,7 @@ export struct AboutPage {
               subtitle: "LGPL-2.1",
               larger: true,
               clickCallback: () => {
-                openUrl(this.getUIContext(), "https://gitcode.com/openharmony-sig/ohos_ijkplayer")
+                shareUrl(this.getUIContext(), "https://gitcode.com/openharmony-sig/ohos_ijkplayer")
               }
             })
             InnerDivider()
@@ -78,7 +88,7 @@ export struct AboutPage {
               subtitle: "MIT",
               larger: true,
               clickCallback: () => {
-                openUrl(this.getUIContext(), "https://github.com/NaturalIntelligence/fast-xml-parser")
+                shareUrl(this.getUIContext(), "https://github.com/NaturalIntelligence/fast-xml-parser")
               }
             })
             InnerDivider()
@@ -87,7 +97,7 @@ export struct AboutPage {
               subtitle: "Apache-2.0",
               larger: true,
               clickCallback: () => {
-                openUrl(this.getUIContext(), "https://gitee.com/tongyuyan/harmony-utils")
+                shareUrl(this.getUIContext(), "https://gitee.com/tongyuyan/harmony-utils")
               }
             })
             InnerDivider()
@@ -96,7 +106,7 @@ export struct AboutPage {
               subtitle: "LGPL-2.1",
               larger: true,
               clickCallback: () => {
-                openUrl(this.getUIContext(), "https://github.com/iAmSomeone2/PgsPlusPlus")
+                shareUrl(this.getUIContext(), "https://github.com/iAmSomeone2/PgsPlusPlus")
               }
             })
             InnerDivider()
@@ -105,7 +115,7 @@ export struct AboutPage {
               subtitle: "MIT",
               larger: true,
               clickCallback: () => {
-                openUrl(this.getUIContext(), "https://github.com/weizhenye/ass-compiler")
+                shareUrl(this.getUIContext(), "https://github.com/weizhenye/ass-compiler")
               }
             })
           }

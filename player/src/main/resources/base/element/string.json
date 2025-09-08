@@ -371,6 +371,14 @@
     {
       "name": "enable",
       "value": "Enable"
+    },
+    {
+      "name": "feedback_email",
+      "value": "Feedback email"
+    },
+    {
+      "name": "privacy_policy",
+      "value": "Privacy policy"
     }
   ]
 }

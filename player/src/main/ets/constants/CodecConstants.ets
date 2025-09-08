@@ -30,6 +30,11 @@ export class CodecConstants {
     names: ["srt", "subrip"],
     extension: 'srt'
   }
+  public static readonly subtitle_vtt: Codec = {
+    id: 'vtt',
+    names: ["vtt", "webvtt"],
+    extension: 'vtt'
+  }
 
   public static getCodec(name: string): Codec | undefined {
     for (let codec of CodecConstants.codecs()) {

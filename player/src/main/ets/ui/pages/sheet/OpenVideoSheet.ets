@@ -1,6 +1,6 @@
 import { LocalFiles, Photos } from '../../../filemanagement/FileSource'
 import { PickedFile } from '../../../filemanagement/PickedFile'
-import { pickPhotosVideoFiles, pickVideoFiles } from '../../../utils/PickerUtils'
+import { pickPhotosVideoFiles, pickSingleVideoFile, pickVideoFiles } from '../../../utils/PickerUtils'
 import { getIcon } from '../../../utils/ResourceUtils'
 import { InnerButtonWithImage } from '../../component/inner/InnerButtonWithImage'
 import { InnerComponentSet } from '../../component/inner/InnerComponentSet'
@@ -28,14 +28,14 @@ export struct OpenVideoSheet {
           showGoToIcon: true,
           clickCallback: () => {
             this.hideChooser()
-            pickVideoFiles(this.getUIContext(), 1)
-              .then((urls) => {
-                if (urls.length == 0) {
+            pickSingleVideoFile(this.getUIContext())
+              .then((url) => {
+                if (!url) {
                   return
                 }
                 this.onPick({
                   source: LocalFiles,
-                  url: urls[0]
+                  url: url
                 })
               })
           }

@@ -96,7 +96,7 @@ export struct PlayerBottomBar {
           Blank()
             .layoutWeight(1)
           CircleIconButton({
-            icon: $r("sys.symbol.questionmark_circle"),
+            icon: $r("sys.symbol.sound"),
             buttonMargin: {
               right: 16,
               bottom: 12
@@ -112,7 +112,7 @@ export struct PlayerBottomBar {
               }
             })
           CircleIconButton({
-            icon: $r("sys.symbol.questionmark_circle"),
+            icon: $r("sys.symbol.AI_subtitles"),
             buttonMargin: {
               right: 16,
               bottom: 12
@@ -128,7 +128,7 @@ export struct PlayerBottomBar {
               }
             })
           CircleIconButton({
-            icon: $r("sys.symbol.chevron_left_2"),
+            icon: $r("sys.symbol.video_speed"),
             buttonMargin: {
               right: 16,
               bottom: 12

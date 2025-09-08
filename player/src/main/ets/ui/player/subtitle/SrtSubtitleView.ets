@@ -4,7 +4,6 @@ import { fileIo } from '@kit.CoreFileKit';
 import { ensurePath } from '../../../utils/FileUtils';
 import { LengthMetricsUnit } from '@kit.ArkUI';
 
-// FIXME: 由于使用 canvas 绘制，假如同一时间有多行字幕，将会重叠到一起
 @ComponentV2
 export struct SrtSubtitleView {
   @Local
@@ -22,6 +21,8 @@ export struct SrtSubtitleView {
   build() {
     Stack() {
       Column() {
+        Blank()
+          .layoutWeight(1)
         ForEach(this.subtitles, (subtitleLine: SrtSubtitleLine) => {
           if (subtitleLine.start <= this.playerContext.currentPosition &&
             subtitleLine.end >= this.playerContext.currentPosition) {
@@ -31,13 +32,25 @@ export struct SrtSubtitleView {
             })
           }
         })
+        Blank()
+          .height(16)
       }
+      .alignItems(HorizontalAlign.Center)
       .width("100%")
       .height("100%")
     }
     .width("100%")
     .height("100%")
   }
+}
+
+@ComponentV2
+struct SrtSubtitle {
+
+  build() {
+
+  }
+
 }
 
 @ComponentV2
@@ -51,20 +64,38 @@ export struct SubtitleLine {
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings, LengthMetricsUnit.PX)
 
+  @Local
+  private canvasWidth: number = 1
+  @Local
+  private canvasHeight: number = 1
+
+  aboutToAppear() {
+    // 这里先提前初始化一下，防止绘制内容超出被裁切
+    this.canvasWidth = this.playerContext.playerWidthPx
+    this.canvasHeight = this.playerContext.playerHeightPx
+  }
+
   build() {
     Canvas(this.context)
-      .width('100%')
-      .height('100%')
+      .width(this.canvasWidth)
+      .height(this.canvasWidth)
       .onReady(() => {
         this.context.font = "16vp"
+        this.context.fillStyle = "#ffffff"
+        this.context.strokeStyle = "#000000"
+
+        let realText = this.text
+
+        while (realText.endsWith("<i>") || realText.endsWith("<b>"))
+          realText = realText.substring(0, realText.length - 3)
+
+        let x = 0
+        let y = 4
 
         let textMetrics = this.context.measureText(this.text)
 
-        let x = (this.playerContext.playerWidthPx - textMetrics.width) / 2
-        let y = this.playerContext.playerHeightPx - 16
-
-        this.context.fillStyle = "#ffffff"
-        this.context.strokeStyle = "#000000"
+        this.canvasWidth = textMetrics.width
+        this.canvasHeight = 24
 
         this.context.lineWidth = 3
         this.context.strokeText(this.text, x, y)
@@ -72,4 +103,5 @@ export struct SubtitleLine {
         this.context.fillText(this.text, x, y)
       })
   }
+
 }

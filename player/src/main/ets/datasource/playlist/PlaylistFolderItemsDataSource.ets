@@ -192,7 +192,7 @@ export class PlaylistFolderItemsDataSource implements IDataSource {
         })
       })
       .catch((err: Error) => {
-        console.error(`fuck: error when deleting videos: ${err.message}`)
+        console.error(`error when deleting videos: ${err.message}`)
       })
   }
 

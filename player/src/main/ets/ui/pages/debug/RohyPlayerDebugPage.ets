@@ -23,7 +23,7 @@ export struct RohyPlayerDebugPage {
                 RohyPlayer.RohyPlayer_test("rohyplayer_test", ensurePath(url))
               })
               .catch((err: Error) => {
-                console.error(`FUCK! error occurs: ${err.message}: ${err.stack}`)
+                console.error(`error occurs: ${err.message}: ${err.stack}`)
               })
           })
           .width("100%")

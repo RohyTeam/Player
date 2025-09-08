@@ -90,7 +90,6 @@ export struct PCIndex {
       .focusable(true)
       .defaultFocus(true)
       .onKeyPreIme((event) => {
-        console.error(`fuck keyboard: trying solving keyboard`)
         return PCKeyboardHandler.handle(this.getUIContext(), this.playerController, event)
       })
       .width("100%")

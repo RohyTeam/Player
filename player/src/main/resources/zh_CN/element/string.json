@@ -371,6 +371,14 @@
     {
       "name": "enable",
       "value": "启用"
+    },
+    {
+      "name": "feedback_email",
+      "value": "问题反馈邮箱"
+    },
+    {
+      "name": "privacy_policy",
+      "value": "隐私政策"
     }
   ]
 }

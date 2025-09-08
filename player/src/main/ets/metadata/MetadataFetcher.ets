@@ -2,6 +2,7 @@ import { VideoMetadata } from './VideoMetadata';
 import { fileIo } from '@kit.CoreFileKit';
 import RohyMetadata from 'librohy_metadata.so';
 import { media } from '@kit.MediaKit';
+import { JSON } from '@kit.ArkTS';
 
 export class MetadataFetcher {
   public static async fetch(path: string, isMedia: boolean, headers?: Record<string, string>): Promise<VideoMetadata> {

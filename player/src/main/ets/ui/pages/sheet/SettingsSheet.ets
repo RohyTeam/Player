@@ -5,6 +5,7 @@ import { InnerContainer } from '../../component/inner/InnerContainer'
 import { InnerContainerDivider } from '../../component/inner/InnerContainerDivider'
 import { InnerSwitch } from '../../component/inner/InnerSwitch'
 import { InnerDivider } from '../../component/inner/InnerDivider'
+import { openUrl } from '../../../utils/AbilityUtils'
 
 @ComponentV2
 export struct SettingsSheet {
@@ -118,6 +119,14 @@ export struct SettingsSheet {
           clickCallback: () => {
             this.close()
             this.indexNavigator.pushPath({ name: "QnA" })
+          }
+        })
+        InnerDivider()
+        InnerButton({
+          title: $r("app.string.privacy_policy"),
+          showGoToIcon: true,
+          clickCallback: () => {
+            openUrl(this.getUIContext(), "https://agreement-drcn.hispace.dbankcloud.cn/index.html?lang=zh&agreementId=1770139877623479680")
           }
         })
         InnerDivider()

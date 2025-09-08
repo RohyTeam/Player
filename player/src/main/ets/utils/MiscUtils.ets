@@ -3,7 +3,7 @@ import { common } from '@kit.AbilityKit';
 import { uniformTypeDescriptor } from '@kit.ArkData';
 import { BusinessError } from '@kit.BasicServicesKit';
 
-export function openUrl(uiContext: UIContext, url: string) {
+export function shareUrl(uiContext: UIContext, url: string) {
   let shareData: systemShare.SharedData = new systemShare.SharedData({
     utd: uniformTypeDescriptor.UniformDataType.HYPERLINK,
     content: url,
