@@ -114,8 +114,7 @@ export struct IndexMenuButtons {
               this.showSettingsSheet = false
             },
             title: {
-              title: $r("app.string.settings"),
-              subtitle: $r("app.string.not_implemented")
+              title: $r("app.string.settings")
             }
           }
         )
