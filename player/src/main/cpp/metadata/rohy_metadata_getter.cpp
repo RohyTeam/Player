@@ -1,5 +1,13 @@
 #include "rohy_metadata_getter.h"
 
+#include <cstdint>
+#include <multimedia/player_framework/native_avdemuxer.h>
+#include <multimedia/player_framework/native_avsource.h>
+#include <multimedia/player_framework/native_avcodec_base.h>
+#include <multimedia/player_framework/native_avformat.h>
+#include <multimedia/player_framework/native_avbuffer.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -216,6 +224,8 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
     try {
         avformat_network_init();
         
+        OH_AVSource* oh_avSource;
+        
         AVFormatContext* fmt_ctx = nullptr;
         AVDictionary* options = nullptr;
         
@@ -231,11 +241,20 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                 av_dict_set(&options, "headers", header_str.c_str(), 0);
             }
         }
+        
         if (url.find("http://") == 0 || url.find("https://") == 0) {
             av_dict_set(&options, "rw_timeout", "5000000", 0);
             av_dict_set(&options, "reconnect", "1", 0);
             av_dict_set(&options, "reconnect_at_eof", "1", 0);
             av_dict_set(&options, "reconnect_streamed", "1", 0);
+        } else if (url.find("/") == 0) {
+            int fd = open(url.c_str(), O_RDONLY);
+            struct stat fileStatus {};
+            size_t fileSize = 0;
+            if (stat(url.c_str(), &fileStatus) == 0) {
+               fileSize = static_cast<size_t>(fileStatus.st_size);
+                oh_avSource = OH_AVSource_CreateWithFD(fd, 0, fileSize);
+            }
         }
         
         if (avformat_open_input(&fmt_ctx, url.c_str(), nullptr, &options) < 0) {
@@ -264,24 +283,6 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
             return meta;
         }
         
-        AVStream* video_stream = fmt_ctx_ptr->streams[video_stream_idx];
-        AVCodecParameters* codecpar = video_stream->codecpar;
-        
-        meta.width = codecpar->width;
-        meta.height = codecpar->height;
-        
-        meta.averageFrameRate = av_q2d(video_stream->avg_frame_rate);
-        
-        meta.hdr = (codecpar->color_range == AVCOL_RANGE_JPEG) || 
-                   (codecpar->color_trc == AVCOL_TRC_SMPTE2084) ||
-                   (codecpar->color_primaries == AVCOL_PRI_BT2020);
-        
-        const AVCodec* codec = avcodec_find_decoder(codecpar->codec_id);
-        if (codec) {
-            meta.codec = codec->name ? codec->name : "";
-            meta.codec_full = codec->long_name ? codec->long_name : "";
-        }
-        
         if (fmt_ctx_ptr->nb_chapters > 0) {
             meta.chapters.reserve(fmt_ctx_ptr->nb_chapters);
             
@@ -301,8 +302,42 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
         
         meta.tracks.reserve(fmt_ctx_ptr->nb_streams);
         
+        int cover_stream_index = find_cover_track(fmt_ctx_ptr.get());
+        
         for (int i = 0; i < fmt_ctx_ptr->nb_streams; i++) {
             AVStream* stream = fmt_ctx_ptr->streams[i];
+            
+            OH_AVFormat* oh_avFormat;
+            
+            if (oh_avSource) {
+                oh_avFormat = OH_AVSource_GetTrackFormat(oh_avSource, i);
+            }
+            
+            if (i == video_stream_idx) {
+                AVCodecParameters* codecpar = stream->codecpar;
+                
+                meta.width = codecpar->width;
+                meta.height = codecpar->height;
+                
+                meta.averageFrameRate = av_q2d(stream->avg_frame_rate);
+                
+                if (stream->codecpar->coded_side_data) {
+                    if (codecpar->coded_side_data->type == AV_PKT_DATA_DOVI_CONF) {
+                        meta.hdr = 1;
+                    } else if (codecpar->coded_side_data->type == AV_PKT_DATA_DYNAMIC_HDR10_PLUS) {
+                        meta.hdr = 3;
+                    } else if (codecpar->coded_side_data->type == AV_PKT_DATA_MASTERING_DISPLAY_METADATA
+                            || codecpar->coded_side_data->type == AV_PKT_DATA_CONTENT_LIGHT_LEVEL
+                            || codecpar->color_range == AVCOL_RANGE_JPEG 
+                            || codecpar->color_trc == AVCOL_TRC_SMPTE2084 
+                            || codecpar->color_primaries == AVCOL_PRI_BT2020)   {
+                        meta.hdr = 4;
+                    } else {
+                        meta.hdr = 0;
+                    }
+                }
+            }
+            
             TrackMetadata track;
             
             track.index = i;
@@ -318,9 +353,14 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
             
             const AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
             if (codec) {
+                if (i == video_stream_idx) {    
+                    meta.codec = codec->name ? codec->name : "";
+                    meta.codec_full = codec->long_name ? codec->long_name : "";
+                }
                 track.codec = codec->name ? codec->name : "";
                 track.codec_full = codec->long_name ? codec->long_name : "";
             }
+            
             
             switch (stream->codecpar->codec_type) {
                 case AVMEDIA_TYPE_VIDEO:
@@ -329,6 +369,35 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                     track.height = stream->codecpar->height;
                     track.bitrate = stream->codecpar->bit_rate;
                     track.averageFrameRate = av_q2d(stream->avg_frame_rate);
+                    if (stream->codecpar->coded_side_data) {
+                        if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_DOVI_CONF) {
+                            track.hdr = 1;
+                        } else if (oh_avFormat) {
+                            int32_t isHDRVivid = 0;
+                            OH_AVFormat_GetIntValue(oh_avFormat, OH_MD_KEY_VIDEO_IS_HDR_VIVID, &isHDRVivid);
+                            if (isHDRVivid) {
+                                if (i == video_stream_idx) {
+                                    meta.hdr = 2;
+                                }
+                                track.hdr = 2;
+                            } else {
+                                if (i == video_stream_idx) {
+                                    meta.hdr = 0;
+                                }
+                                track.hdr = 0;
+                            }
+                        } else if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_DYNAMIC_HDR10_PLUS) {
+                            track.hdr = 3;
+                        } else if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_MASTERING_DISPLAY_METADATA
+                                || stream->codecpar->coded_side_data->type == AV_PKT_DATA_CONTENT_LIGHT_LEVEL
+                                || stream->codecpar->color_range == AVCOL_RANGE_JPEG 
+                                || stream->codecpar->color_trc == AVCOL_TRC_SMPTE2084 
+                                || stream->codecpar->color_primaries == AVCOL_PRI_BT2020)   {
+                            track.hdr = 4;
+                        } else {
+                            track.hdr = 0;
+                        }
+                    }
                     break;
                     
                 case AVMEDIA_TYPE_AUDIO:
@@ -354,19 +423,43 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                     track.track_type = TrackType::Unknown;
                     break;
             }
-            
-            meta.tracks.push_back(std::move(track));
-        }
         
-        int cover_stream_index = find_cover_track(fmt_ctx_ptr.get());
-        
-        if (cover_stream_index >= 0) {
             AVPacketPtr pkt(av_packet_alloc());
             
-            if (av_read_frame(fmt_ctx_ptr.get(), pkt.get()) >= 0 && 
-                pkt->stream_index == cover_stream_index) {
-                meta.cover.assign(pkt->data, pkt->data + pkt->size);
+            if (av_read_frame(fmt_ctx_ptr.get(), pkt.get()) >= 0) {
+                if (!oh_avFormat) {
+                    const AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
+                    if (codec) {
+                        AVCodecContextPtr codec_ctx(avcodec_alloc_context3(codec));
+                        AVFramePtr frame(av_frame_alloc());
+                        
+                        if (frame) {
+                            if (avcodec_send_packet(codec_ctx.get(), pkt.get()) >= 0) {
+                                if (avcodec_receive_frame(codec_ctx.get(), frame.get()) >= 0) {
+                                    const AVFrameSideData *sd = av_frame_get_side_data(frame.get(), AV_FRAME_DATA_DYNAMIC_HDR_VIVID);
+                                    if (sd) {
+                                        track.hdr = 2;
+                                        if (i == video_stream_idx) {
+                                            meta.hdr = 2;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    
+                    }
+                }
+                
+                if (cover_stream_index >= 0 && pkt->stream_index == cover_stream_index) {
+                    meta.cover.assign(pkt->data, pkt->data + pkt->size);
+                }
             }
+            
+            if (oh_avFormat) {
+                OH_AVFormat_Destroy(oh_avFormat);
+            }
+            
+            meta.tracks.push_back(std::move(track));
         }
         
         if (meta.cover.empty()) {
@@ -376,6 +469,10 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
             if (video_stream_index >= 0) {
                 meta.cover = extract_cover_image(fmt_ctx_ptr.get(), video_stream_index);
             }
+        }
+        
+        if (oh_avSource) {
+            OH_AVSource_Destroy(oh_avSource);
         }
         
         meta.success = true;

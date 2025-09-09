@@ -142,6 +142,8 @@ export struct PlaylistMenuButtons {
 
               this.importProgressContext.current = 0
               this.importProgressContext.total = filteredUrls.length
+              this.importProgressContext.subProgressCurrent = 0
+              this.importProgressContext.subProgressTotal = filteredUrls.length * 4
 
               let importProgressOverlayComponent: ComponentContent<ImportProgressContext> = new ComponentContent(
                 this.getUIContext(),
@@ -196,6 +198,8 @@ export struct PlaylistMenuButtons {
                     return
                   }
                   let metadata = sendableVideoMetadataToNormal(result)
+                  this.importProgressContext.subProgressCurrent += 1
+                  this.importProgressContext.subProgressText = $r("app.string.import_persisting", fileName(uri))
                   fileShare.persistPermission([{
                     uri: uri,
                     operationMode: fileShare.OperationMode.READ_MODE
@@ -203,7 +207,11 @@ export struct PlaylistMenuButtons {
                     .then(() => {
                       let continueJob: () => void = () => {
                         this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
+                        this.importProgressContext.subProgressCurrent += 1
+                        this.importProgressContext.subProgressText = $r("app.string.import_finished", fileName(uri))
                       }
+                      this.importProgressContext.subProgressCurrent += 1
+                      this.importProgressContext.subProgressText = $r("app.string.import_saving", fileName(uri))
                       if (!VideoMetadataManager.existsInFiles(identity)) {
                         if (VideoMetadataManager.existsInTemp(identity)) {
                           VideoMetadataManager.tempToFile(identity)
@@ -219,6 +227,7 @@ export struct PlaylistMenuButtons {
                           )
                             .then(() => {
                               continueJob()
+                              plusOne()
                             })
                             .catch(() => {
                               importErrors.push({
@@ -229,8 +238,8 @@ export struct PlaylistMenuButtons {
                         }
                       } else {
                         continueJob()
+                        plusOne()
                       }
-                      plusOne()
                     })
                     .catch(() => {
                       importErrors.push({
@@ -248,10 +257,16 @@ export struct PlaylistMenuButtons {
                   })
                   plusOne()
                 })
+                this.importProgressContext.subProgressCurrent += 1
+                this.importProgressContext.subProgressText = $r("app.string.import_fetching_metadata", fileName(uri))
                 taskpool.execute(task)
                   .then(() => {})
                   .catch(() => {
-
+                    importErrors.push({
+                      url: uri,
+                      reason: ImportErrorType.FETCH_METADATA
+                    })
+                    plusOne()
                   })
               }
             })

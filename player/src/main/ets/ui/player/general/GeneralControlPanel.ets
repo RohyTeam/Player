@@ -145,7 +145,7 @@ export struct GeneralControlPanel {
     .autoHide(true)
     .showControlButton(false)
     .showSideBar(true)
-    .sideBarWidth(this.landscape ? "40%" : "80%")
+    .sideBarWidth(this.landscape || Sys.isTablet() ? "40%" : "80%")
     .sideBarPosition(SideBarPosition.End)
     .backgroundColor(Color.Transparent)
   }

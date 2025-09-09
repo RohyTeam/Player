@@ -13,6 +13,7 @@ export interface TrackMetadata {
   duration: number | undefined
   averageFramerate: number | undefined
   bitrate: number | undefined
+  hdr: number | undefined // 0: not hdr, 1: dolby vision, 2: hdr vivid, 3: hdr 10+, 4: other hdrs
   // audio
   sampleRate: number | undefined
   // attachment
@@ -34,6 +35,7 @@ export class SendableTrackMetadata {
   duration: number | undefined
   averageFramerate: number | undefined
   bitrate: number | undefined
+  hdr: number | undefined
   sampleRate: number | undefined
   filename: string | undefined
   mimetype: string | undefined
@@ -50,6 +52,7 @@ export class SendableTrackMetadata {
     duration: number | undefined,
     averageFramerate: number | undefined,
     bitrate: number | undefined,
+    hdr: number | undefined,
     sampleRate: number | undefined,
     filename: string | undefined,
     mimetype: string | undefined,
@@ -65,6 +68,7 @@ export class SendableTrackMetadata {
     this.duration = duration
     this.averageFramerate = averageFramerate
     this.bitrate = bitrate
+    this.hdr = hdr
     this.sampleRate = sampleRate
     this.filename = filename
     this.mimetype = mimetype
@@ -84,6 +88,7 @@ export function sendableTrackMetadataToNormal(track: SendableTrackMetadata): Tra
     duration: track.duration,
     averageFramerate: track.averageFramerate,
     bitrate: track.bitrate,
+    hdr: track.hdr,
     sampleRate: track.sampleRate,
     filename: track.filename,
     mimetype: track.mimetype

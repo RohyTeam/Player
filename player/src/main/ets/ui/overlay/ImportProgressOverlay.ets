@@ -23,6 +23,23 @@ export struct ImportProgressOverlay {
         right: 12,
         bottom: 24
       })
+      Text(this.context.subProgressText)
+        .fontSize(18)
+        .margin({
+          left: 12,
+          right: 12,
+          top: 24,
+          bottom: 4
+        })
+      Progress({
+        value: this.context.subProgressCurrent,
+        total: this.context.subProgressTotal,
+        type: ProgressType.Linear
+      }).margin({
+        left: 12,
+        right: 12,
+        bottom: 24
+      })
     }
     .alignItems(HorizontalAlign.Start)
     .backgroundColor($r("app.color.rohy_card"))
@@ -38,6 +55,12 @@ export class ImportProgressContext {
   current: number = 0
   @Trace
   total: number = 0
+  @Trace
+  subProgressText: ResourceStr = ""
+  @Trace
+  subProgressCurrent: number = 0
+  @Trace
+  subProgressTotal: number = 0
 }
 
 @Builder

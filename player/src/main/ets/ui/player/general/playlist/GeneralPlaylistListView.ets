@@ -10,10 +10,6 @@ export struct GeneralPlaylistView {
   @Consumer("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
 
-  aboutToAppear(): void {
-    DataSources.PLAYLIST.reloadInitially()
-  }
-
   build() {
     if (DataSources.PLAYLIST.alreadyReloaded) {
       Grid(undefined, { regularSize: [1, 1] }) {

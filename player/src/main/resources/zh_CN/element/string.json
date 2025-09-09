@@ -511,6 +511,26 @@
     {
       "name": "mirror_flip",
       "value": "镜像翻转"
+    },
+    {
+      "name": "special_thanks",
+      "value": "特别鸣谢"
+    },
+    {
+      "name": "import_persisting",
+      "value": "授权持久化中（%s）"
+    },
+    {
+      "name": "import_fetching_metadata",
+      "value": "获取元数据中"
+    },
+    {
+      "name": "import_saving",
+      "value": "保存中（%s）"
+    },
+    {
+      "name": "import_finished",
+      "value": "导入完成（%s）"
     }
   ]
 }

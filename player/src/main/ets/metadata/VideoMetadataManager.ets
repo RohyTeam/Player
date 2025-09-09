@@ -180,8 +180,12 @@ export class VideoMetadataManager {
       return undefined
     }
 
-    let metadata: VideoMetadata =
-      JSON.parse(fileIo.readTextSync(getPath(`videos/${identity}/metadata.json`))) as VideoMetadata
+    // 拯救一下邀测用户
+    let metadataText = fileIo.readTextSync(getPath(`videos/${identity}/metadata.json`))
+      .replace('"hdr":false"', '"hdr":0')
+      .replace('"hdr":true"', '"hdr":4')
+
+    let metadata: VideoMetadata = JSON.parse(metadataText) as VideoMetadata
 
     metadata.cover = ensureUri(getPath(`videos/${identity}/cover.jpg`))
 

@@ -10,6 +10,7 @@ import { IndexMenuButtons } from './IndexMenuButtons'
 import { AboutPage } from '../misc/AboutPage'
 import { QnAPage } from '../misc/QnAPage'
 import { VisualStylePage } from './VisualStylePage'
+import { DataSources } from '../../../datasource/DataSources'
 
 @ComponentV2
 export struct GeneralDeviceIndex {
@@ -37,6 +38,10 @@ export struct GeneralDeviceIndex {
         })
       }
       GeneralPlaylistView()
+        .onAppear(() => {
+          // 放在这里让 ui 加载出来再重载，这样不会卡在 startIcon 页
+          DataSources.PLAYLIST.reloadInitially()
+        })
     }
     .menus(this.menuButtons)
     .width("100%")
@@ -82,4 +87,5 @@ export struct GeneralDeviceIndex {
       VisualStylePage()
     }
   }
+
 }

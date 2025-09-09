@@ -27,11 +27,14 @@ export struct ChapterSidebar {
       }) {
         ForEach(this.playerContext.chapters, (chapter: ChapterInfo, index: number) => {
           InnerContainerDivider()
-          InnerComponentSet() {
+          InnerComponentSet({
+            blurredBackground: true
+          }) {
             InnerButton({
               title: chapter.title,
               subtitle: `${convertNumberToDurationString(chapter.start)} - ${convertNumberToDurationString(chapter.end)}`,
               italic: typeof chapter.title != 'string',
+              transparentBackground: true,
               clickCallback: () => {
                 this.playerController.seek(chapter.start)
               }

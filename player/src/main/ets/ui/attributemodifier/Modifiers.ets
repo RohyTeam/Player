@@ -8,6 +8,9 @@ export class Modifiers {
   public static backgroundBlur(): BackgroundBlurModifier {
     return new BackgroundBlurModifier()
   }
+  public static optionalBackgroundBlur(enable: boolean): BackgroundBlurModifier {
+    return new BackgroundBlurModifier(enable)
+  }
 
   public static surfaceFilling(metadata: VideoMetadata,
     surfaceFillingMode: SurfaceFillingMode): SurfaceFillingModeModifier {

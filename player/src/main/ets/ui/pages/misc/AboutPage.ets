@@ -64,6 +64,17 @@ export struct AboutPage {
                 })*/
               }
 
+              /*InnerContainerDivider()
+              InnerContainerText({
+                text: $r("app.string.special_thanks")
+              })
+              InnerComponentSet() {
+                InnerRow({
+                  title: "GitCode@Cinyu",
+                  larger: true
+                })
+              }*/
+
               InnerContainerDivider()
               InnerContainerText({
                 text: $r("app.string.open_source_projects_used")
@@ -149,6 +160,21 @@ export struct AboutPage {
                   Blank()
                     .width(4)
                   Text($r("app.string.icon_vivid_hdr"))
+                }
+                .alignItems(VerticalAlign.Center)
+                .width("100%")
+                .margin({
+                  bottom: 8
+                })
+                Row() {
+                  Image($r("app.media.vivid_colorful_new"))
+                    .borderRadius(4)
+                    .height(20)
+                    .aspectRatio(2 / 1)
+                  Blank()
+                    .width(4)
+                  Text($r("app.string.icon_vivid_hdr"))
+                  Text(" (New)")
                 }
                 .alignItems(VerticalAlign.Center)
                 .width("100%")

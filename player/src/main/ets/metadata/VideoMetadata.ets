@@ -10,7 +10,7 @@ export interface VideoMetadata {
   averageFramerate: number
   width: number
   height: number
-  hdr: boolean
+  hdr: number // 0: not hdr, 1: dolby vision, 2: hdr vivid, 3: hdr 10+, 4: other hdrs
   codec: string
   codecLong: string
   cover: ArrayBuffer | string | undefined // jpeg, if string, point to local saved picture path
@@ -27,7 +27,7 @@ export class SendableVideoMetadata {
   averageFramerate: number
   width: number
   height: number
-  hdr: boolean
+  hdr: number
   codec: string
   codecLong: string
   cover: collections.ArrayBuffer | string | undefined
@@ -40,7 +40,7 @@ export class SendableVideoMetadata {
     averageFramerate: number,
     width: number,
     height: number,
-    hdr: boolean,
+    hdr: number,
     codec: string,
     codecLong: string,
     cover: collections.ArrayBuffer | string | undefined,
@@ -95,6 +95,7 @@ export function createSendableVideoMetadata(metadata: VideoMetadata): SendableVi
         track.duration,
         track.averageFramerate,
         track.bitrate,
+        track.hdr,
         track.sampleRate,
         track.filename,
         track.mimetype,
@@ -190,6 +191,7 @@ function copyTracks(tracks: TrackMetadata[]): TrackMetadata[] {
       duration: track.duration,
       averageFramerate: track.averageFramerate,
       bitrate: track.bitrate,
+      hdr: track.hdr,
       sampleRate: track.sampleRate,
       filename: track.filename,
       mimetype: track.mimetype,

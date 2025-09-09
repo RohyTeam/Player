@@ -1,3 +1,4 @@
+import { Sys } from '../../../context/SystemContext'
 import { BottomAvoidArea } from '../../avoidarea/BottomAvoidArea'
 
 @ComponentV2
@@ -15,9 +16,11 @@ export struct InnerContainer {
     Scroll() {
       Column() {
         this.content()
-        BottomAvoidArea({
-          static: this.staticBottomAvoid
-        })
+        if (!Sys.isTablet()) {
+          BottomAvoidArea({
+            static: this.staticBottomAvoid
+          })
+        }
       }
       .width("100%")
       .backgroundColor(this.bgColor)

@@ -10,6 +10,7 @@ import { VisualEffectSheet } from '../pages/sheet/VisualEffectSheet'
 import { ControlsContext } from './PlayerBottomBar'
 import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI'
 import { CutoutAvoidArea } from '../avoidarea/CutoutAvoidArea'
+import { Sys } from '../../context/SystemContext'
 
 @ComponentV2
 export struct PlayerTopBar {
@@ -47,6 +48,39 @@ export struct PlayerTopBar {
               this.indexNavigator.pop()
             }
           })
+          if (this.playerContext.videoSource?.metadata().metadata.hdr == 1) {
+            Image($r("app.media.dolby_colorful"))
+              .borderRadius(4)
+              .height(24)
+              .aspectRatio(2 / 1)
+              .margin({
+                left: 4
+              })
+          } else if (this.playerContext.videoSource?.metadata().metadata.hdr == 2) {
+            Image($r("app.media.vivid_colorful_new"))
+              .borderRadius(4)
+              .height(24)
+              .aspectRatio(2 / 1)
+              .margin({
+                left: 4
+              })
+          } else if (this.playerContext.videoSource?.metadata().metadata.hdr == 3) {
+            Image($r("app.media.hdr10_plus_colorful"))
+              .borderRadius(4)
+              .height(24)
+              .aspectRatio(2 / 1)
+              .margin({
+                left: 4
+              })
+          } else if (this.playerContext.videoSource?.metadata().metadata.hdr == 4) {
+            Image($r("app.media.hdr_gold"))
+              .borderRadius(4)
+              .height(24)
+              .aspectRatio(2 / 1)
+              .margin({
+                left: 4
+              })
+          }
           Text(this.playerContext.videoSource?.name())
             .maxLines(1)
             .textOverflow({
@@ -60,7 +94,7 @@ export struct PlayerTopBar {
             .fontColor($r("sys.color.font_primary"))
           Blank()
             .layoutWeight(1)
-          if (this.landscape) {
+          if (this.landscape || Sys.isTablet()) {
             CircleIconSwitch({
               icon: $r("sys.symbol.trapezoid_and_line_vertical"),
               buttonMargin: {

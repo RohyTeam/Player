@@ -102,7 +102,7 @@ export struct PlayerBottomBar {
           })
           Blank()
             .layoutWeight(1)
-          if (this.landscape) {
+          if (this.landscape || Sys.isTablet()) {
             CircleIconButton({
               icon: $r("sys.symbol.resolution_video"),
               buttonMargin: {

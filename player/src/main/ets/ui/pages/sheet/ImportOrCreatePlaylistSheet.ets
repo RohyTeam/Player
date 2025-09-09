@@ -19,7 +19,8 @@ export struct ImportOrCreatePlaylistSheet {
 
   build() {
     InnerContainer({
-      bgColor: Color.Transparent
+      bgColor: Color.Transparent,
+      edgeEffect: false
     }) {
       InnerComponentSet() {
         InnerButtonWithImage({

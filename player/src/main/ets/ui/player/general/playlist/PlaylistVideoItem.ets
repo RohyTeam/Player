@@ -38,11 +38,61 @@ export struct PlaylistVideoItem {
               .objectFit(ImageFit.Fill)
               .height("100%")
               .width("100%")
-            Column() {
+            Row() {
+              Column() {
+                if (this.metadata.metadata.hdr == 1) {
+                  Image($r("app.media.dolby_colorful"))
+                    .borderRadius({
+                      topLeft: 6,
+                      topRight: 4,
+                      bottomLeft: 4,
+                      bottomRight: 4
+                    })
+                    .padding(2)
+                    .height(24)
+                    .aspectRatio(2 / 1)
+                } else if (this.metadata.metadata.hdr == 2) {
+                  Image($r("app.media.vivid_colorful_new"))
+                    .borderRadius({
+                      topLeft: 6,
+                      topRight: 4,
+                      bottomLeft: 4,
+                      bottomRight: 4
+                    })
+                    .padding(2)
+                    .height(24)
+                    .aspectRatio(2 / 1)
+                } else if (this.metadata.metadata.hdr == 3) {
+                  Image($r("app.media.hdr10_plus_colorful"))
+                    .borderRadius({
+                      topLeft: 6,
+                      topRight: 4,
+                      bottomLeft: 4,
+                      bottomRight: 4
+                    })
+                    .padding(2)
+                    .height(24)
+                    .aspectRatio(2 / 1)
+                } else if (this.metadata.metadata.hdr == 4) {
+                  Image($r("app.media.hdr_gold"))
+                    .borderRadius({
+                      topLeft: 6,
+                      topRight: 4,
+                      bottomLeft: 4,
+                      bottomRight: 4
+                    })
+                    .padding(2)
+                    .height(24)
+                    .aspectRatio(2 / 1)
+                }
+                Blank()
+                  .backgroundColor(Color.Transparent)
+                  .layoutWeight(1)
+              }
               Blank()
                 .backgroundColor(Color.Transparent)
                 .layoutWeight(1)
-              Row() {
+              Column() {
                 Blank()
                   .backgroundColor(Color.Transparent)
                   .layoutWeight(1)

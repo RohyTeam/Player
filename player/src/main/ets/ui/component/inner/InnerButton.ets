@@ -1,3 +1,5 @@
+import { Modifiers } from "../../attributemodifier/Modifiers"
+
 @ComponentV2
 export struct InnerButton {
   @Param
@@ -13,6 +15,8 @@ export struct InnerButton {
   popup: ResourceStr | undefined = undefined
   @Param
   showGoToIcon: boolean = false
+  @Param
+  transparentBackground: boolean = false
   @Event
   clickCallback: () => void = () => {
   }
@@ -99,7 +103,7 @@ export struct InnerButton {
       .width("100%")
       .height("100%")
       .type(ButtonType.Normal)
-      .backgroundColor($r("app.color.rohy_card"))
+      .backgroundColor(this.transparentBackground ? Color.Transparent : $r("app.color.rohy_card"))
     }
     .height(this.larger ? "56vp" : "48vp")
     .width("100%")

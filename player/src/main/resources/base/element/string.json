@@ -511,6 +511,26 @@
     {
       "name": "mirror_flip",
       "value": "Mirror flip"
+    },
+    {
+      "name": "special_thanks",
+      "value": "Special Thanks"
+    },
+    {
+      "name": "import_persisting",
+      "value": "Persisting (%s)"
+    },
+    {
+      "name": "import_fetching_metadata",
+      "value": "Fetching metadata (%s)"
+    },
+    {
+      "name": "import_saving",
+      "value": "Saving (%s)"
+    },
+    {
+      "name": "import_finished",
+      "value": "Finished (%s)"
     }
   ]
 }

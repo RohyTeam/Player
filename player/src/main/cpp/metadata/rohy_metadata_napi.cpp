@@ -72,7 +72,7 @@ napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
     NapiUtils::SetPropertyNumberValue(env, video_metadata, "width", meta.width);
     NapiUtils::SetPropertyNumberValue(env, video_metadata, "height", meta.height);
     NapiUtils::SetPropertyDoubleValue(env, video_metadata, "averageFramerate", meta.averageFrameRate);
-    NapiUtils::SetPropertyBooleanValue(env, video_metadata, "hdr", meta.hdr);
+    NapiUtils::SetPropertyNumberValue(env, video_metadata, "hdr", meta.hdr);
     NapiUtils::SetPropertyStringValueOrUndefined(env, video_metadata, "codec", meta.codec);
     NapiUtils::SetPropertyStringValueOrUndefined(env, video_metadata, "codecLong", meta.codec_full);
     
@@ -129,6 +129,7 @@ napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
             NapiUtils::SetPropertyNumberValue(env, track_object, "duration", track.duration);
             NapiUtils::SetPropertyDoubleValue(env, track_object, "averageFramerate", track.averageFrameRate);
             NapiUtils::SetPropertyNumberValue(env, track_object, "bitrate", track.bitrate);
+            NapiUtils::SetPropertyNumberValue(env, track_object, "hdr", track.hdr);
         } else if (track.track_type == TrackType::Audio) {
             NapiUtils::SetPropertyNumberValue(env, track_object, "sampleRate", track.samplerate);
         } else if (track.track_type == TrackType::Attachment) {
