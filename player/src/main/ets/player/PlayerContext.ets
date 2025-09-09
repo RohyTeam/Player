@@ -71,7 +71,21 @@ export class PlayerContext {
   @Trace
   surfaceFillingMode: SurfaceFillingMode = SurfaceFillingMode.Fit
   @Trace
+  mirrorFlipping: boolean = false
+  @Trace
+  cycling: boolean = false
+  @Trace
   hardwareEncoding: boolean = false
+  @Trace
+  visualEffect_grayscale: number = 0
+  @Trace
+  visualEffect_brightness: number = 0
+  @Trace
+  visualEffect_saturate: number = 0
+  @Trace
+  visualEffect_contrast: number = 0
+  @Trace
+  visualEffect_invert: boolean = false
   subtitlePositionUpdater: (time: number) => void = () => {
   }
 

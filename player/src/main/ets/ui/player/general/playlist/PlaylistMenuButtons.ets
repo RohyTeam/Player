@@ -18,11 +18,42 @@ import {
 import { ensureContext } from '../../../../utils/AbilityUtils'
 import { asyncSave } from '../../../../metadata/SendableVideoMetadataManager'
 import { BusinessError } from '@kit.BasicServicesKit'
+import { importErrorDialog } from './dialog/ImportErrorDialog'
 
-interface ImportError {
+export class ImportErrorType {
+
+  public static readonly NOT_IN_FILES: ImportErrorType = new ImportErrorType("not_in_files", $r("app.string.photos_not_importable"))
+  public static readonly DUPLICATED: ImportErrorType = new ImportErrorType("duplicated", $r("app.string.video_imported"))
+  public static readonly FETCH_METADATA: ImportErrorType = new ImportErrorType("fetch_metadata", $r("app.string.failed_to_fetch_metadata"))
+  public static readonly SAVE_METADATA: ImportErrorType = new ImportErrorType("save_metadata", $r("app.string.failed_to_save_metadata"))
+  public static readonly STORAGE_FULL: ImportErrorType = new ImportErrorType("storage_full", $r("app.string.storage_is_not_enough"))
+  public static readonly PERSIST_FILE: ImportErrorType = new ImportErrorType("persist_file", $r("app.string.faield_to_persist_file"))
+  public static readonly UNKNOWN: ImportErrorType = new ImportErrorType("persist_file", $r("app.string.unknown_error"))
+
+  public static readonly TYPES: ImportErrorType[] = [
+    ImportErrorType.NOT_IN_FILES,
+    ImportErrorType.DUPLICATED,
+    ImportErrorType.FETCH_METADATA,
+    ImportErrorType.SAVE_METADATA,
+    ImportErrorType.STORAGE_FULL,
+    ImportErrorType.PERSIST_FILE,
+    ImportErrorType.UNKNOWN
+  ]
+
+  readonly id: string
+  readonly reason: ResourceStr
+
+  constructor(id: string, reason: ResourceStr) {
+    this.id = id
+    this.reason = reason
+  }
+
+}
+
+export interface ImportError {
 
   url: string
-  reason: ResourceStr
+  reason: ImportErrorType
 
 }
 
@@ -32,10 +63,14 @@ async function fetchMetadata(path: string, isMedia: boolean, headers: collection
   for (let key of headers.keys()) {
     realHeaders[key] = headers.get(key)!
   }
-  let metadata = await MetadataFetcher.fetch(path, isMedia, realHeaders)
-  taskpool.Task.sendData(
-    createSendableVideoMetadata(metadata)
-  )
+  let metadata = await MetadataFetcher.fetchNullable(path, isMedia, realHeaders)
+  if (metadata) {
+    taskpool.Task.sendData(
+      createSendableVideoMetadata(metadata)
+    )
+  } else {
+    taskpool.Task.sendData(2)
+  }
 }
 
 @ComponentV2
@@ -72,7 +107,7 @@ export struct PlaylistMenuButtons {
                 if (!uri.startsWith("file://docs")) {
                   importErrors.push({
                     url: uri,
-                    reason: $r('app.string.photos_not_importable')
+                    reason: ImportErrorType.NOT_IN_FILES
                   })
                   continue
                 }
@@ -80,12 +115,29 @@ export struct PlaylistMenuButtons {
                 if (this.playlistFolderDataSource!.hasVideo(identity)) {
                   importErrors.push({
                     url: uri,
-                    reason: $r('app.string.video_imported')
+                    reason:ImportErrorType.DUPLICATED
                   })
                   continue
                 }
 
                 filteredUrls.push(uri)
+              }
+
+              if (filteredUrls.length <= 0) {
+                if (importErrors.length > 0) {
+                  let errorsComponent = new ComponentContent(this.getUIContext(), wrapBuilder(importErrorDialog), importErrors)
+                  this.getUIContext().getPromptAction().openCustomDialog(
+                    errorsComponent,
+                    {
+                      autoCancel: true,
+                      onWillDismiss: () => {
+                        this.getUIContext().getPromptAction().closeCustomDialog(errorsComponent)
+                        errorsComponent.dispose()
+                      }
+                    }
+                  )
+                }
+                return
               }
 
               this.importProgressContext.current = 0
@@ -106,70 +158,102 @@ export struct PlaylistMenuButtons {
                 }
               )
 
-              let taskGroup = new taskpool.TaskGroup()
+              let plusOne = () => {
+                this.importProgressContext.current += 1
+                if (this.importProgressContext.current >= this.importProgressContext.total) {
+                  this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
+                  importProgressOverlayComponent.dispose()
+
+                  if (importErrors.length > 0) {
+                    let errorsComponent = new ComponentContent(this.getUIContext(), wrapBuilder(importErrorDialog), importErrors)
+                    this.getUIContext().getPromptAction().openCustomDialog(
+                      errorsComponent,
+                      {
+                        autoCancel: true,
+                        onWillDismiss: () => {
+                          this.getUIContext().getPromptAction().closeCustomDialog(errorsComponent)
+                          errorsComponent.dispose()
+                        }
+                      }
+                    )
+                  }
+                }
+              }
+
               for (let uri of filteredUrls) {
                 let identity = sha256(`files:${uri}`)
-                let task =
-                  new taskpool.Task(fetchMetadata, ensurePath(uri), true, new collections.Map<string, string>())
-                task.onReceiveData(async (result: SendableVideoMetadata) => {
+                let task = new taskpool.Task(fetchMetadata, ensurePath(uri), true, new collections.Map<string, string>())
+                task.onReceiveData(async (result: SendableVideoMetadata | number) => {
                   if (!result) {
                     return
                   }
+                  if (typeof result == 'number') {
+                    importErrors.push({
+                      url: uri,
+                      reason: ImportErrorType.TYPES[result]
+                    })
+                    plusOne()
+                    return
+                  }
                   let metadata = sendableVideoMetadataToNormal(result)
-                  await fileShare.persistPermission([{
+                  fileShare.persistPermission([{
                     uri: uri,
                     operationMode: fileShare.OperationMode.READ_MODE
                   }])
-                  let continueJob: () => void = () => {
-                    this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
-                    this.importProgressContext.current += 1
-                    if (this.importProgressContext.current >= this.importProgressContext.total) {
-                      this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                      importProgressOverlayComponent.dispose()
-                      // TODO: 显示所有的错误和问题
-                    }
-                  }
-                  if (!VideoMetadataManager.existsInFiles(identity)) {
-                    if (VideoMetadataManager.existsInTemp(identity)) {
-                      VideoMetadataManager.tempToFile(identity)
-                      continueJob()
-                    } else {
-                      asyncSave(
-                        ensureContext(this.getUIContext()).tempDir,
-                        ensureContext(this.getUIContext()).filesDir,
-                        identity,
-                        true,
-                        uri,
-                        createSendableVideoMetadata(metadata)
-                      )
-                        .then(() => {
+                    .then(() => {
+                      let continueJob: () => void = () => {
+                        this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
+                      }
+                      if (!VideoMetadataManager.existsInFiles(identity)) {
+                        if (VideoMetadataManager.existsInTemp(identity)) {
+                          VideoMetadataManager.tempToFile(identity)
                           continueJob()
-                        })
-                        .catch((err: BusinessError) => {
-                          console.error(`error occurs: ${err.message} (${err.code})`)
-                        })
-                    }
-                  } else {
-                    continueJob()
-                  }
-
+                        } else {
+                          asyncSave(
+                            ensureContext(this.getUIContext()).tempDir,
+                            ensureContext(this.getUIContext()).filesDir,
+                            identity,
+                            true,
+                            uri,
+                            createSendableVideoMetadata(metadata)
+                          )
+                            .then(() => {
+                              continueJob()
+                            })
+                            .catch(() => {
+                              importErrors.push({
+                                url: uri,
+                                reason: ImportErrorType.SAVE_METADATA
+                              })
+                            })
+                        }
+                      } else {
+                        continueJob()
+                      }
+                      plusOne()
+                    })
+                    .catch(() => {
+                      importErrors.push({
+                        url: uri,
+                        reason: ImportErrorType.SAVE_METADATA
+                      })
+                      plusOne()
+                    })
                 })
                 task.onExecutionFailed((err) => {
                   this.importProgressContext.current += 1
                   importErrors.push({
                     url: uri,
-                    reason: err.message
+                    reason: ImportErrorType.UNKNOWN
                   })
-                  if (this.importProgressContext.current >= this.importProgressContext.total) {
-                    this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                    importProgressOverlayComponent.dispose()
-                    // TODO: 显示所有的错误和问题
-                  }
+                  plusOne()
                 })
-                taskGroup.addTask(task)
-              }
+                taskpool.execute(task)
+                  .then(() => {})
+                  .catch(() => {
 
-              taskpool.execute(taskGroup)
+                  })
+              }
             })
 
           /*pickSingleVideoFile(this.getUIContext())

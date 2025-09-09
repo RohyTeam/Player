@@ -29,6 +29,7 @@ export struct CircleIconButton {
             centerX: "50%",
             centerY: "50%",
           })
+          .symbolEffect(new BounceSymbolEffect(EffectScope.LAYER, EffectDirection.DOWN))
       } else {
         Image(this.icon)
           .width(24)

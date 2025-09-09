@@ -14,7 +14,7 @@ export struct InnerContainerText {
           bottom: 2
         })
     }
-    .width("85%")
+    .width("89%")
     .alignItems(HorizontalAlign.Start)
     .backgroundColor(Color.Transparent)
   }

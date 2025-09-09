@@ -18,6 +18,8 @@ export struct GeneralControlPanel {
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
   @Provider("controlsContext")
   controlsContext: ControlsContext = new ControlsContext()
+  @Consumer("landscape")
+  landscape: boolean = true
 
   build() {
     SideBarContainer(SideBarContainerType.Overlay) {
@@ -143,7 +145,7 @@ export struct GeneralControlPanel {
     .autoHide(true)
     .showControlButton(false)
     .showSideBar(true)
-    .sideBarWidth("40%")
+    .sideBarWidth(this.landscape ? "40%" : "80%")
     .sideBarPosition(SideBarPosition.End)
     .backgroundColor(Color.Transparent)
   }

@@ -242,11 +242,11 @@
     },
     {
       "name": "photos_not_importable",
-      "value": "Videos in Photos are not importable"
+      "value": "Files not in local storage"
     },
     {
       "name": "video_imported",
-      "value": "The video has already been imported in this playlist"
+      "value": "Duplicated"
     },
     {
       "name": "importing",
@@ -379,6 +379,138 @@
     {
       "name": "privacy_policy",
       "value": "Privacy policy"
+    },
+    {
+      "name": "icons_introduction",
+      "value": "Icons introduction"
+    },
+    {
+      "name": "icon_vivid_none",
+      "value": "Not HDR Vivid or Audio Vivid"
+    },
+    {
+      "name": "icon_vivid_hdr",
+      "value": "HDR Vivid"
+    },
+    {
+      "name": "icon_vivid_audio",
+      "value": "Audio Vivid"
+    },
+    {
+      "name": "icon_dolby_none",
+      "value": "Not Dolby Vision"
+    },
+    {
+      "name": "icon_dolby",
+      "value": "Dolby Vision"
+    },
+    {
+      "name": "icon_hdr10_plus_none",
+      "value": "Not HDR10+"
+    },
+    {
+      "name": "icon_hdr10_plus",
+      "value": "HDR10+"
+    },
+    {
+      "name": "surface_filling_mode_stretch",
+      "value": "Stretch"
+    },
+    {
+      "name": "surface_filling_mode_fit",
+      "value": "Fit"
+    },
+    {
+      "name": "surface_filling_mode_4_to_3",
+      "value": "4: 3"
+    },
+    {
+      "name": "surface_filling_mode_16_to_9",
+      "value": "16: 9"
+    },
+    {
+      "name": "icon_hdr_none",
+      "value": "Not HDR"
+    },
+    {
+      "name": "icon_hdr",
+      "value": "Other HDRs"
+    },
+    {
+      "name": "speed",
+      "value": "Speed"
+    },
+    {
+      "name": "subtitles",
+      "value": "Subtitles"
+    },
+    {
+      "name": "audios",
+      "value": "Audios"
+    },
+    {
+      "name": "surface_filling_mode",
+      "value": "Surface filling mode"
+    },
+    {
+      "name": "visual_effect",
+      "value": "Visual effect"
+    },
+    {
+      "name": "grayscale",
+      "value": "Grayscale"
+    },
+    {
+      "name": "brightness",
+      "value": "Brightness"
+    },
+    {
+      "name": "saturate",
+      "value": "Saturate"
+    },
+    {
+      "name": "contrast",
+      "value": "Contrast"
+    },
+    {
+      "name": "invert",
+      "value": "Invert"
+    },
+    {
+      "name": "failed_to_fetch_metadata",
+      "value": "Failed to fetch metadata"
+    },
+    {
+      "name": "failed_to_save_metadata",
+      "value": "Failed to save metadata"
+    },
+    {
+      "name": "storage_is_not_enough",
+      "value": "Storage is not enough"
+    },
+    {
+      "name": "faield_to_persist_file",
+      "value": "Failed to persist file"
+    },
+    {
+      "name": "unknown_error",
+      "value": "Unknown error"
+    },
+    {
+      "name": "unknown_error_desc",
+      "value": "If you meet unknown error, please give feedback to us with your video files, we will find out the reason."
+    },
+    {
+      "name": "failed_to_open_video",
+      "value": "Failed to open video"
+    },
+    {
+      "name": "loop_playing",
+      "value": "Loop playing"
+    },
+    {
+      "name": "mirror_flip",
+      "value": "Mirror flip"
     }
   ]
 }

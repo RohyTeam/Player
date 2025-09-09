@@ -5,7 +5,7 @@ import { AbilityStorage } from '../../storage/AbilityStorage'
 import { Modifiers } from '../attributemodifier/Modifiers'
 import { CircleIconButton } from '../button/CircleIconButton'
 import { PlayerProgressBar } from './PlayerProgressBar'
-import { ComponentContent, SymbolGlyphModifier } from '@kit.ArkUI'
+import { ComponentContent, LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI'
 import { pickSingleSubtitleFile, pickSubtitleFiles } from '../../utils/PickerUtils'
 import { fileIo, fileUri } from '@kit.CoreFileKit'
 import { compile } from '../../lib/subtitle/ass_compiler'
@@ -18,6 +18,7 @@ import { ensurePath,
 import { taskpool } from '@kit.ArkTS'
 import { SubtitleInfo } from '../../player/subtitle/SubtitleInfo'
 import { DialogHelper } from '@pura/harmony-dialog'
+import { SURFACE_FILLING_MODES, SURFACE_FILLING_MODE_NAMES } from '../../player/SurfaceFillingMode'
 
 @ObservedV2
 export class ControlsContext {
@@ -58,14 +59,20 @@ export struct PlayerBottomBar {
     () => new PlayerContext()
   )!
   @Local
+  showSurfaceFillingModeMenu: boolean = false
+  @Local
   showAudiosMenu: boolean = false
   @Local
   showSubtitlesMenu: boolean = false
   @Local
   showSpeedMenu: boolean = false
+  @Local
+  showMoreMenu: boolean = false
 
   @Local
   importProgressContext: ImportProgressContext = new ImportProgressContext()
+  @Consumer("landscape")
+  landscape: boolean = true
 
   build() {
     Row() {
@@ -95,55 +102,91 @@ export struct PlayerBottomBar {
           })
           Blank()
             .layoutWeight(1)
-          CircleIconButton({
-            icon: $r("sys.symbol.sound"),
-            buttonMargin: {
-              right: 16,
-              bottom: 12
-            },
-            clickCallback: () => {
-              this.showAudiosMenu = false // refresh menu status
-              this.showAudiosMenu = true
-            }
-          })
-            .bindMenu(this.showAudiosMenu!!, this.audiosMenu, {
-              onDisappear: () => {
-                this.showAudiosMenu = false
+          if (this.landscape) {
+            CircleIconButton({
+              icon: $r("sys.symbol.resolution_video"),
+              buttonMargin: {
+                right: 16,
+                bottom: 12
+              },
+              clickCallback: () => {
+                this.showSurfaceFillingModeMenu = false // refresh menu status
+                this.showSurfaceFillingModeMenu = true
               }
             })
-          CircleIconButton({
-            icon: $r("sys.symbol.AI_subtitles"),
-            buttonMargin: {
-              right: 16,
-              bottom: 12
-            },
-            clickCallback: () => {
-              this.showSubtitlesMenu = false // refresh menu status
-              this.showSubtitlesMenu = true
-            }
-          })
-            .bindMenu(this.showSubtitlesMenu!!, this.subtitlesMenu, {
-              onDisappear: () => {
-                this.showSubtitlesMenu = false
+              .bindMenu(this.showSurfaceFillingModeMenu!!, this.surfaceFillingModesMenu, {
+                onDisappear: () => {
+                  this.showSurfaceFillingModeMenu = false
+                }
+              })
+            CircleIconButton({
+              icon: $r("sys.symbol.sound"),
+              buttonMargin: {
+                right: 16,
+                bottom: 12
+              },
+              clickCallback: () => {
+                this.showAudiosMenu = false // refresh menu status
+                this.showAudiosMenu = true
               }
             })
-          CircleIconButton({
-            icon: $r("sys.symbol.video_speed"),
-            buttonMargin: {
-              right: 16,
-              bottom: 12
-            },
-            iconRotation: 180,
-            clickCallback: () => {
-              this.showSpeedMenu = false // refresh menu status
-              this.showSpeedMenu = true
-            }
-          })
-            .bindMenu(this.showSpeedMenu!!, this.speedMenu, {
-              onDisappear: () => {
-                this.showSpeedMenu = false
+              .bindMenu(this.showAudiosMenu!!, this.audiosMenu, {
+                onDisappear: () => {
+                  this.showAudiosMenu = false
+                }
+              })
+            CircleIconButton({
+              icon: $r("sys.symbol.AI_subtitles"),
+              buttonMargin: {
+                right: 16,
+                bottom: 12
+              },
+              clickCallback: () => {
+                this.showSubtitlesMenu = false // refresh menu status
+                this.showSubtitlesMenu = true
               }
             })
+              .bindMenu(this.showSubtitlesMenu!!, this.subtitlesMenu, {
+                onDisappear: () => {
+                  this.showSubtitlesMenu = false
+                }
+              })
+            CircleIconButton({
+              icon: $r("sys.symbol.video_speed"),
+              buttonMargin: {
+                right: 16,
+                bottom: 12
+              },
+              iconRotation: 180,
+              clickCallback: () => {
+                this.showSpeedMenu = false // refresh menu status
+                this.showSpeedMenu = true
+              }
+            })
+              .bindMenu(this.showSpeedMenu!!, this.speedMenu, {
+                onDisappear: () => {
+                  this.showSpeedMenu = false
+                }
+              })
+          } else {
+            CircleIconButton({
+              icon: $r("sys.symbol.dot_grid_2x2"),
+              buttonMargin: {
+                right: 16,
+                bottom: 12
+              },
+              iconRotation: 180,
+              clickCallback: () => {
+                this.showMoreMenu = false // refresh menu status
+                this.showMoreMenu = true
+              }
+            })
+              .bindMenu(this.showMoreMenu!!, this.moreMenu, {
+                onDisappear: () => {
+                  this.showMoreMenu = false
+                }
+              })
+          }
           if (Sys.isPC()) {
             CircleIconButton({
               icon: $r("sys.symbol.open_sidebar"),
@@ -217,6 +260,40 @@ export struct PlayerBottomBar {
   }
 
   @Builder
+  private moreMenu() {
+    Menu() {
+      MenuItemGroup() {
+        MenuItem({
+          symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.resolution_video")),
+          content: $r("app.string.surface_filling_mode"),
+          builder: this.surfaceFillingModesMenu
+        })
+        MenuItem({
+          symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.sound")),
+          content: $r("app.string.audios"),
+          builder: this.audiosMenu
+        })
+        MenuItem({
+          symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.AI_subtitles")),
+          content: $r("app.string.subtitles"),
+          builder: this.subtitlesMenu
+        })
+        MenuItem({
+          symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.video_speed")),
+          content: $r("app.string.speed"),
+          builder: this.speedMenu
+        })
+      }
+    }
+    .menuItemDivider({
+      color: $r("sys.color.comp_background_tertiary"),
+      strokeWidth: LengthMetrics.vp(1),
+      startMargin: LengthMetrics.vp(4),
+      endMargin: LengthMetrics.vp(4)
+    })
+  }
+
+  @Builder
   private speedMenu() {
     Menu() {
       ForEach([0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0], (speed: number) => {
@@ -235,6 +312,40 @@ export struct PlayerBottomBar {
         }
       })
     }
+    .menuItemDivider({
+      color: $r("sys.color.comp_background_tertiary"),
+      strokeWidth: LengthMetrics.vp(1),
+      startMargin: LengthMetrics.vp(4),
+      endMargin: LengthMetrics.vp(4)
+    })
+  }
+
+  @Builder
+  private surfaceFillingModesMenu() {
+    RohyMenu({
+      groups: menuGroups(() => [
+        buildMenuGroup(() => {
+          let items: RohyMenuItem[] = []
+          SURFACE_FILLING_MODES.forEach((surfaceFillingMode, index) => {
+            items.push({
+              options: {
+                content: SURFACE_FILLING_MODE_NAMES[surfaceFillingMode],
+                symbolEndIcon: this.playerContext.surfaceFillingMode === surfaceFillingMode ?
+                  new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
+              },
+              action: () => {
+                if (this.playerContext.surfaceFillingMode == index) {
+                  return
+                }
+
+                this.playerController.setFillingMode(surfaceFillingMode)
+              }
+            })
+          })
+          return items
+        })
+      ])
+    })
   }
 
   @Builder
@@ -246,6 +357,7 @@ export struct PlayerBottomBar {
           this.playerContext.audios.forEach((audio, index) => {
             items.push({
               options: {
+                startIcon: audio.codec === "av3a" ? $r('app.media.vivid_gold_icon') : undefined,
                 content: audio.title,
                 symbolEndIcon: this.playerContext.selectedAudio === index ?
                   new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined

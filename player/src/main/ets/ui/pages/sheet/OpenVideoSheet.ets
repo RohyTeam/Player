@@ -12,13 +12,16 @@ export struct OpenVideoSheet {
   @Event
   hideChooser: () => void = () => {
   }
+
+  // 本控件将数据包装好后触发
   @Event
   onPick: (files: PickedFile) => void = () => {
   }
 
   build() {
     InnerContainer({
-      bgColor: Color.Transparent
+      bgColor: Color.Transparent,
+      edgeEffect: false
     }) {
       InnerComponentSet() {
         InnerButtonWithImage({

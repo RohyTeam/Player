@@ -77,7 +77,7 @@ export class PlayerController {
     }
     this.getPlayerContext()!.currentScreenBrightness =
       Math.min(255, Math.max(0, this.getPlayerContext()!.currentScreenBrightness + brightness))
-    this.getWindowContext()!.window.setWindowBrightness(clamp(this.getPlayerContext()!.currentScreenBrightness / 255, 0,
+    this.getWindowContext()!.window!.setWindowBrightness(clamp(this.getPlayerContext()!.currentScreenBrightness / 255, 0,
       1)).then(() => {
     })
   }
@@ -88,7 +88,7 @@ export class PlayerController {
     }
     this.getPlayerContext()!.currentScreenBrightness =
       Math.min(255, Math.max(0, this.getPlayerContext()!.currentScreenBrightness - brightness))
-    this.getWindowContext()!.window.setWindowBrightness(clamp(this.getPlayerContext()!.currentScreenBrightness / 255, 0,
+    this.getWindowContext()!.window!.setWindowBrightness(clamp(this.getPlayerContext()!.currentScreenBrightness / 255, 0,
       1)).then(() => {
     })
   }

@@ -3,7 +3,6 @@ export struct ImportProgressOverlay {
   @Param
   @Require
   context: ImportProgressContext
-  controller?: CustomDialogController
 
   build() {
     Column() {

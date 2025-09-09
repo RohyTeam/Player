@@ -14,6 +14,8 @@ import { ensurePath } from '../../../utils/FileUtils';
 import { asyncSave } from '../../../metadata/SendableVideoMetadataManager';
 import { ensureContext } from '../../../utils/AbilityUtils';
 import { createSendableVideoMetadata } from '../../../metadata/VideoMetadata';
+import { openVideoWaitingDialog } from './dialog/OpenVideoWaitingDialog';
+import { ComponentContent, promptAction } from '@kit.ArkUI';
 
 @ComponentV2
 export struct IndexMenuButtons {
@@ -150,9 +152,20 @@ export struct IndexMenuButtons {
         this.showOpenVideoSheet = false
       },
       onPick: async (file) => {
+        let waitingComponent = new ComponentContent(this.getUIContext(), wrapBuilder(openVideoWaitingDialog))
+        this.getUIContext().getPromptAction().openCustomDialog(
+          waitingComponent,
+          {
+            autoCancel: false,
+            onWillDismiss: () => {
+            }
+          }
+        )
         let savedMetadata: SavedVideoMetadata
         if (file.source === LocalFiles) {
           let playIt: () => void = () => {
+            this.getUIContext().getPromptAction().closeCustomDialog(waitingComponent)
+            waitingComponent.dispose()
             this.playerContext.video = true
             this.playerContext.videoSource = new LocalFileVideoSource(
               false,
@@ -179,11 +192,22 @@ export struct IndexMenuButtons {
                 if (saved) {
                   savedMetadata = saved
                   playIt()
+                } else {
+                  this.getUIContext().getPromptAction().closeCustomDialog(waitingComponent)
+                  waitingComponent.dispose()
+                  promptAction.showToast({ message: $r("app.string.failed_to_open_video") })
                 }
+              })
+              .catch(() => {
+                this.getUIContext().getPromptAction().closeCustomDialog(waitingComponent)
+                waitingComponent.dispose()
+                promptAction.showToast({ message: $r("app.string.failed_to_open_video") })
               })
           }
         } else if (file.source === Photos) {
           let playIt: () => void = () => {
+            this.getUIContext().getPromptAction().closeCustomDialog(waitingComponent)
+            waitingComponent.dispose()
             this.playerContext.video = true
             this.playerContext.videoSource = new PhotosVideoSource(
               savedMetadata,
@@ -209,7 +233,16 @@ export struct IndexMenuButtons {
                 if (saved) {
                   savedMetadata = saved
                   playIt()
+                } else {
+                  this.getUIContext().getPromptAction().closeCustomDialog(waitingComponent)
+                  waitingComponent.dispose()
+                  promptAction.showToast({ message: $r("app.string.failed_to_open_video") })
                 }
+              })
+              .catch(() => {
+                this.getUIContext().getPromptAction().closeCustomDialog(waitingComponent)
+                waitingComponent.dispose()
+                promptAction.showToast({ message: $r("app.string.failed_to_open_video") })
               })
           }
         } else {

@@ -13,6 +13,8 @@ import { SrtSubtitleView } from './subtitle/SrtSubtitleView';
 import { getScreenBrightness } from '../../utils/SystemSettings';
 import { clamp } from '../../utils/MathUtils';
 import { SubtitleInfo } from '../../player/subtitle/SubtitleInfo';
+import { Pref } from '../../context/PreferenceContext';
+import { BackgroundTaskContext } from '../../context/BackgroundTaskContext';
 
 @ComponentV2
 export struct PlayerPage {
@@ -29,6 +31,9 @@ export struct PlayerPage {
     this.playerContext.currentVolume = Sys.currentVolume
     this.playerContext.currentScreenBrightness = getScreenBrightness(this.getUIContext())
 
+    // preferences
+    this.playerContext.hardwareEncoding = Pref.hardwareDecoding
+
     // tracks
     //   audios
     this.playerContext.audios = []
@@ -38,14 +43,15 @@ export struct PlayerPage {
         this.playerContext.audios.push({
           index: track.index,
           title: track.title ?? $r("app.string.internal_audio", `#${audioIndex}`),
-          language: track.language
+          language: track.language,
+          codec: track.codec
         })
         audioIndex += 1
       }
     }
     this.playerContext.selectedAudio = 0
 
-    //   subtitles
+    // subtitles
     this.playerContext.subtitles = []
     this.playerContext.subtitles.push(...this.playerContext.videoSource!.metadata().subtitles)
     this.playerContext.selectedSubtitle = undefined
@@ -69,7 +75,7 @@ export struct PlayerPage {
     }
     this.playerController.initPlayer(this.playerContext.player)
     this.playerContext.player!.onPrepared(() => {
-      this.playerController.getWindowContext()!.window.setWindowBrightness(clamp(this.playerContext.currentScreenBrightness /
+      this.playerController.getWindowContext()!.window!.setWindowBrightness(clamp(this.playerContext.currentScreenBrightness /
         255, 0, 1)).then(() => {
       })
       this.playerController.play()
@@ -108,18 +114,36 @@ export struct PlayerPage {
       }
     })
     this.playerContext.player.onCompleted(() => {
-      this.playerController.pause()
+      if (this.playerContext.cycling) {
+        this.playerController.pause()
+        this.playerController.seek(0)
+        this.playerController.play()
+      } else {
+        this.playerController.pause()
+      }
     })
+    BackgroundTaskContext.startBackgroundTask(this.getUIContext(), this.playerController)
   }
 
   aboutToDisappear(): void {
-    this.playerController.getWindowContext()!.window.setWindowBrightness(-1)
+    this.playerController.getWindowContext()!.window!.setWindowBrightness(-1)
     this.playerController.release()
     this.playerContext.subtitles = []
     this.playerContext.selectedSubtitle = undefined
     this.playerContext.audios = []
     this.playerContext.selectedAudio = 0
     this.playerContext.chapters = []
+
+    // 部分需要重置的首选项
+    this.playerContext.mirrorFlipping = false
+    this.playerContext.cycling = false
+    this.playerContext.visualEffect_grayscale = 0
+    this.playerContext.visualEffect_brightness = 0
+    this.playerContext.visualEffect_saturate = 0
+    this.playerContext.visualEffect_contrast = 0
+    this.playerContext.visualEffect_invert = false
+
+    BackgroundTaskContext.stopBackgroundTask(this.getUIContext())
   }
 
   build() {
@@ -148,17 +172,42 @@ export struct PlayerPage {
       .zIndex(2)
 
       Column() {
-        if (this.videoSource.type() == VideoSourceType.Photos) {
-          AvXComponent({
-            videoSource: this.videoSource,
-            player: this.playerContext.player as AvPlayer
-          })
-        } else {
-          IjkXComponent({
-            videoSource: this.videoSource,
-            player: this.playerContext.player as IjkPlayer
-          })
+        Column() {
+          Column() {
+            Column() {
+              Column() {
+                Column() {
+                  if (this.videoSource.type() == VideoSourceType.Photos) {
+                    AvXComponent({
+                      videoSource: this.videoSource,
+                      player: this.playerContext.player as AvPlayer
+                    })
+                  } else {
+                    IjkXComponent({
+                      videoSource: this.videoSource,
+                      player: this.playerContext.player as IjkPlayer
+                    })
+                  }
+                }
+                .width("100%")
+                .height("100%")
+                .invert(this.playerContext.visualEffect_invert ? 1 : 0)
+              }
+              .width("100%")
+              .height("100%")
+              .contrast((this.playerContext.visualEffect_contrast + 100) / 100)
+            }
+            .width("100%")
+            .height("100%")
+            .saturate((this.playerContext.visualEffect_saturate + 100) / 100)
+          }
+          .width("100%")
+          .height("100%")
+          .brightness((this.playerContext.visualEffect_brightness + 100) / 100)
         }
+        .width("100%")
+        .height("100%")
+        .grayscale(this.playerContext.visualEffect_grayscale / 100)
       }
       .id('player_view')
       .onAreaChange((_, newArea) => {
@@ -169,6 +218,14 @@ export struct PlayerPage {
       })
       .attributeModifier(Modifiers.surfaceFilling(this.videoSource.metadata().metadata,
         this.playerContext.surfaceFillingMode))
+      .rotate({
+        centerX: "50%",
+        centerY: "50%",
+        x: 0,
+        y: 1,
+        z: 0,
+        angle: this.playerContext.mirrorFlipping ? 180 : 0
+      })
       .zIndex(1)
     }
     .width("100%")

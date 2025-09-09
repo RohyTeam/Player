@@ -22,7 +22,8 @@ export struct ChapterSidebar {
   build() {
     Navigation() {
       InnerContainer({
-        bgColor: Color.Transparent
+        bgColor: Color.Transparent,
+        staticBottomAvoid: false
       }) {
         ForEach(this.playerContext.chapters, (chapter: ChapterInfo, index: number) => {
           InnerContainerDivider()

@@ -1,19 +1,20 @@
 import { display, window } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { Win } from '../../context/WindowContext';
-import { abilityWindow } from '../../utils/AbilityUtils';
+import { WindowContext } from '../../context/WindowContext';
+import { ability, abilityKey, abilityWindow, ensureContext } from '../../utils/AbilityUtils';
+import { JSON } from '@kit.ArkTS';
 
 export class WindowManager {
   public static init(context: Context, windowObj: window.Window) {
-    Win.get(context, windowObj) // init window object
+    WindowContext.reach(context).window = windowObj
     let rect = windowObj.getWindowProperties().windowRect
     WindowManager.updateWindowSize(context, rect.width, rect.height)
-    WindowManager.updateAvoidArea(
+    WindowManager.updateStaticAvoidArea(
       context,
       window.AvoidAreaType.TYPE_SYSTEM,
       windowObj.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
     )
-    WindowManager.updateAvoidArea(
+    WindowManager.updateStaticAvoidArea(
       context,
       window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR,
       windowObj.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
@@ -28,6 +29,20 @@ export class WindowManager {
     windowObj.on('windowStatusChange', (type: window.WindowStatusType) => {
       WindowManager.updateWindowStatusType(context, type)
     })
+  }
+
+  public static updateManually(rawContext: UIContext | Context) {
+    let playerAbility = ability(rawContext)
+    WindowManager.updateAvoidArea(
+      playerAbility.context,
+      window.AvoidAreaType.TYPE_SYSTEM,
+      playerAbility.getWindow().getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM)
+    )
+    WindowManager.updateAvoidArea(
+      playerAbility.context,
+      window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR,
+      playerAbility.getWindow().getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
+    )
   }
 
   public static setFullscreen(context: UIContext | Context, status: boolean) {
@@ -53,20 +68,36 @@ export class WindowManager {
   }
 
   private static updateWindowStatusType(context: UIContext | Context, type: WindowStatusType) {
-    Win.get(context).windowStatusType = type
+    WindowContext.reach(context).windowStatusType = type
   }
 
   private static updateAvoidArea(context: UIContext | Context, type: window.AvoidAreaType, area: window.AvoidArea) {
-    let windowContext = Win.get(context)
-    if (type === window.AvoidAreaType.TYPE_SYSTEM) {
-      windowContext.topAvoid = area.topRect.height
-    } else if (type === window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR) {
-      windowContext.bottomAvoid = area.bottomRect.height
+    let windowContext = WindowContext.reach(context)
+    if (type == window.AvoidAreaType.TYPE_SYSTEM) {
+      let vp = px2vp(area.topRect.height)
+      windowContext.topAvoid = vp
+    } else if (type == window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR) {
+      let vp = px2vp(area.bottomRect.height)
+      windowContext.bottomAvoid = vp
+    } else if (type == window.AvoidAreaType.TYPE_CUTOUT) {
+      let vp = px2vp(area.topRect.height)
+      windowContext.cutoutAvoid = vp
+    }
+  }
+
+  private static updateStaticAvoidArea(context: UIContext | Context, type: window.AvoidAreaType, area: window.AvoidArea) {
+    let windowContext = WindowContext.reach(context)
+    if (type == window.AvoidAreaType.TYPE_SYSTEM) {
+      let vp = px2vp(area.topRect.height)
+      windowContext.staticTopAvoid = vp
+    } else if (type == window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR) {
+      let vp = px2vp(area.bottomRect.height)
+      windowContext.staticBottomAvoid = vp
     }
   }
 
   private static updateWindowSize(context: UIContext | Context, width: number, height: number): void {
-    let windowContext = Win.get(context)
+    let windowContext = WindowContext.reach(context)
 
     let windowWidthVp = width / display.getDefaultDisplaySync().densityPixels;
     let windowHeightVp = height / display.getDefaultDisplaySync().densityPixels;

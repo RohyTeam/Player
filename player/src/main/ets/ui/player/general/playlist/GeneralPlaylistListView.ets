@@ -41,8 +41,8 @@ export struct GeneralPlaylistView {
       .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: true })
       .attributeModifier(Modifiers.gridLayout(this.getUIContext()))
       .padding({
-        left: "5%",
-        right: "5%",
+        left: 16,
+        right: 16,
       })
       .rowsGap(8)
       .columnsGap(8)

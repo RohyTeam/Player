@@ -5,6 +5,8 @@ export class PreferenceContext {
   @Trace
   colorMode: ThemeColorMode = ThemeColorMode.SYSTEM
   @Trace
+  hardwareDecoding: boolean = false
+  @Trace
   screenForwardAndBackward: boolean = true
   @Trace
   uiUpdatePreview: boolean = false
@@ -20,6 +22,7 @@ export class PreferenceContext {
   public static load(context: Context) {
     let preference = preferences.getPreferencesSync(context, { name: "general_settings" })
     Pref.colorMode = preference.getSync("color_mode", ThemeColorMode.SYSTEM) as ThemeColorMode
+    Pref.hardwareDecoding = preference.getSync("hardware_decoding", false) as boolean
     Pref.screenForwardAndBackward = preference.getSync("screen_forward_and_backward", true) as boolean
     Pref.uiUpdatePreview = preference.getSync("ui_update_preview", false) as boolean
     Pref.blurStyle = numberToBlurStyle(preference.getSync("blur_style", 0) as number)
@@ -31,6 +34,7 @@ export class PreferenceContext {
   public static save(context: Context) {
     let preference = preferences.getPreferencesSync(context, { name: "general_settings" })
     preference.putSync("color_mode", Pref.colorMode)
+    preference.putSync("hardware_decoding", Pref.hardwareDecoding)
     preference.putSync("screen_forward_and_backward", Pref.screenForwardAndBackward)
     preference.putSync("ui_update_preview", Pref.uiUpdatePreview)
     preference.putSync("blur_style", blurStyleToNumber(Pref.blurStyle))

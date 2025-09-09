@@ -1,5 +1,6 @@
 import { clamp } from '../../../utils/MathUtils'
 import { CounterComponent, CounterType } from '@ohos.arkui.advanced.Counter'
+import { CircleIconButton } from '../../button/CircleIconButton'
 
 @ComponentV2
 export struct InnerCounter {
@@ -16,6 +17,8 @@ export struct InnerCounter {
   step: number = 1
   @Param
   larger: boolean = false
+  @Param
+  resetValue: number | undefined = undefined
   @Param
   subtitle: ResourceStr | undefined = undefined
   @Param
@@ -111,8 +114,21 @@ export struct InnerCounter {
           }
         })
           .margin({
-            right: 8
+            right: 4
           })
+        if (this.resetValue != undefined) {
+          CircleIconButton({
+            icon: $r("sys.symbol.arrow_clockwise"),
+            clickCallback: () => {
+              this.value = this.resetValue!
+            },
+            buttonMargin: {
+              right: 8,
+              top: 4,
+              bottom: 4
+            }
+          })
+        }
       }
       .alignItems(VerticalAlign.Center)
       .borderRadius(12)

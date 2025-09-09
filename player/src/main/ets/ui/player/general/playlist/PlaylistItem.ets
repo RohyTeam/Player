@@ -20,6 +20,7 @@ export struct PlaylistItem {
           .draggable(false)
           .aspectRatio(4 / 3)
           .width("100%")
+          .objectFit(ImageFit.Contain)
           .margin({
             top: 8,
             left: 8,

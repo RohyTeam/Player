@@ -80,7 +80,7 @@ export struct RohyMenu {
       endMargin: LengthMetrics.vp(0)
     })
     .padding(0)
-    .subMenuExpandingMode(SubMenuExpandingMode.EMBEDDED_EXPAND)
+    .subMenuExpandingMode(SubMenuExpandingMode.STACK_EXPAND)
   }
 }
 

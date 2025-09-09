@@ -6,7 +6,8 @@ import { PlayerContext } from './PlayerContext';
 import { IjkMediaPlayer } from '@ohos/ijkplayer';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { fileIo, fileUri } from '@kit.CoreFileKit';
-import { Win, WindowContext } from '../context/WindowContext';
+import { WindowContext } from '../context/WindowContext';
+import { Pref } from '../context/PreferenceContext';
 
 export interface Player {
 
@@ -131,7 +132,7 @@ abstract class AbstractPlayer implements Player {
   }
 
   getWindowContext(): WindowContext {
-    return Win.get(this.context!)
+    return WindowContext.reach(this.context!)
   }
 
   getPlayerContext(): PlayerContext {
@@ -450,6 +451,11 @@ export class IjkPlayer extends AbstractPlayer {
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "max_cached_duration", "5000")
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "infbuf", "1")
 
+    if (Pref.hardwareDecoding) {
+      this.ijkPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-all-videos", "1");
+      this.ijkPlayer?.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "mediacodec-hevc", "1");
+    }
+
     // timeout
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "timeout", "10000000");
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "connect_timeout", "10000000");
@@ -457,6 +463,7 @@ export class IjkPlayer extends AbstractPlayer {
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "addrinfo_timeout", "10000000");
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "dns_cache_timeout", "10000000");
 
+    // 倍速播放音高调整
     ijkPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", "1");
 
     this.positionUpdater = setInterval(() => {

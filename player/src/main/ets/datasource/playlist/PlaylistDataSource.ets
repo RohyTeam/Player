@@ -8,6 +8,7 @@ import { PlaylistCache } from '../../cache/PlaylistCache';
 
 @ObservedV2
 export class PlaylistDataSource extends RDataSource<PlaylistDao> {
+
   constructor() {
     super(DB, Table_PlaylistDao, DB.playlistDao, (a, b) => a.name.localeCompare(b.name))
   }

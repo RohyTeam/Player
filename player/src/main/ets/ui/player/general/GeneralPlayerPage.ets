@@ -31,7 +31,6 @@ export struct GeneralPlayerPage {
     }
 
     AVSessionContext.startSession(this.getUIContext(), this.playerContext.videoSource!, this.playerController)
-    BackgroundTaskContext.startBackgroundTask(this.getUIContext(), this.playerController)
   }
 
   aboutToDisappear(): void {
@@ -43,7 +42,6 @@ export struct GeneralPlayerPage {
       WindowManager.setOrientation(this.getUIContext(), window.Orientation.PORTRAIT)
     }
 
-    BackgroundTaskContext.stopBackgroundTask(this.getUIContext())
     AVSessionContext.stopSession()
   }
 

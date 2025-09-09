@@ -17,13 +17,19 @@ import { sha256 } from '../../utils/HashUtils';
 import { ensurePath } from '../../utils/FileUtils';
 import { asyncSave } from '../../metadata/SendableVideoMetadataManager';
 import { createSendableVideoMetadata } from '../../metadata/VideoMetadata';
+import { BackgroundTaskContext } from '../../context/BackgroundTaskContext';
 
 export default class PlayerAbility extends UIAbility {
   private static contextToAbilityMappings: Map<common.UIAbilityContext, PlayerAbility> = new Map()
   private key: string | undefined = undefined
+  private windowObject: window.Window | undefined = undefined
 
   public getIdentifier(): string {
     return this.key!
+  }
+
+  public getWindow(): window.Window {
+    return this.windowObject!
   }
 
   public static getAbility(context: common.UIAbilityContext): PlayerAbility {
@@ -52,6 +58,7 @@ export default class PlayerAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage): void {
     windowStage.getMainWindow()
       .then((window: window.Window) => {
+        this.windowObject = window
         WindowManager.init(this.context, window)
       })
     windowStage.loadContent('ui/pages/Index', (err) => {
@@ -71,7 +78,10 @@ export default class PlayerAbility extends UIAbility {
   }
 
   onBackground(): void {
-
+    if (PlayerContext.reach(this.context).paused) {
+      // 这一步是防止用户暂停后长时间待在后台造成系统认为我们无故申请长时任务
+      BackgroundTaskContext.stopBackgroundTask(this.context)
+    }
   }
 
   private async resolveWantUri(url: string | undefined): Promise<boolean> {

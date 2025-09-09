@@ -6,6 +6,8 @@ export struct InnerContainer {
   bgColor: ResourceColor = $r("app.color.rohy_background")
   @Param
   edgeEffect: boolean = true
+  @Param
+  staticBottomAvoid: boolean = true
   @BuilderParam
   content: () => void
 
@@ -13,7 +15,9 @@ export struct InnerContainer {
     Scroll() {
       Column() {
         this.content()
-        BottomAvoidArea()
+        BottomAvoidArea({
+          static: this.staticBottomAvoid
+        })
       }
       .width("100%")
       .backgroundColor(this.bgColor)

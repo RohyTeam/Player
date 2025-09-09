@@ -1,10 +1,10 @@
-import { Win, WindowContext } from '../../context/WindowContext'
+import { WindowContext } from '../../context/WindowContext'
 
 export class GridLayoutModifier implements AttributeModifier<GridAttribute> {
   private windowContext: WindowContext
 
   constructor(context: UIContext) {
-    this.windowContext = Win.get(context)
+    this.windowContext = WindowContext.reach(context)
   }
 
   applyNormalAttribute(instance: GridAttribute): void {
@@ -13,13 +13,13 @@ export class GridLayoutModifier implements AttributeModifier<GridAttribute> {
     } else if (this.windowContext.widthBreakpoint == "sm") {
       instance.columnsTemplate("1fr 1fr 1fr")
     } else if (this.windowContext.widthBreakpoint == "md") {
-      instance.columnsTemplate("1fr 1fr 1fr 1fr")
-    } else if (this.windowContext.widthBreakpoint == "lg") {
       instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr")
+    } else if (this.windowContext.widthBreakpoint == "lg") {
+      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr")
     } else if (this.windowContext.widthBreakpoint == "xl") {
-      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr")
-    } else {
       instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr")
+    } else {
+      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr")
     }
   }
 }

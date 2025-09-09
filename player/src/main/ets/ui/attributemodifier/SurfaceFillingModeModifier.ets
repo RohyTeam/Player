@@ -1,7 +1,7 @@
 import { VideoMetadata } from '../../metadata/VideoMetadata';
 import { SurfaceFillingMode } from '../../player/SurfaceFillingMode';
 import { CommonModifier } from '@kit.ArkUI';
-import { Win } from '../../context/WindowContext';
+import { WindowContext } from '../../context/WindowContext';
 
 export class SurfaceFillingModeModifier extends CommonModifier {
   private metadata: VideoMetadata
@@ -14,7 +14,7 @@ export class SurfaceFillingModeModifier extends CommonModifier {
   }
 
   applyNormalAttribute(instance: CommonAttribute): void {
-    let windowContext = Win.get(getContext())
+    let windowContext = WindowContext.reach(getContext())
     if (this.mode == SurfaceFillingMode.Stretch) {
       instance.width("100%")
         .height("100%")

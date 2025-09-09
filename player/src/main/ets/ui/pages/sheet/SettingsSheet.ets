@@ -94,7 +94,9 @@ export struct SettingsSheet {
         InnerSwitch({
           title: $r("app.string.hardware_decode"),
           popup: $r("app.string.hardware_decode_tips"),
+          initialValue: Pref.hardwareDecoding,
           switch: (original) => {
+            Pref.hardwareDecoding = !original
             return !original
           }
         })

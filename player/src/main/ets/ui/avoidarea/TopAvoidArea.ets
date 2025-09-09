@@ -1,15 +1,17 @@
-import { Win, WindowContext } from '../../context/WindowContext'
-import { window } from '@kit.ArkUI'
+import { WindowContext } from '../../context/WindowContext'
 
 @ComponentV2
 export struct TopAvoidArea {
+
+  @Param
+  static: boolean = true
+
   @Local
-  private win: WindowContext = Win.get(this.getUIContext())
+  private win: WindowContext = WindowContext.reach(this.getUIContext())
 
   build() {
-    if (this.win.windowStatusType != window.WindowStatusType.FLOATING) {
-      Blank()
-        .height(32)
-    }
+    Blank()
+      .height(this.static ? this.win.staticTopAvoid : this.win.topAvoid)
   }
+
 }
