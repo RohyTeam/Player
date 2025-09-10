@@ -21,6 +21,14 @@ export class WindowContext {
   @Trace
   cutoutAvoid: number = 0
   @Trace
+  topCutoutAvoid: number = 0
+  @Trace
+  bottomCutoutAvoid: number = 0
+  @Trace
+  leftCutoutAvoid: number = 0
+  @Trace
+  rightCutoutAvoid: number = 0
+  @Trace
   staticBottomAvoid: number = 0
   @Trace
   staticTopAvoid: number = 0

@@ -8,6 +8,8 @@ export struct InnerFoldable {
   @Param
   larger: boolean = false
   @Param
+  crazyLarger: boolean = false
+  @Param
   subtitle: ResourceStr | undefined = undefined
   @Param
   popup: ResourceStr | undefined = undefined
@@ -40,6 +42,10 @@ export struct InnerFoldable {
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
                 .fontColor($r("sys.color.font_primary"))
+                .constraintSize({
+                  maxWidth: '75%'
+                })
+                .textOverflow({ overflow:TextOverflow.Ellipsis })
               if (this.subtitle != undefined) {
                 Text(this.subtitle)
                   .fontSize(14)
@@ -118,7 +124,7 @@ export struct InnerFoldable {
         .width("100%")
         .height("100%")
         .type(ButtonType.Normal)
-        .height(this.larger ? "56vp" : "48vp")
+        .height(this.crazyLarger ? 72 : (this.larger ? "56vp" : "48vp"))
         .backgroundColor($r("app.color.rohy_card"))
 
         if (!this.folded) {

@@ -1,51 +1,37 @@
+import { DialogHelper } from "@pura/harmony-dialog"
+import { AbilityStorage } from "../../storage/AbilityStorage"
+
 @ComponentV2
 export struct ImportProgressOverlay {
-  @Param
-  @Require
-  context: ImportProgressContext
+  @Local
+  context: ImportProgressContext = ImportProgressContext.reach(this.getUIContext())
 
   build() {
     Column() {
       Text($r('app.string.importing', `${this.context.current}`, `${this.context.total}`))
         .fontSize(18)
-        .margin({
-          left: 12,
-          right: 12,
-          top: 24,
-          bottom: 4
-        })
+        .margin(4)
       Progress({
         value: this.context.current,
         total: this.context.total,
         type: ProgressType.Linear
-      }).margin({
-        left: 12,
-        right: 12,
-        bottom: 24
       })
-      Text(this.context.subProgressText)
-        .fontSize(18)
-        .margin({
-          left: 12,
-          right: 12,
-          top: 24,
-          bottom: 4
+        .margin(4)
+      if (this.context.total > 0) {
+        Text(this.context.subProgressText)
+          .fontSize(18)
+          .margin(4)
+        Progress({
+          value: this.context.subProgressCurrent,
+          total: this.context.subProgressTotal,
+          type: ProgressType.Linear
         })
-      Progress({
-        value: this.context.subProgressCurrent,
-        total: this.context.subProgressTotal,
-        type: ProgressType.Linear
-      }).margin({
-        left: 12,
-        right: 12,
-        bottom: 24
-      })
+          .margin(4)
+      }
     }
     .alignItems(HorizontalAlign.Start)
-    .backgroundColor($r("app.color.rohy_card"))
+    .backgroundColor(Color.Transparent)
     .borderRadius(16)
-    .padding(12)
-    .margin(16)
   }
 }
 
@@ -61,11 +47,36 @@ export class ImportProgressContext {
   subProgressCurrent: number = 0
   @Trace
   subProgressTotal: number = 0
+
+  public static reach(context: UIContext | Context): ImportProgressContext {
+    return AbilityStorage.connect(
+      context,
+      ImportProgressContext,
+      "import_progress_context",
+      () => new ImportProgressContext()
+    )!
+  }
+
 }
 
 @Builder
-export function ImportProgressOverlayBuilder(context: ImportProgressContext) {
-  ImportProgressOverlay({
-    context: context
+function importProgressContent() {
+  ImportProgressOverlay()
+}
+
+export function showEasyImportProgressDialog(cancelCallback: () => void): string {
+  return DialogHelper.showCustomContentDialog({
+    primaryTitle: $r("app.string.import_video"),
+    contentBuilder: importProgressContent,
+    buttons: [
+      {
+        value: $r("app.string.cancel"),
+        fontColor: $r("sys.color.font_primary")
+      }
+    ],
+    onAction: (action: number, dialogId: string): void => {
+      DialogHelper.closeDialog(dialogId)
+      cancelCallback()
+    }
   })
 }

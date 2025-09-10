@@ -7,6 +7,7 @@ import { window } from '@kit.ArkUI'
 import { AVSessionContext } from '../../../context/AVSessionContext'
 import { Sys } from '../../../context/SystemContext'
 import { BackgroundTaskContext } from '../../../context/BackgroundTaskContext'
+import { DialogHelper } from '@pura/harmony-dialog'
 
 @ComponentV2
 export struct GeneralPlayerPage {
@@ -31,6 +32,20 @@ export struct GeneralPlayerPage {
     }
 
     AVSessionContext.startSession(this.getUIContext(), this.playerContext.videoSource!, this.playerController)
+
+    if (metadata.hdr > 0) {
+      DialogHelper.showAlertDialog({
+        primaryTitle: $r("app.string.warning"),
+        content: $r("app.string.hdr_warning"),
+        primaryButton: {
+          value: $r("app.string.confirm"),
+          fontColor: $r("sys.color.font_primary"),
+        },
+        onAction: (action: number, dialogId: string): void => {
+          DialogHelper.closeDialog(dialogId)
+        }
+      })
+    }
   }
 
   aboutToDisappear(): void {

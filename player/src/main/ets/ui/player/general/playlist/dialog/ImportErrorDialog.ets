@@ -1,5 +1,49 @@
+import { DialogHelper } from "@pura/harmony-dialog";
 import { fileName } from "../../../../../utils/FileUtils";
 import { ImportError, ImportErrorType } from "../PlaylistMenuButtons";
+
+@ObservedV2
+class Errors {
+
+  @Trace
+  errors: ImportError[] = []
+
+}
+
+let globalErrors: Errors = new Errors()
+
+@Builder
+function importErrorContent() {
+  ForEach(listifiedErrors(optimizeErrors(globalErrors.errors)), (urls: string[], index: number) => {
+    if (urls.length > 0) {
+      Text() {
+        Span(ImportErrorType.TYPES[index].reason)
+          .fontColor($r('sys.color.warning'))
+        ForEach(urls, (uri: string) => {
+          Span('\n' + `  ·  ${fileName(uri)}`)
+        })
+      }
+      .margin(8)
+    }
+  })
+}
+
+export function showEasyImportErrorDialog(errors: ImportError[]) {
+  globalErrors.errors = errors
+  DialogHelper.showCustomContentDialog({
+    primaryTitle: $r("app.string.import_error"),
+    contentBuilder: importErrorContent,
+    buttons: [
+      {
+        value: $r("app.string.confirm"),
+        fontColor: $r("sys.color.font_primary")
+      }
+    ],
+    onAction: (action: number, dialogId: string): void => {
+      DialogHelper.closeDialog(dialogId)
+    }
+  })
+}
 
 @Builder
 export function importErrorDialog(errors: ImportError[]) {

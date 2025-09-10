@@ -30,6 +30,7 @@ export struct VisualEffectSheet {
           step: 1,
           initialValue: this.playerContext.visualEffect_grayscale,
           resetValue: 0,
+          gestureAlwaysAnnouncement: true,
           onChange: (value) => {
             this.playerContext.visualEffect_grayscale = value
           }
@@ -42,6 +43,7 @@ export struct VisualEffectSheet {
           step: 1,
           initialValue: this.playerContext.visualEffect_brightness,
           resetValue: 0,
+          gestureAlwaysAnnouncement: true,
           onChange: (value) => {
             this.playerContext.visualEffect_brightness = value
           }
@@ -54,6 +56,7 @@ export struct VisualEffectSheet {
           step: 1,
           initialValue: this.playerContext.visualEffect_saturate,
           resetValue: 0,
+          gestureAlwaysAnnouncement: true,
           onChange: (value) => {
             this.playerContext.visualEffect_saturate = value
           }
@@ -66,6 +69,7 @@ export struct VisualEffectSheet {
           step: 1,
           initialValue: this.playerContext.visualEffect_contrast,
           resetValue: 0,
+          gestureAlwaysAnnouncement: true,
           onChange: (value) => {
             this.playerContext.visualEffect_contrast = value
           }

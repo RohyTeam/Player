@@ -531,6 +531,42 @@
     {
       "name": "import_finished",
       "value": "导入完成（%s）"
+    },
+    {
+      "name": "hdr_warning",
+      "value": "当前还未完全支持 HDR 视频播放，你可能会遇见黑屏或视频发灰的问题。"
+    },
+    {
+      "name": "warning",
+      "value": "警告"
+    },
+    {
+      "name": "import_verify_file",
+      "value": "检验文件中（%s）"
+    },
+    {
+      "name": "failed_to_access_file",
+      "value": "访问文件失败"
+    },
+    {
+      "name": "flexable_content_builder_plus",
+      "value": "%s%s"
+    },
+    {
+      "name": "flexable_content_builder_newline",
+      "value": "%s\n%s"
+    },
+    {
+      "name": "import_error",
+      "value": "导入错误"
+    },
+    {
+      "name": "paused",
+      "value": "已暂停"
+    },
+    {
+      "name": "please_input_number",
+      "value": "请输入数字"
     }
   ]
 }

@@ -18,6 +18,12 @@ export class BackgroundBlurModifier implements AttributeModifier<CommonAttribute
             scale: Pref.blurLevel,
           }
         )
+      // todo: 后续将修改背景模糊的实现方式
+      /*.backgroundEffect({
+        radius: 80,
+        brightness: 1.07,
+        saturation: 1.2
+      })*/
     }
   }
 }

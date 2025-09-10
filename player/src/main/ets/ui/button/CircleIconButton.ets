@@ -1,3 +1,5 @@
+import { Modifiers } from "../attributemodifier/Modifiers"
+
 @ComponentV2
 export struct CircleIconButton {
   @Param
@@ -9,6 +11,8 @@ export struct CircleIconButton {
   iconRotation: number = 0
   @Param
   buttonMargin: Margin = {}
+  @Param
+  blurredBackground: boolean = false
   @Param
   bgColor: Resource = $r("sys.color.comp_background_tertiary")
   @Event
@@ -46,6 +50,7 @@ export struct CircleIconButton {
       level: ClickEffectLevel.LIGHT,
       scale: 0.8
     })
+    .attributeModifier(Modifiers.optionalBackgroundBlur(this.blurredBackground))
     .align(Alignment.Center)
     .margin(this.buttonMargin)
     .width(40)

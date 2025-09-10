@@ -531,6 +531,42 @@
     {
       "name": "import_finished",
       "value": "Finished (%s)"
+    },
+    {
+      "name": "hdr_warning",
+      "value": "Currently not completely supporting HDR videos, you may encounter black screen or gray video."
+    },
+    {
+      "name": "warning",
+      "value": "Warning"
+    },
+    {
+      "name": "import_verify_file",
+      "value": "Verifying file (%s)"
+    },
+    {
+      "name": "failed_to_access_file",
+      "value": "Failed to access file"
+    },
+    {
+      "name": "flexable_content_builder_plus",
+      "value": "%s%s"
+    },
+    {
+      "name": "flexable_content_builder_newline",
+      "value": "%s\n%s"
+    },
+    {
+      "name": "import_error",
+      "value": "Import errors"
+    },
+    {
+      "name": "paused",
+      "value": "Paused"
+    },
+    {
+      "name": "please_input_number",
+      "value": "Please input number"
     }
   ]
 }

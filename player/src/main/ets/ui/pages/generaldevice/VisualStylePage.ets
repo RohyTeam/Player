@@ -151,6 +151,7 @@ export struct VisualStylePage {
               min: 0,
               max: 64,
               initialValue: Pref.innerRadius,
+              gestureAlwaysAnnouncement: true,
               onChange: (value) => {
                 animateTo({
                   duration: 200,
@@ -167,6 +168,7 @@ export struct VisualStylePage {
                 min: 0,
                 max: 64,
                 initialValue: Pref.outerRadius,
+                gestureAlwaysAnnouncement: true,
                 onChange: (value) => {
                   animateTo({
                     duration: 200,

@@ -1,6 +1,5 @@
 import { clamp } from '../../../utils/MathUtils'
-import { CounterComponent, CounterType } from '@ohos.arkui.advanced.Counter'
-import { CircleIconButton } from '../../button/CircleIconButton'
+import { CounterChangeMode, RohyCounter } from '../counter/RohyCounter'
 
 @ComponentV2
 export struct InnerCounter {
@@ -19,6 +18,8 @@ export struct InnerCounter {
   larger: boolean = false
   @Param
   resetValue: number | undefined = undefined
+  @Param
+  gestureAlwaysAnnouncement: boolean = false
   @Param
   subtitle: ResourceStr | undefined = undefined
   @Param
@@ -99,36 +100,21 @@ export struct InnerCounter {
         }
         Blank()
           .layoutWeight(1)
-        CounterComponent({
-          options: {
-            type: CounterType.COMPACT,
-            numberOptions: {
-              value: this.value,
-              min: this.min,
-              max: this.max,
-              step: this.step,
-              onChange: (value) => {
-                this.onChange(value)
-              }
+        RohyCounter({
+          initial: this.value,
+          min: this.min,
+          max: this.max,
+          step: this.step,
+          reset: this.resetValue,
+          onChange: (value, mode) => {
+            if (this.gestureAlwaysAnnouncement || mode != CounterChangeMode.Gesture) {
+              this.onChange(value)
             }
           }
         })
           .margin({
             right: 4
           })
-        if (this.resetValue != undefined) {
-          CircleIconButton({
-            icon: $r("sys.symbol.arrow_clockwise"),
-            clickCallback: () => {
-              this.value = this.resetValue!
-            },
-            buttonMargin: {
-              right: 8,
-              top: 4,
-              bottom: 4
-            }
-          })
-        }
       }
       .alignItems(VerticalAlign.Center)
       .borderRadius(12)

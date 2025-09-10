@@ -84,6 +84,10 @@ export class SystemContext {
   public isTablet(): boolean {
     return deviceInfo.deviceType == "tablet"
   }
+
+  public isPhone(): boolean {
+    return deviceInfo.deviceType == "phone"
+  }
 }
 
 export const Sys: SystemContext = new SystemContext()

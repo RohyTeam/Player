@@ -1,7 +1,7 @@
 import { PlayerContext } from '../../../player/PlayerContext'
 import { PlayerController } from '../../../player/PlayerController'
 import { ControlsContext, PlayerBottomBar } from '../PlayerBottomBar'
-import { curves } from '@kit.ArkUI'
+import { curves, window } from '@kit.ArkUI'
 import { PlayerTopBar } from '../PlayerTopBar'
 import { HandGestureModifier } from '../../gesture/HandGestureModifier'
 import { AVVolumePanel } from '@ohos.multimedia.avVolumePanel'
@@ -9,6 +9,12 @@ import { Sys } from '../../../context/SystemContext'
 import { clamp } from '../../../utils/MathUtils'
 import { convertNumberToDurationString } from '../../../utils/NumberUtils'
 import { ChapterSidebar } from '../ChapterSidebar'
+import { CircleIconButton } from '../../button/CircleIconButton'
+import { WindowManager } from '../../manager/WindowManager'
+import { CutoutAvoidArea } from '../../avoidarea/CutoutAvoidArea'
+import { WindowContext } from '../../../context/WindowContext'
+import { TopCutoutAvoidArea } from '../../avoidarea/TopCutoutAvoidArea'
+import { LeftCutoutAvoidArea } from '../../avoidarea/LeftCutoutAvoidArea'
 
 @ComponentV2
 export struct GeneralControlPanel {
@@ -16,6 +22,8 @@ export struct GeneralControlPanel {
   playerController: PlayerController = new PlayerController()
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
+  @Local
+  windowContext: WindowContext = WindowContext.reach(this.getUIContext())
   @Provider("controlsContext")
   controlsContext: ControlsContext = new ControlsContext()
   @Consumer("landscape")
@@ -59,32 +67,64 @@ export struct GeneralControlPanel {
           )
         Stack() {
           Column() {
+            if (!this.controlsContext.showTopBarAndBottomBar) {
+              TopCutoutAvoidArea()
+            }
+            if (this.playerContext.paused) {
+              SmallTips({
+                content: $r("app.string.paused")
+              })
+                .animation({
+                  curve: curves.springMotion(),
+                  duration: 200
+                })
+            }
             if (this.playerContext.speedingUp) {
               SmallTips({
                 content: $r("app.string.speeding_up")
               })
+                .animation({
+                  curve: curves.springMotion(),
+                  duration: 200
+                })
             }
             if (this.playerContext.adjustingVolume) {
               SmallTips({
                 content: $r("app.string.adjusting_volume",
                   `${clamp(Math.round((this.playerContext.currentVolume / Sys.maxVolume) * 100), 0, 100)}%`)
               })
+                .animation({
+                  curve: curves.springMotion(),
+                  duration: 200
+                })
             }
             if (this.playerContext.adjustingScreenBrightness) {
               SmallTips({
                 content: $r("app.string.adjusting_brightness",
                   `${clamp(Math.round((this.playerContext.currentScreenBrightness / 255) * 100), 0, 100)}%`)
               })
+                .animation({
+                  curve: curves.springMotion(),
+                  duration: 200
+                })
             }
             if (Sys.time - this.playerContext.lastTimeForward <= 1000) {
               SmallTips({
                 content: $r("app.string.forwarded")
               })
+                .animation({
+                  curve: curves.springMotion(),
+                  duration: 200
+                })
             }
             if (Sys.time - this.playerContext.lastTimeBackward <= 1000) {
               SmallTips({
                 content: $r("app.string.backwarded")
               })
+                .animation({
+                  curve: curves.springMotion(),
+                  duration: 200
+                })
             }
             Blank()
               .layoutWeight(1)
@@ -101,11 +141,45 @@ export struct GeneralControlPanel {
           .height("100%")
           .width("100%")
 
-          Column() {
+          Row() {
+            if (Sys.isPhone()) {
+              LeftCutoutAvoidArea()
+              CircleIconButton({
+                icon: this.landscape ? $r("sys.symbol.rectangle_portrait_rotate") : $r("sys.symbol.rectangle_rotate"),
+                buttonMargin: {
+                  left: 8
+                },
+                blurredBackground: true,
+                clickCallback: () => {
+                  this.landscape = !this.landscape
+                  if (this.landscape) {
+                    WindowManager.setOrientation(this.getUIContext(), window.Orientation.AUTO_ROTATION_LANDSCAPE)
+                  } else {
+                    WindowManager.setOrientation(this.getUIContext(), window.Orientation.PORTRAIT)
+                  }
+                }
+              })
+                .focusable(false)
+                .visibility(this.controlsContext.showTopBarAndBottomBar ? Visibility.Visible : Visibility.Hidden)
+                .transition(
+                  TransitionEffect.asymmetric(
+                    TransitionEffect.move(TransitionEdge.START)
+                      .combine(TransitionEffect.OPACITY),
+                    TransitionEffect.scale({ x: 0, y: 0, centerX: "50%", centerY: "50%" })
+                      .combine(TransitionEffect.OPACITY)
+                  )
+                    .animation({
+                      curve: curves.springMotion(),
+                      duration: 200
+                    })
+                )
+            }
             Blank()
               .gestureModifier(new HandGestureModifier(this.playerController, this.playerContext, this.controlsContext))
               .layoutWeight(1)
           }
+          .alignItems(VerticalAlign.Center)
+          .gestureModifier(new HandGestureModifier(this.playerController, this.playerContext, this.controlsContext))
           .height("100%")
           .width("100%")
         }

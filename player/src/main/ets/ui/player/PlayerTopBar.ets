@@ -11,6 +11,7 @@ import { ControlsContext } from './PlayerBottomBar'
 import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI'
 import { CutoutAvoidArea } from '../avoidarea/CutoutAvoidArea'
 import { Sys } from '../../context/SystemContext'
+import { TopCutoutAvoidArea } from '../avoidarea/TopCutoutAvoidArea'
 
 @ComponentV2
 export struct PlayerTopBar {
@@ -33,7 +34,7 @@ export struct PlayerTopBar {
   build() {
     Row() {
       Column() {
-        CutoutAvoidArea({
+        TopCutoutAvoidArea({
           extra: Pref.uiUpdatePreview ? -8 : 0
         })
         Row() {

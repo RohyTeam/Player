@@ -19,6 +19,11 @@ export class WindowManager {
       window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR,
       windowObj.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR)
     )
+    WindowManager.updateStaticAvoidArea(
+      context,
+      window.AvoidAreaType.TYPE_CUTOUT,
+      windowObj.getWindowAvoidArea(window.AvoidAreaType.TYPE_CUTOUT)
+    )
     WindowManager.updateWindowStatusType(context, windowObj.getWindowStatus())
     windowObj.on('windowSizeChange', (size: window.Size) => {
       WindowManager.updateWindowSize(context, size.width, size.height)
@@ -80,8 +85,11 @@ export class WindowManager {
       let vp = px2vp(area.bottomRect.height)
       windowContext.bottomAvoid = vp
     } else if (type == window.AvoidAreaType.TYPE_CUTOUT) {
-      let vp = px2vp(area.topRect.height)
-      windowContext.cutoutAvoid = vp
+      windowContext.topCutoutAvoid = px2vp(area.topRect.height)
+      windowContext.bottomCutoutAvoid = px2vp(area.bottomRect.height)
+      windowContext.leftCutoutAvoid = px2vp(area.leftRect.width)
+      windowContext.rightCutoutAvoid = px2vp(area.rightRect.width)
+      console.error(`updating cutout, left: ${windowContext.leftCutoutAvoid}, right: ${windowContext.rightCutoutAvoid}, top: ${windowContext.topCutoutAvoid}, bottom: ${windowContext.bottomCutoutAvoid}`)
     }
   }
 
@@ -93,6 +101,9 @@ export class WindowManager {
     } else if (type == window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR) {
       let vp = px2vp(area.bottomRect.height)
       windowContext.staticBottomAvoid = vp
+    } else if (type == window.AvoidAreaType.TYPE_CUTOUT) {
+      let vp = px2vp(area.topRect.height)
+      windowContext.cutoutAvoid = vp
     }
   }
 

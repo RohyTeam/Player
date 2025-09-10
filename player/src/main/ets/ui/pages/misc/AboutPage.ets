@@ -10,6 +10,7 @@ import { shareUrl } from '../../../utils/MiscUtils'
 import { openEmail } from '../../../utils/AbilityUtils'
 import { InnerContainer } from '../../component/inner/InnerContainer'
 import { BottomAvoidArea } from '../../avoidarea/BottomAvoidArea'
+import { RohyCounter } from '../../component/counter/RohyCounter'
 
 @ComponentV2
 export struct AboutPage {

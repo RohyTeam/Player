@@ -11,7 +11,7 @@ import { fileIo, fileUri } from '@kit.CoreFileKit'
 import { compile } from '../../lib/subtitle/ass_compiler'
 import { buildMenuGroup, menuGroups, RohyMenu, RohyMenuItem } from '../component/menu/RohyMenu'
 import { Pref } from '../../context/PreferenceContext'
-import { ImportProgressContext, ImportProgressOverlayBuilder } from '../overlay/ImportProgressOverlay'
+import { ImportProgressContext, showEasyImportProgressDialog } from '../overlay/ImportProgressOverlay'
 import { ensurePath,
   existsInFiles,
   fileName, fileNameAndExtension, getPathInFiles, mkdirsInFiles } from '../../utils/FileUtils'
@@ -70,7 +70,7 @@ export struct PlayerBottomBar {
   showMoreMenu: boolean = false
 
   @Local
-  importProgressContext: ImportProgressContext = new ImportProgressContext()
+  importProgressContext: ImportProgressContext = ImportProgressContext.reach(this.getUIContext())
   @Consumer("landscape")
   landscape: boolean = true
 
@@ -530,29 +530,43 @@ export struct PlayerBottomBar {
               this.importProgressContext.current = 0
               this.importProgressContext.total = urls.length
 
-              let importProgressOverlayComponent: ComponentContent<ImportProgressContext> = new ComponentContent(
-                this.getUIContext(),
-                wrapBuilder(ImportProgressOverlayBuilder),
-                this.importProgressContext
-              );
+              this.importProgressContext.subProgressTotal = 0
 
-              this.getUIContext().getPromptAction().openCustomDialog(
-                importProgressOverlayComponent,
-                {
-                  autoCancel: false,
-                  onWillDismiss: () => {
-                  }
+              let tasks: taskpool.Task[] = []
+              let subtitleInfos: SubtitleInfo[] = []
+
+              let cancelled = false
+
+              let startedTask: taskpool.Task[] = []
+
+              let importProgressDialogId = showEasyImportProgressDialog(() => {
+                cancelled = true
+                for (let task of tasks) {
+                  if (!task.isDone() && startedTask.indexOf(task) < 0)
+                    taskpool.cancel(task)
                 }
-              )
+              })
 
               if (!existsInFiles(`videos/${this.playerContext.videoSource?.identity()}/external_subtitles`)) {
                 mkdirsInFiles(`videos/${this.playerContext.videoSource?.identity()}/external_subtitles`)
               }
 
-              let taskGroup = new taskpool.TaskGroup()
+              let plusOne = () => {
+                this.importProgressContext.current += 1
+                if (this.importProgressContext.current >= this.importProgressContext.total) {
+                  DialogHelper.closeDialog(importProgressDialogId)
+                  if (!cancelled) {
+                    for (let subtitleInfo of subtitleInfos) {
+                      this.playerContext.subtitles.push(subtitleInfo)
+                      this.playerContext.videoSource?.metadata().subtitles.push(subtitleInfo)
+                    }
+                    // TODO: 显示所有的错误和问题
+                  }
+                }
+              }
+
               for (let uri of urls) {
                 let task = new taskpool.Task(importSubtitle, uri, getPathInFiles(`videos/${this.playerContext.videoSource?.identity()}/external_subtitles`))
-
                 task.onReceiveData((finalName: string) => {
                   let subtitleInfo: SubtitleInfo | undefined = undefined
                   if (uri.endsWith(".ass")) {
@@ -581,29 +595,25 @@ export struct PlayerBottomBar {
                     }
                   }
                   if (subtitleInfo != undefined) {
-                    this.playerContext.subtitles.push(subtitleInfo)
-                    this.playerContext.videoSource?.metadata().subtitles.push(subtitleInfo)
+                    subtitleInfos.push(subtitleInfo)
                   }
                   this.importProgressContext.current += 1
-                  if (this.importProgressContext.current >= this.importProgressContext.total) {
-                    this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                    importProgressOverlayComponent.dispose()
-                  }
+                  plusOne()
                 })
                 task.onExecutionFailed((err) => {
-                  console.error(`error when importing subtitle: ${err.message}`)
                   this.importProgressContext.current += 1
-                  if (this.importProgressContext.current >= this.importProgressContext.total) {
-                    this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                    importProgressOverlayComponent.dispose()
-                    // TODO: 显示所有的错误和问题
-                  }
+                  plusOne()
                 })
 
-                taskGroup.addTask(task)
+                tasks.push(task)
               }
 
-              taskpool.execute(taskGroup)
+              for (let task of tasks) {
+                if (cancelled)
+                  break
+                taskpool.execute(task)
+                startedTask.push(task)
+              }
             })
         }
       }

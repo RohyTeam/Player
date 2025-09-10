@@ -5,10 +5,11 @@ import { ComponentContent } from '@kit.ArkUI'
 import { collections, taskpool } from '@kit.ArkTS'
 import { sha256 } from '../../../../utils/HashUtils'
 import { PlaylistFolderItemsDataSource } from '../../../../datasource/playlist/PlaylistFolderItemsDataSource'
-import { ImportProgressContext, ImportProgressOverlayBuilder } from '../../../overlay/ImportProgressOverlay'
+import { ImportProgressContext,
+  showEasyImportProgressDialog } from '../../../overlay/ImportProgressOverlay'
 import { MetadataFetcher } from '../../../../metadata/MetadataFetcher'
 import { ensurePath, fileName } from '../../../../utils/FileUtils'
-import { fileShare } from '@kit.CoreFileKit'
+import { fileIo, fileShare } from '@kit.CoreFileKit'
 import { VideoMetadataManager } from '../../../../metadata/VideoMetadataManager'
 import {
   createSendableVideoMetadata,
@@ -18,7 +19,8 @@ import {
 import { ensureContext } from '../../../../utils/AbilityUtils'
 import { asyncSave } from '../../../../metadata/SendableVideoMetadataManager'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { importErrorDialog } from './dialog/ImportErrorDialog'
+import { importErrorDialog, showEasyImportErrorDialog } from './dialog/ImportErrorDialog'
+import { DialogHelper } from '@pura/harmony-dialog'
 
 export class ImportErrorType {
 
@@ -28,7 +30,8 @@ export class ImportErrorType {
   public static readonly SAVE_METADATA: ImportErrorType = new ImportErrorType("save_metadata", $r("app.string.failed_to_save_metadata"))
   public static readonly STORAGE_FULL: ImportErrorType = new ImportErrorType("storage_full", $r("app.string.storage_is_not_enough"))
   public static readonly PERSIST_FILE: ImportErrorType = new ImportErrorType("persist_file", $r("app.string.faield_to_persist_file"))
-  public static readonly UNKNOWN: ImportErrorType = new ImportErrorType("persist_file", $r("app.string.unknown_error"))
+  public static readonly ACCESS_FILE: ImportErrorType = new ImportErrorType("access_file", $r("app.string.failed_to_access_file"))
+  public static readonly UNKNOWN: ImportErrorType = new ImportErrorType("unknown", $r("app.string.unknown_error"))
 
   public static readonly TYPES: ImportErrorType[] = [
     ImportErrorType.NOT_IN_FILES,
@@ -37,6 +40,7 @@ export class ImportErrorType {
     ImportErrorType.SAVE_METADATA,
     ImportErrorType.STORAGE_FULL,
     ImportErrorType.PERSIST_FILE,
+    ImportErrorType.ACCESS_FILE,
     ImportErrorType.UNKNOWN
   ]
 
@@ -57,8 +61,14 @@ export interface ImportError {
 
 }
 
+export interface ImportVideo {
+  name: string
+  identity: string
+  url: string
+}
+
 @Concurrent
-async function fetchMetadata(path: string, isMedia: boolean, headers: collections.Map<string, string>) {
+async function fetchMetadata(uri: string, path: string, isMedia: boolean, headers: collections.Map<string, string>) {
   let realHeaders: Record<string, string> = {}
   for (let key of headers.keys()) {
     realHeaders[key] = headers.get(key)!
@@ -80,7 +90,7 @@ export struct PlaylistMenuButtons {
   @Local
   private showImportVideoSheet: boolean = false
   @Local
-  importProgressContext: ImportProgressContext = new ImportProgressContext()
+  importProgressContext: ImportProgressContext = ImportProgressContext.reach(this.getUIContext())
 
   build() {
     Row() {
@@ -100,91 +110,95 @@ export struct PlaylistMenuButtons {
               if (urls.length == 0) {
                 return
               }
+
+              let tasks: Record<string, taskpool.Task> = {}
               let importErrors: ImportError[] = []
+              let importVideos: ImportVideo[] = []
+
+              this.importProgressContext.current = 0
+              this.importProgressContext.total = urls.length
+              this.importProgressContext.subProgressCurrent = 0
+              this.importProgressContext.subProgressTotal = urls.length * 5
+
+              let cancelled = false
+
+              let startedTask: taskpool.Task[] = []
+
+              let importProgressDialogId = showEasyImportProgressDialog(() => {
+                cancelled = true
+                for (let task of Object.values(tasks)) {
+                  if (!task.isDone() && startedTask.indexOf(task) < 0)
+                    taskpool.cancel(task)
+                }
+              })
 
               let filteredUrls: string[] = []
               for (let uri of urls) {
-                if (!uri.startsWith("file://docs")) {
-                  importErrors.push({
-                    url: uri,
-                    reason: ImportErrorType.NOT_IN_FILES
-                  })
-                  continue
-                }
+                this.importProgressContext.subProgressCurrent += 1
+                this.importProgressContext.subProgressText = $r("app.string.import_verify_file", fileName(uri))
                 let identity = sha256(`files:${uri}`)
                 if (this.playlistFolderDataSource!.hasVideo(identity)) {
                   importErrors.push({
                     url: uri,
                     reason:ImportErrorType.DUPLICATED
                   })
+                  this.importProgressContext.subProgressCurrent += 4
+                  this.importProgressContext.current += 1
                   continue
                 }
-
-                filteredUrls.push(uri)
+                try {
+                  let file = fileIo.openSync(uri)
+                  let stat = fileIo.statSync(file.fd)
+                  let location = stat.location
+                  fileIo.closeSync(file)
+                  if (location == 1) {
+                    filteredUrls.push(uri)
+                  } else {
+                    importErrors.push({
+                      url: uri,
+                      reason: ImportErrorType.NOT_IN_FILES
+                    })
+                    this.importProgressContext.subProgressCurrent += 4
+                    this.importProgressContext.current += 1
+                    continue
+                  }
+                } catch (_) {
+                  importErrors.push({
+                    url: uri,
+                    reason: ImportErrorType.ACCESS_FILE
+                  })
+                  this.importProgressContext.subProgressCurrent += 4
+                  this.importProgressContext.current += 1
+                  continue
+                }
               }
 
               if (filteredUrls.length <= 0) {
+                DialogHelper.closeDialog(importProgressDialogId)
                 if (importErrors.length > 0) {
-                  let errorsComponent = new ComponentContent(this.getUIContext(), wrapBuilder(importErrorDialog), importErrors)
-                  this.getUIContext().getPromptAction().openCustomDialog(
-                    errorsComponent,
-                    {
-                      autoCancel: true,
-                      onWillDismiss: () => {
-                        this.getUIContext().getPromptAction().closeCustomDialog(errorsComponent)
-                        errorsComponent.dispose()
-                      }
-                    }
-                  )
+                  showEasyImportErrorDialog(importErrors)
                 }
                 return
               }
 
-              this.importProgressContext.current = 0
-              this.importProgressContext.total = filteredUrls.length
-              this.importProgressContext.subProgressCurrent = 0
-              this.importProgressContext.subProgressTotal = filteredUrls.length * 4
-
-              let importProgressOverlayComponent: ComponentContent<ImportProgressContext> = new ComponentContent(
-                this.getUIContext(),
-                wrapBuilder(ImportProgressOverlayBuilder),
-                this.importProgressContext
-              )
-
-              this.getUIContext().getPromptAction().openCustomDialog(
-                importProgressOverlayComponent,
-                {
-                  autoCancel: false,
-                  onWillDismiss: () => {
-                  }
-                }
-              )
-
               let plusOne = () => {
                 this.importProgressContext.current += 1
                 if (this.importProgressContext.current >= this.importProgressContext.total) {
-                  this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                  importProgressOverlayComponent.dispose()
-
-                  if (importErrors.length > 0) {
-                    let errorsComponent = new ComponentContent(this.getUIContext(), wrapBuilder(importErrorDialog), importErrors)
-                    this.getUIContext().getPromptAction().openCustomDialog(
-                      errorsComponent,
-                      {
-                        autoCancel: true,
-                        onWillDismiss: () => {
-                          this.getUIContext().getPromptAction().closeCustomDialog(errorsComponent)
-                          errorsComponent.dispose()
-                        }
-                      }
-                    )
+                  DialogHelper.closeDialog(importProgressDialogId)
+                  if (!cancelled) {
+                    for (let video of importVideos) {
+                      this.playlistFolderDataSource?.importVideo(video.name, video.identity, video.url)
+                    }
+                    if (importErrors.length > 0) {
+                      showEasyImportErrorDialog(importErrors)
+                    }
                   }
                 }
               }
 
               for (let uri of filteredUrls) {
                 let identity = sha256(`files:${uri}`)
-                let task = new taskpool.Task(fetchMetadata, ensurePath(uri), true, new collections.Map<string, string>())
+                let task = new taskpool.Task(fetchMetadata, uri, ensurePath(uri), true, new collections.Map<string, string>())
                 task.onReceiveData(async (result: SendableVideoMetadata | number) => {
                   if (!result) {
                     return
@@ -206,7 +220,11 @@ export struct PlaylistMenuButtons {
                   }])
                     .then(() => {
                       let continueJob: () => void = () => {
-                        this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
+                        importVideos.push({
+                          name: fileName(uri),
+                          identity: identity,
+                          url: uri
+                        })
                         this.importProgressContext.subProgressCurrent += 1
                         this.importProgressContext.subProgressText = $r("app.string.import_finished", fileName(uri))
                       }
@@ -257,6 +275,14 @@ export struct PlaylistMenuButtons {
                   })
                   plusOne()
                 })
+                tasks[uri] = task
+              }
+
+              for (let entry of Object.entries(tasks)) {
+                if (cancelled)
+                  break
+                let uri = entry[0]
+                let task = entry[1]
                 this.importProgressContext.subProgressCurrent += 1
                 this.importProgressContext.subProgressText = $r("app.string.import_fetching_metadata", fileName(uri))
                 taskpool.execute(task)
@@ -268,110 +294,9 @@ export struct PlaylistMenuButtons {
                     })
                     plusOne()
                   })
+                startedTask.push(task)
               }
             })
-
-          /*pickSingleVideoFile(this.getUIContext())
-            .then(async (url) => {
-              if (!url)
-                return
-              if (!url.startsWith("file://docs")) {
-                promptAction.showToast({
-                  message: $r('app.string.photos_not_importable')
-                })
-                return
-              }
-              let identity = sha256(`files:${url}`)
-              if (this.playlistFolderDataSource!.hasVideo(identity)) {
-                // TODO: 未来要将重复导入的视频作为错误添加到一个列表中，等所有任务执行完以后给用户展示
-                promptAction.showToast({
-                  message: $r('app.string.video_imported')
-                })
-                return
-              }
-              this.importProgressContext.current = 0
-              this.importProgressContext.total = 1
-
-              let importProgressOverlayComponent: ComponentContent<ImportProgressContext> = new ComponentContent(
-                this.getUIContext(),
-                wrapBuilder(ImportProgressOverlayBuilder),
-                this.importProgressContext
-              )
-
-              this.getUIContext().getPromptAction().openCustomDialog(
-                importProgressOverlayComponent,
-                {
-                  autoCancel: false,
-                  onWillDismiss: () => {
-                  }
-                }
-              )
-
-              for (let uri of [url]) {
-                let identity = sha256(`files:${uri}`)
-                let metadata = await MetadataFetcher.fetch(ensurePath(uri), false)
-                await fileShare.persistPermission([{
-                  uri: uri,
-                  operationMode: fileShare.OperationMode.READ_MODE
-                }])
-                VideoMetadataManager.save(identity, true, url, metadata)
-                this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
-                this.importProgressContext.current += 1
-                if (this.importProgressContext.current >= this.importProgressContext.total) {
-                  this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                  importProgressOverlayComponent.dispose()
-                }
-              }
-
-              */
-          /*
-                                        let closed: boolean = false
-
-                                        let taskGroup = new taskpool.TaskGroup()
-
-                                        // TODO: 未来替换成可以选择大量文件，然后遍历所有的 url
-                                        for (let uri of [url]) {
-                                          let identity = sha256(`files:${uri}`)
-                                          let task = new taskpool.Task(importVideo, [ensurePath(uri)])
-                                          task.onReceiveData(async (metadata: VideoMetadata) => {
-                                            await fileShare.persistPermission([{
-                                              uri: uri,
-                                              operationMode: fileShare.OperationMode.READ_MODE
-                                            }])
-                                            console.error(`FUCK: persisted`)
-                                            VideoMetadataManager.save(identity, true, url, metadata)
-                                            console.error(`FUCK: saved`)
-                                            this.playlistFolderDataSource?.importVideo(fileName(uri), identity, uri)
-                                          })
-                                          task.onExecutionSucceeded(() => {
-                                            console.error(`FUCK: sucess importing`)
-                                            this.importProgressContext.current += 1
-                                            if (this.importProgressContext.current >= this.importProgressContext.total && !closed) {
-                                              closed = true
-                                              this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                                              importProgressOverlayComponent.dispose()
-                                            }
-                                          })
-                                          // TODO: 未来要将所有的错误都添加到一个列表中，等所有任务执行完以后给用户展示
-                                          task.onExecutionFailed((e: Error) => {
-                                            this.importProgressContext.current += 1
-                                            if (this.importProgressContext.current >= this.importProgressContext.total && !closed) {
-                                              closed = true
-                                              this.getUIContext().getPromptAction().closeCustomDialog(importProgressOverlayComponent)
-                                              importProgressOverlayComponent.dispose()
-                                            }
-                                            console.error(`FUCK: error when importing: ${e.message}`)
-                                          })
-                                          taskGroup.addTask(task)
-                                        }
-
-                                        taskpool.execute(taskGroup)
-                                          .then(() => {
-                                            console.error(`finished all tasks, removing dialog`)
-                                          })*/
-          /*
-                     })*/
-
         }
       })
         .bindSheet(
