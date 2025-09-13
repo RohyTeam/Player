@@ -15,6 +15,7 @@ import { clamp } from '../../utils/MathUtils';
 import { SubtitleInfo } from '../../player/subtitle/SubtitleInfo';
 import { Pref } from '../../context/PreferenceContext';
 import { BackgroundTaskContext } from '../../context/BackgroundTaskContext';
+import { WindowContext } from '../../context/WindowContext';
 
 @ComponentV2
 export struct PlayerPage {
@@ -25,6 +26,8 @@ export struct PlayerPage {
   playerController: PlayerController = new PlayerController()
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
+  @Local
+  windowContext: WindowContext = WindowContext.reach(this.getUIContext())
 
   aboutToAppear(): void {
     this.playerContext.playSpeed = 1
@@ -75,7 +78,7 @@ export struct PlayerPage {
     }
     this.playerController.initPlayer(this.playerContext.player)
     this.playerContext.player!.onPrepared(() => {
-      this.playerController.getWindowContext()!.window!.setWindowBrightness(clamp(this.playerContext.currentScreenBrightness /
+      this.windowContext.window!.setWindowBrightness(clamp(this.playerContext.currentScreenBrightness /
         255, 0, 1)).then(() => {
       })
       this.playerController.play()
@@ -126,7 +129,7 @@ export struct PlayerPage {
   }
 
   aboutToDisappear(): void {
-    this.playerController.getWindowContext()!.window!.setWindowBrightness(-1)
+    this.windowContext.window!.setWindowBrightness(-1)
     this.playerController.release()
     this.playerContext.subtitles = []
     this.playerContext.selectedSubtitle = undefined
@@ -228,6 +231,18 @@ export struct PlayerPage {
       })
       .zIndex(1)
     }
+    .rotate({
+      centerX: "50%",
+      centerY: "50%",
+      x: 0,
+      y: 0,
+      z: 1,
+      angle: this.playerContext.visualEffect_rotation
+    })
+    .scale({
+      x: this.playerContext.visualEffect_rotation === 90 || this.playerContext.visualEffect_rotation === 270 ? this.windowContext.heightVp / this.windowContext.widthVp : 1,
+      y: this.playerContext.visualEffect_rotation === 90 || this.playerContext.visualEffect_rotation === 270 ? this.windowContext.heightVp / this.windowContext.widthVp : 1
+    })
     .width("100%")
     .height("100%")
   }

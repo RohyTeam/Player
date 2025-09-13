@@ -20,7 +20,7 @@ export struct CircleIconSwitch {
   @Param
   backgroundNormalColor: Resource = $r("sys.color.comp_background_tertiary")
   @Param
-  backgroundActiveColor: Resource = $r("sys.color.brand")
+  backgroundActiveColor: Resource = $r("app.color.brand_opacity_50")
   @Event
   switch: (value: boolean) => boolean = (it) => {
     return it

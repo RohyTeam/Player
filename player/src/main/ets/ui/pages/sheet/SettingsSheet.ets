@@ -11,12 +11,15 @@ import { openUrl } from '../../../utils/AbilityUtils'
 export struct SettingsSheet {
   @Consumer("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
+  @Consumer("sheetNavigator")
+  private sheetNavigator: NavPathStack = new NavPathStack()
   @Event
   close: () => void
 
   build() {
     InnerContainer({
-      bgColor: Color.Transparent
+      bgColor: Color.Transparent,
+      fillHeight: true
     }) {
       /*
       InnerComponentSet() {
@@ -60,21 +63,11 @@ export struct SettingsSheet {
           ]
         })
         InnerDivider()*/
-        InnerSwitch({
-          title: $r("app.string.ui_update"),
-          initialValue: Pref.uiUpdatePreview,
-          switch: (original) => {
-            Pref.uiUpdatePreview = !original
-            return !original
-          }
-        })
-        InnerDivider()
         InnerButton({
-          title: $r("app.string.visual_style"),
+          title: $r("app.string.appearance"),
           showGoToIcon: true,
           clickCallback: () => {
-            this.close()
-            this.indexNavigator.pushPath({ name: "VisualStyle" })
+            this.sheetNavigator.pushPath({ name: "appearance" })
           }
         })
       }
@@ -119,8 +112,7 @@ export struct SettingsSheet {
           title: $r("app.string.questions"),
           showGoToIcon: true,
           clickCallback: () => {
-            this.close()
-            this.indexNavigator.pushPath({ name: "QnA" })
+            this.sheetNavigator.pushPath({ name: "qna" })
           }
         })
         InnerDivider()
@@ -133,11 +125,18 @@ export struct SettingsSheet {
         })
         InnerDivider()
         InnerButton({
+          title: $r("app.string.update_log"),
+          showGoToIcon: true,
+          clickCallback: () => {
+            this.sheetNavigator.pushPath({ name: "update_log" })
+          }
+        })
+        InnerDivider()
+        InnerButton({
           title: $r("app.string.about"),
           showGoToIcon: true,
           clickCallback: () => {
-            this.close()
-            this.indexNavigator.pushPath({ name: "About" })
+            this.sheetNavigator.pushPath({ name: "about" })
           }
         })
       }

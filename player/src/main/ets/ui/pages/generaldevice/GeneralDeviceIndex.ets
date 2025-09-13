@@ -79,12 +79,6 @@ export struct GeneralDeviceIndex {
       DebugPage()
     } else if (name == 'RohyPlayerDebugPage') {
       RohyPlayerDebugPage()
-    } else if (name == 'About') {
-      AboutPage()
-    } else if (name == 'QnA') {
-      QnAPage()
-    } else if (name == 'VisualStyle') {
-      VisualStylePage()
     }
   }
 

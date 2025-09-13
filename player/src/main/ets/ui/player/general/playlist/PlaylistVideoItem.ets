@@ -34,6 +34,7 @@ export struct PlaylistVideoItem {
         Column() {
           Stack() {
             Image(this.metadata.metadata.cover as string)
+              .objectFit(ImageFit.Cover)
               .draggable(false)
               .objectFit(ImageFit.Fill)
               .height("100%")
@@ -122,6 +123,8 @@ export struct PlaylistVideoItem {
           .borderRadius(8)
 
           Text(this.video.name)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.MARQUEE })
             .margin({
               bottom: 8,
               left: 8,

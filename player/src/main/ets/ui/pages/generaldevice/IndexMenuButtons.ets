@@ -16,6 +16,11 @@ import { ensureContext } from '../../../utils/AbilityUtils';
 import { createSendableVideoMetadata } from '../../../metadata/VideoMetadata';
 import { openVideoWaitingDialog } from './dialog/OpenVideoWaitingDialog';
 import { ComponentContent, promptAction } from '@kit.ArkUI';
+import { SheetContainer } from '../../component/sheet/SheetContainer';
+import { AboutPage } from '../misc/AboutPage';
+import { QnAPage } from '../misc/QnAPage';
+import { AppearancePage } from './settings/AppearancePage';
+import { UpdateLogPage } from '../misc/UpdateLogPage';
 
 @ComponentV2
 export struct IndexMenuButtons {
@@ -108,16 +113,17 @@ export struct IndexMenuButtons {
             height: SheetSize.LARGE,
             dragBar: false,
             shadow: ShadowStyle.OUTER_DEFAULT_MD,
-            showClose: true,
+            // showClose: true,
+            showClose: false,
             preferType: SheetType.CENTER,
             enableOutsideInteractive: false,
             mode: SheetMode.OVERLAY,
             onWillDismiss: () => {
               this.showSettingsSheet = false
-            },
+            },/*
             title: {
               title: $r("app.string.settings")
-            }
+            }*/
           }
         )
     }
@@ -128,11 +134,42 @@ export struct IndexMenuButtons {
   }
 
   @Builder
-  private SettingsSheet() {
+  private wrappedSettingsSheet() {
     SettingsSheet({
       close: () => {
         this.showSettingsSheet = false
       }
+    })
+  }
+
+  @Builder
+  private SettingsSheet() {
+    SheetContainer({
+      title: {
+        text: $r("app.string.settings")
+      },
+      routes: {
+        'about': {
+          title: $r('app.string.about'),
+          builder: wrapBuilder(aboutWrapper)
+        },
+        'qna': {
+          title: $r('app.string.questions'),
+          builder: wrapBuilder(qnaWrapper)
+        },
+        'update_log': {
+          title: $r('app.string.update_log'),
+          builder: wrapBuilder(updateLogWrapper)
+        },
+        'appearance': {
+          title: $r('app.string.appearance'),
+          builder: wrapBuilder(appearanceWrapper)
+        }
+      },
+      onClose: () => {
+        this.showSettingsSheet = false
+      },
+      content: this.wrappedSettingsSheet
     })
   }
 
@@ -251,4 +288,24 @@ export struct IndexMenuButtons {
       }
     })
   }
+}
+
+@Builder
+function aboutWrapper() {
+  AboutPage()
+}
+
+@Builder
+function qnaWrapper() {
+  QnAPage()
+}
+
+@Builder
+function updateLogWrapper() {
+  UpdateLogPage()
+}
+
+@Builder
+function appearanceWrapper() {
+  AppearancePage()
 }

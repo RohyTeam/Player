@@ -1,6 +1,7 @@
 import { taskpool } from '@kit.ArkTS'
 import { batteryInfo, deviceInfo } from '@kit.BasicServicesKit'
 import { audio } from '@kit.AudioKit'
+import { ConfigurationConstant, Configuration } from '@kit.AbilityKit'
 
 interface SystemInfo {
 

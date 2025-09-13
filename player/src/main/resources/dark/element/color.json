@@ -9,8 +9,16 @@
       "value": "#000000"
     },
     {
+      "name": "rohy_background_opacity_50",
+      "value": "#80000000"
+    },
+    {
       "name": "rohy_card",
       "value": "#ff191a1c"
+    },
+    {
+      "name": "brand_opacity_50",
+      "value": "#E6317AF7"
     }
   ]
 }

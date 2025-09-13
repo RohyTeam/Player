@@ -1,17 +1,23 @@
 import { Pref } from '../../context/PreferenceContext'
 import { PlayerContext } from '../../player/PlayerContext'
 import { PlayerController } from '../../player/PlayerController'
-import { AbilityStorage } from '../../storage/AbilityStorage'
 import { Modifiers } from '../attributemodifier/Modifiers'
-import { TopAvoidArea } from '../avoidarea/TopAvoidArea'
 import { CircleIconButton } from '../button/CircleIconButton'
-import { CircleIconSwitch } from '../button/CircleIconSwitch'
-import { VisualEffectSheet } from '../pages/sheet/VisualEffectSheet'
 import { ControlsContext } from './PlayerBottomBar'
-import { LengthMetrics, SymbolGlyphModifier } from '@kit.ArkUI'
-import { CutoutAvoidArea } from '../avoidarea/CutoutAvoidArea'
+import { LengthMetrics } from '@kit.ArkUI'
 import { Sys } from '../../context/SystemContext'
 import { TopCutoutAvoidArea } from '../avoidarea/TopCutoutAvoidArea'
+import { chapterListButton, chapterListMenuItem } from './controller/items/ControllerChapterList'
+import { mirrorFlipButton, mirrorFlipMenuItem } from './controller/items/ControllerMirrorFlip'
+import { repeatButton, repeatMenuItem } from './controller/items/ControllerRepeat'
+import { videoFiltersButton, videoFiltersMenuItem, VisualEffectSheet } from './controller/items/ControllerVideoFilters'
+import { Con } from '../../context/ControllerContext'
+import { DraggableItem } from '../component/inner/InnerDraggable'
+import { surfaceFillingModesButton,
+  surfaceFillingModesMenuItem } from './controller/items/ControllerSurfaceFillingModes'
+import { audiosButton, audiosMenuItem } from './controller/items/ControllerAudios'
+import { subtitlesButton, subtitlesMenuItem } from './controller/items/ControllerSubtitles'
+import { speedsButton, speedsMenuItem } from './controller/items/ControllerSpeeds'
 
 @ComponentV2
 export struct PlayerTopBar {
@@ -26,8 +32,6 @@ export struct PlayerTopBar {
   @Consumer("controlsContext")
   controlsContext: ControlsContext = new ControlsContext()
 
-  @Local
-  private showFilterSheet: boolean = false
   @Local
   showMoreMenu: boolean = false
 
@@ -95,74 +99,78 @@ export struct PlayerTopBar {
             .fontColor($r("sys.color.font_primary"))
           Blank()
             .layoutWeight(1)
-          if (this.landscape || Sys.isTablet()) {
-            CircleIconSwitch({
-              icon: $r("sys.symbol.trapezoid_and_line_vertical"),
-              buttonMargin: {
-                right: 16,
-                top: 12,
-                bottom: 12
-              },
-              switch: (value) => {
-                this.playerContext.mirrorFlipping = value
-                return value
+          if (!Pref.alwaysFold && (this.landscape || Sys.isTablet())) {
+            ForEach(Con.topBar, (item: DraggableItem) => {
+              if (item.index === 0) {
+                mirrorFlipButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
+              } else if (item.index === 1) {
+                repeatButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
+              } else if (item.index === 2) {
+                videoFiltersButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
+              } else if (item.index === 3 && this.playerContext.chapters.length > 0) {
+                chapterListButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
+              } else if (item.index === 4) {
+                surfaceFillingModesButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
+              } else if (item.index === 5) {
+                audiosButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
+              } else if (item.index === 6) {
+                subtitlesButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
+              } else if (item.index === 7) {
+                speedsButton({
+                  right: 16,
+                  top: 12,
+                  bottom: 12
+                })
               }
             })
-            CircleIconSwitch({
-              icon: $r("sys.symbol.repeat"),
-              buttonMargin: {
-                right: 16,
-                top: 12,
-                bottom: 12
-              },
-              switch: (value) => {
-                this.playerContext.cycling = value
-                return value
-              }
-            })
-            CircleIconButton({
-              icon: $r("sys.symbol.camera_filters"),
-              buttonMargin: {
-                right: 16,
-                top: 12,
-                bottom: 12
-              },
-              clickCallback: () => {
-                this.showFilterSheet = true
-              }
-            })
-            if (this.playerContext.chapters.length > 0) {
+            if (Con.topBarFolded.length > 0) {
               CircleIconButton({
-                icon: $r("sys.symbol.bookmark"),
+                icon: $r("sys.symbol.dot_grid_2x2"),
                 buttonMargin: {
                   right: 16,
                   top: 12,
                   bottom: 12
                 },
+                iconRotation: 180,
                 clickCallback: () => {
-                  this.controlsContext.showChapterList = true
+                  this.showMoreMenu = false // refresh menu status
+                  this.showMoreMenu = true
                 }
               })
+                .bindMenu(this.showMoreMenu!!, this.moreMenu, {
+                  onDisappear: () => {
+                    this.showMoreMenu = false
+                  }
+                })
             }
-          } else {
-            CircleIconButton({
-              icon: $r("sys.symbol.dot_grid_2x2"),
-              buttonMargin: {
-                right: 16,
-                top: 12,
-                bottom: 12
-              },
-              iconRotation: 180,
-              clickCallback: () => {
-                this.showMoreMenu = false // refresh menu status
-                this.showMoreMenu = true
-              }
-            })
-              .bindMenu(this.showMoreMenu!!, this.moreMenu, {
-                onDisappear: () => {
-                  this.showMoreMenu = false
-                }
-              })
           }
         }
         .alignItems(VerticalAlign.Center)
@@ -170,7 +178,7 @@ export struct PlayerTopBar {
       }
       // 因为有按钮折叠，所以不绑定在按钮上
       .bindSheet(
-        this.showFilterSheet,
+        this.controlsContext.showFilterSheet,
         this.VisualEffectSheet,
         {
           backgroundColor: $r("app.color.rohy_background"),
@@ -182,7 +190,7 @@ export struct PlayerTopBar {
           enableOutsideInteractive: false,
           mode: SheetMode.OVERLAY,
           onWillDismiss: () => {
-            this.showFilterSheet = false
+            this.controlsContext.showFilterSheet = false
           },
           title: {
             title: $r("app.string.visual_effect")
@@ -217,38 +225,25 @@ export struct PlayerTopBar {
   private moreMenu() {
     Menu() {
       MenuItemGroup() {
-        MenuItem({
-          symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.trapezoid_and_line_vertical")),
-          content: $r("app.string.mirror_flip"),
-          symbolEndIcon: this.playerContext.mirrorFlipping ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined,
+        ForEach(Con.topBarFolded, (item: DraggableItem) => {
+          if (item.index === 0) {
+            mirrorFlipMenuItem()
+          } else if (item.index === 1) {
+            repeatMenuItem()
+          } else if (item.index === 2) {
+            videoFiltersMenuItem()
+          } else if (item.index === 3 && this.playerContext.chapters.length > 0) {
+            chapterListMenuItem()
+          } else if (item.index === 4) {
+            surfaceFillingModesMenuItem()
+          } else if (item.index === 5) {
+            audiosMenuItem()
+          } else if (item.index === 6) {
+            subtitlesMenuItem()
+          } else if (item.index === 7) {
+            speedsMenuItem()
+          }
         })
-          .onClick(() => {
-            this.playerContext.mirrorFlipping = !this.playerContext.mirrorFlipping
-          })
-        MenuItem({
-          symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.repeat")),
-          content: $r("app.string.loop_playing"),
-          symbolEndIcon: this.playerContext.cycling ? new SymbolGlyphModifier($r("sys.symbol.checkmark")) : undefined
-        })
-          .onClick(() => {
-            this.playerContext.cycling = !this.playerContext.cycling
-          })
-        MenuItem({
-          symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.camera_filters")),
-          content: $r("app.string.visual_effect")
-        })
-          .onClick(() => {
-            this.showFilterSheet = true
-          })
-        if (this.playerContext.chapters.length > 0) {
-          MenuItem({
-            symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.bookmark")),
-            content: $r("app.string.chapter_list")
-          })
-            .onClick(() => {
-              this.controlsContext.showChapterList = true
-            })
-        }
       }
     }
     .menuItemDivider({
@@ -263,7 +258,7 @@ export struct PlayerTopBar {
   private VisualEffectSheet() {
     VisualEffectSheet({
       hideChooser: () => {
-        this.showFilterSheet = false
+        this.controlsContext.showFilterSheet = false
       },
     })
   }

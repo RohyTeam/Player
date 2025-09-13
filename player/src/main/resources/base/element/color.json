@@ -15,6 +15,10 @@
     {
       "name": "rohy_card",
       "value": "#ffffffff"
+    },
+    {
+      "name": "brand_opacity_50",
+      "value": "#E60A59F7"
     }
   ]
 }

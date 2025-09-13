@@ -46,6 +46,8 @@ export struct PlaylistFolderItem {
             bottom: 4
           })
         Text(this.folderItem.name)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.MARQUEE })
           .margin({
             bottom: 8,
             left: 8,

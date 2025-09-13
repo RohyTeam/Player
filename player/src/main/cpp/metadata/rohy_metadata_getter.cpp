@@ -8,6 +8,8 @@
 #include <multimedia/player_framework/native_avbuffer.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#include "utils/rohy_logger.h"
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
@@ -198,20 +200,10 @@ namespace {
         for (int i = 0; i < fmt_ctx->nb_streams; i++) {
             AVStream* stream = fmt_ctx->streams[i];
             if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO &&
-                stream->codecpar->codec_id == AV_CODEC_ID_MJPEG) {
+                (stream->codecpar->codec_id == AV_CODEC_ID_MJPEG ||
+                stream->codecpar->codec_id == AV_CODEC_ID_PNG ||
+                stream->codecpar->codec_id == AV_CODEC_ID_BMP)) {
                 return i;
-            }
-        }
-        
-        for (int i = 0; i < fmt_ctx->nb_streams; i++) {
-            AVStream* stream = fmt_ctx->streams[i];
-            if (stream->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT) {
-                AVDictionaryEntry* mime = av_dict_get(stream->metadata, "mimetype", nullptr, 0);
-                if (mime && (strstr(mime->value, "image/jpeg") || 
-                             strstr(mime->value, "image/png") ||
-                             strstr(mime->value, "image/bmp"))) {
-                    return i;
-                }
             }
         }
         
@@ -320,22 +312,6 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                 meta.height = codecpar->height;
                 
                 meta.averageFrameRate = av_q2d(stream->avg_frame_rate);
-                
-                if (stream->codecpar->coded_side_data) {
-                    if (codecpar->coded_side_data->type == AV_PKT_DATA_DOVI_CONF) {
-                        meta.hdr = 1;
-                    } else if (codecpar->coded_side_data->type == AV_PKT_DATA_DYNAMIC_HDR10_PLUS) {
-                        meta.hdr = 3;
-                    } else if (codecpar->coded_side_data->type == AV_PKT_DATA_MASTERING_DISPLAY_METADATA
-                            || codecpar->coded_side_data->type == AV_PKT_DATA_CONTENT_LIGHT_LEVEL
-                            || codecpar->color_range == AVCOL_RANGE_JPEG 
-                            || codecpar->color_trc == AVCOL_TRC_SMPTE2084 
-                            || codecpar->color_primaries == AVCOL_PRI_BT2020)   {
-                        meta.hdr = 4;
-                    } else {
-                        meta.hdr = 0;
-                    }
-                }
             }
             
             TrackMetadata track;
@@ -352,7 +328,11 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
             if (tag) track.language = tag->value;
             
             const AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
-            if (codec) {
+            if (stream->codecpar->codec_id == AV_CODEC_ID_AVS3DA) {
+                // TODO: this is a dirty hack
+                track.codec = "av3a";
+                track.codec_full = "Audio Vivid";
+            } else if (codec) {
                 if (i == video_stream_idx) {    
                     meta.codec = codec->name ? codec->name : "";
                     meta.codec_full = codec->long_name ? codec->long_name : "";
@@ -360,7 +340,6 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                 track.codec = codec->name ? codec->name : "";
                 track.codec_full = codec->long_name ? codec->long_name : "";
             }
-            
             
             switch (stream->codecpar->codec_type) {
                 case AVMEDIA_TYPE_VIDEO:
@@ -371,7 +350,15 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                     track.averageFrameRate = av_q2d(stream->avg_frame_rate);
                     if (stream->codecpar->coded_side_data) {
                         if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_DOVI_CONF) {
+                            if (i == video_stream_idx) {
+                                meta.hdr = 1;
+                            }
                             track.hdr = 1;
+                        } else if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_DYNAMIC_HDR10_PLUS) {
+                            if (i == video_stream_idx) {
+                                meta.hdr = 3;
+                            }
+                            track.hdr = 3;
                         } else if (oh_avFormat) {
                             int32_t isHDRVivid = 0;
                             OH_AVFormat_GetIntValue(oh_avFormat, OH_MD_KEY_VIDEO_IS_HDR_VIVID, &isHDRVivid);
@@ -380,21 +367,34 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                                     meta.hdr = 2;
                                 }
                                 track.hdr = 2;
+                            } else if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_MASTERING_DISPLAY_METADATA
+                                || stream->codecpar->coded_side_data->type == AV_PKT_DATA_CONTENT_LIGHT_LEVEL
+                                || stream->codecpar->color_range == AVCOL_RANGE_JPEG 
+                                || stream->codecpar->color_trc == AVCOL_TRC_SMPTE2084 
+                                || stream->codecpar->color_primaries == AVCOL_PRI_BT2020)   {
+                                if (i == video_stream_idx) {
+                                    meta.hdr = 4;
+                                }
+                                track.hdr = 4;
                             } else {
                                 if (i == video_stream_idx) {
                                     meta.hdr = 0;
                                 }
                                 track.hdr = 0;
                             }
-                        } else if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_DYNAMIC_HDR10_PLUS) {
-                            track.hdr = 3;
                         } else if (stream->codecpar->coded_side_data->type == AV_PKT_DATA_MASTERING_DISPLAY_METADATA
                                 || stream->codecpar->coded_side_data->type == AV_PKT_DATA_CONTENT_LIGHT_LEVEL
                                 || stream->codecpar->color_range == AVCOL_RANGE_JPEG 
                                 || stream->codecpar->color_trc == AVCOL_TRC_SMPTE2084 
                                 || stream->codecpar->color_primaries == AVCOL_PRI_BT2020)   {
+                            if (i == video_stream_idx) {
+                                meta.hdr = 4;
+                            }
                             track.hdr = 4;
                         } else {
+                            if (i == video_stream_idx) {
+                                meta.hdr = 0;
+                            }
                             track.hdr = 0;
                         }
                     }

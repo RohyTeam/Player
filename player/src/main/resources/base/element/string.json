@@ -567,6 +567,82 @@
     {
       "name": "please_input_number",
       "value": "Please input number"
+    },
+    {
+      "name": "use_white_background",
+      "value": "Use white background"
+    },
+    {
+      "name": "blur_radius",
+      "value": "Blur radius"
+    },
+    {
+      "name": "blur_brightness",
+      "value": "Blur brightness"
+    },
+    {
+      "name": "blur_saturation",
+      "value": "Blur saturation"
+    },
+    {
+      "name": "blur_background_color",
+      "value": "Blur background color"
+    },
+    {
+      "name": "blur_background_color_tips",
+      "value": "Enable this will apply a color on components which have blur style, to avoid the transparent color with blur style will make the components on blurred component hard to see when the content below have similar colors."
+    },
+    {
+      "name": "topbar",
+      "value": "Top bar (up to 4)"
+    },
+    {
+      "name": "bottombar",
+      "value": "Bottom bar (up to 4)"
+    },
+    {
+      "name": "hided",
+      "value": "Hided"
+    },
+    {
+      "name": "topbar_folded",
+      "value": "Folded on top bar"
+    },
+    {
+      "name": "bottombar_folded",
+      "value": "Folded on bottom bar"
+    },
+    {
+      "name": "always_fold",
+      "value": "Always fold"
+    },
+    {
+      "name": "always_fold_tips",
+      "value": "Enable this option, all buttons on top bar and bottom bar will be folded at the bottm right corner of bottom bar"
+    },
+    {
+      "name": "controllers",
+      "value": "Controllers"
+    },
+    {
+      "name": "blur_effect",
+      "value": "Blur effect"
+    },
+    {
+      "name": "rotation",
+      "value": "Rotation"
+    },
+    {
+      "name": "appearance",
+      "value": "Appearance"
+    },
+    {
+      "name": "control_buttons",
+      "value": "Control buttons"
+    },
+    {
+      "name": "update_log",
+      "value": "Update log"
     }
   ]
 }

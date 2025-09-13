@@ -121,14 +121,19 @@ export struct PlaylistMenuButtons {
               this.importProgressContext.subProgressTotal = urls.length * 5
 
               let cancelled = false
+              let finished = false
 
               let startedTask: taskpool.Task[] = []
 
               let importProgressDialogId = showEasyImportProgressDialog(() => {
                 cancelled = true
                 for (let task of Object.values(tasks)) {
-                  if (!task.isDone() && startedTask.indexOf(task) < 0)
-                    taskpool.cancel(task)
+                  if (!task.isDone() && startedTask.indexOf(task) < 0) {
+                    try {
+                      taskpool.cancel(task)
+                    } catch (_) {
+                    }
+                  }
                 }
               })
 
@@ -185,7 +190,8 @@ export struct PlaylistMenuButtons {
                 this.importProgressContext.current += 1
                 if (this.importProgressContext.current >= this.importProgressContext.total) {
                   DialogHelper.closeDialog(importProgressDialogId)
-                  if (!cancelled) {
+                  if (!cancelled && !finished) {
+                    finished = true
                     for (let video of importVideos) {
                       this.playlistFolderDataSource?.importVideo(video.name, video.identity, video.url)
                     }

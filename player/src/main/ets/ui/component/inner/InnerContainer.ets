@@ -6,7 +6,11 @@ export struct InnerContainer {
   @Param
   bgColor: ResourceColor = $r("app.color.rohy_background")
   @Param
+  fillHeight: boolean = false
+  @Param
   edgeEffect: boolean = true
+  @Param
+  scrollBar: boolean = true
   @Param
   staticBottomAvoid: boolean = true
   @BuilderParam
@@ -22,11 +26,14 @@ export struct InnerContainer {
           })
         }
       }
+      .height(this.fillHeight ? "100%" : undefined)
       .width("100%")
       .backgroundColor(this.bgColor)
     }
+    .scrollBar(this.scrollBar ? BarState.On : BarState.Off)
     .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: this.edgeEffect })
     .width("100%")
     .backgroundColor(this.bgColor)
+    .height(this.fillHeight ? "100%" : undefined)
   }
 }

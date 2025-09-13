@@ -77,6 +77,8 @@ export class PlayerContext {
   @Trace
   hardwareEncoding: boolean = false
   @Trace
+  visualEffect_rotation: number = 0
+  @Trace
   visualEffect_grayscale: number = 0
   @Trace
   visualEffect_brightness: number = 0

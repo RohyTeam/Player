@@ -27,7 +27,7 @@ export function pickSingleVideoFile(context: UIContext | Context): Promise<strin
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = 1;
     documentSelectOptions.fileSuffixFilters = [
-      '全部视频文件|.mp4,.mkv,.mov',
+      '全部视频文件|.mp4,.mkv,.mov,.avi,.flv',
       'mp4 视频文件|.mp4',
       'mkv 视频文件|.mkv',
       'mov 视频文件|.mov',
@@ -51,7 +51,7 @@ export function pickVideoFiles(context: UIContext | Context, limit: number): Pro
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = limit;
     documentSelectOptions.fileSuffixFilters = [
-      '全部视频文件|.mp4,.mkv,.mov',
+      '全部视频文件|.mp4,.mkv,.mov,.avi,.flv',
       'mp4 视频文件|.mp4',
       'mkv 视频文件|.mkv',
       'mov 视频文件|.mov',

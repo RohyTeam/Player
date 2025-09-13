@@ -11,7 +11,7 @@ import { hiAppEvent } from '@kit.PerformanceAnalysisKit'
 
 @Concurrent
 function periodJob(): void {
-  PreferenceContext.save(superContext())
+  taskpool.Task.sendData(undefined)
 }
 
 export default class PlayerAbilityStage extends AbilityStage {
@@ -23,6 +23,10 @@ export default class PlayerAbilityStage extends AbilityStage {
     await DB.init(this.context)
     PreferenceContext.load(this.context)
     SystemContext.start()
+
+    PlayerAbilityStage.task.onReceiveData(() => {
+      PreferenceContext.save(this.context)
+    })
     taskpool.executePeriodically(10 * 60 * 1000, PlayerAbilityStage.task, taskpool.Priority.LOW)
 
     // 软件崩溃后不会清空 temp 文件夹，手动清空
@@ -46,9 +50,9 @@ export default class PlayerAbilityStage extends AbilityStage {
   }
 
   onDestroy(): void {
+    taskpool.cancel(PlayerAbilityStage.task)
     PreferenceContext.save(this.context)
     SystemContext.stop()
-    taskpool.cancel(PlayerAbilityStage.task)
   }
 
   onAcceptWant(want: Want): string {

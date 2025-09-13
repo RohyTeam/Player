@@ -567,6 +567,82 @@
     {
       "name": "please_input_number",
       "value": "请输入数字"
+    },
+    {
+      "name": "use_white_background",
+      "value": "使用白色背景"
+    },
+    {
+      "name": "blur_radius",
+      "value": "模糊半径"
+    },
+    {
+      "name": "blur_brightness",
+      "value": "模糊高光"
+    },
+    {
+      "name": "blur_saturation",
+      "value": "模糊饱和"
+    },
+    {
+      "name": "blur_background_color",
+      "value": "模糊背景色"
+    },
+    {
+      "name": "blur_background_color_tips",
+      "value": "开启此选项后，为控件应用模糊效果是会添加一个背景色，防止底部内容的颜色与上方控件颜色相近导致难以辨认。"
+    },
+    {
+      "name": "topbar",
+      "value": "顶栏（至多 4 个）"
+    },
+    {
+      "name": "bottombar",
+      "value": "底栏（至多 4 个）"
+    },
+    {
+      "name": "hided",
+      "value": "隐藏"
+    },
+    {
+      "name": "topbar_folded",
+      "value": "顶栏折叠"
+    },
+    {
+      "name": "bottombar_folded",
+      "value": "底栏折叠"
+    },
+    {
+      "name": "always_fold",
+      "value": "总是折叠"
+    },
+    {
+      "name": "always_fold_tips",
+      "value": "开启此选项后，控制栏的所有按钮都会始终在底栏右下角处折叠。"
+    },
+    {
+      "name": "controllers",
+      "value": "控制器"
+    },
+    {
+      "name": "blur_effect",
+      "value": "模糊效果"
+    },
+    {
+      "name": "rotation",
+      "value": "旋转"
+    },
+    {
+      "name": "appearance",
+      "value": "外观"
+    },
+    {
+      "name": "control_buttons",
+      "value": "控制按钮"
+    },
+    {
+      "name": "update_log",
+      "value": "更新日志"
     }
   ]
 }

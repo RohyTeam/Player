@@ -101,11 +101,18 @@ export struct RohyCounter {
   @Local
   private context: CounterContext = new CounterContext()
 
+  @Local
+  private aboutToDie: boolean = false
+
   aboutToAppear() {
     if (this.min > this.max)
       throw Error()
     this.context.value = clamp(this.initial, this.min, this.max)
     this.controller.init(this.context, this.min, this.max)
+  }
+
+  aboutToDisappear(): void {
+    this.aboutToDie = true
   }
 
   build() {
@@ -127,6 +134,8 @@ export struct RohyCounter {
       .height(36)
       .enabled(this.context.value > this.min)
       .onClick(() => {
+        if (this.aboutToDie)
+          return
         let newValue = Math.max(this.min, formatDecimalNumber(this.context.value -= Math.abs(this.step), Math.abs(this.step)))
         if (this.context.value != newValue) {
           this.context.value = newValue
@@ -154,6 +163,8 @@ export struct RohyCounter {
             ],
             onAction: (action: number, dialogId: string, value: string): void => {
               DialogHelper.closeDialog(dialogId)
+              if (this.aboutToDie)
+                return
               if (action === -1) {
                 try {
                   let numberValue = formatDecimalNumber(parseFloat(value) || 0, Math.abs(this.step))
@@ -185,6 +196,8 @@ export struct RohyCounter {
       .height(36)
       .enabled(this.context.value < this.max)
       .onClick(() => {
+        if (this.aboutToDie)
+          return
         let newValue = Math.min(this.max, formatDecimalNumber(this.context.value += Math.abs(this.step), Math.abs(this.step)))
         if (this.context.value != newValue) {
           this.context.value = newValue
@@ -213,6 +226,8 @@ export struct RohyCounter {
         .height(36)
         .enabled(this.context.value != this.reset)
         .onClick(() => {
+          if (this.aboutToDie)
+            return
           this.context.value = this.reset!
           this.onChange(this.context.value, CounterChangeMode.Reset)
         })
@@ -220,12 +235,16 @@ export struct RohyCounter {
       }
     }
     .gestureModifier(new CounterGestureModifier(this.getUIContext(), Math.abs(this.step), (delta) => {
+      if (this.aboutToDie)
+        return
       let newValue = clamp(formatDecimalNumber(this.context.value + delta, Math.abs(this.step)), this.min, this.max)
       if (this.context.value != newValue) {
         this.context.value = newValue
         this.onChange(this.context.value, CounterChangeMode.Gesture)
       }
     }, () => {
+      if (this.aboutToDie)
+        return
       this.onChange(this.context.value, CounterChangeMode.GestureFinish)
     }))
   }
