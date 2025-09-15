@@ -97,11 +97,20 @@ export struct AboutPage {
               })
               InnerDivider()
               InnerButton({
-                title: "NaturalIntelligence/fast-xml-parser",
-                subtitle: "MIT",
+                title: "@dove/subtitles",
+                subtitle: "木兰宽松许可证，第2版",
                 larger: true,
                 clickCallback: () => {
-                  shareUrl(this.getUIContext(), "https://github.com/NaturalIntelligence/fast-xml-parser")
+                  shareUrl(this.getUIContext(), "https://ohpm.openharmony.cn/#/cn/detail/@dove%2Fsubtitles")
+                }
+              })
+              InnerDivider()
+              InnerButton({
+                title: "@dove/webdav",
+                subtitle: "木兰宽松许可证，第2版",
+                larger: true,
+                clickCallback: () => {
+                  shareUrl(this.getUIContext(), "https://ohpm.openharmony.cn/#/cn/detail/@dove%2Fwebdav")
                 }
               })
               InnerDivider()

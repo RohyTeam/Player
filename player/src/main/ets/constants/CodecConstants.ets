@@ -12,6 +12,7 @@ export class CodecConstants {
       CodecConstants.subtitle_pgs,
       CodecConstants.subtitle_ass,
       CodecConstants.subtitle_srt,
+      CodecConstants.subtitle_vtt,
     ]
   }
 

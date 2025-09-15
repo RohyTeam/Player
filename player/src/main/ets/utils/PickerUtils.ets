@@ -71,10 +71,11 @@ export function pickSingleSubtitleFile(context: UIContext | Context): Promise<st
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = 1;
     documentSelectOptions.fileSuffixFilters = [
-      '全部字幕文件|.ass,.srt,',
+      '全部字幕文件|.ass,.srt,.pgs,.vtt',
       'ass 字幕文件|.ass',
       'pgs 字幕文件|.sup',
-      'srt 字幕文件|.srt'
+      'srt 字幕文件|.srt',
+      'WebVTT 字幕文件|.vtt'
     ];
 
     let documentSelectResult = await documentViewPicker.select(documentSelectOptions)
@@ -93,10 +94,11 @@ export function pickSubtitleFiles(context: UIContext | Context, limit: number): 
     const documentSelectOptions = new picker.DocumentSelectOptions();
     documentSelectOptions.maxSelectNumber = limit;
     documentSelectOptions.fileSuffixFilters = [
-      '全部字幕文件|.ass,.srt,',
+      '全部字幕文件|.ass,.srt,.pgs,.vtt',
       'ass 字幕文件|.ass',
       'pgs 字幕文件|.sup',
-      'srt 字幕文件|.srt'
+      'srt 字幕文件|.srt',
+      'WebVTT 字幕文件|.vtt'
     ];
 
     let documentSelectResult = await documentViewPicker.select(documentSelectOptions)

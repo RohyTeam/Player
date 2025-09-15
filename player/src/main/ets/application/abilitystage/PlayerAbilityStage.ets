@@ -3,10 +3,8 @@ import { PreferenceContext } from '../../context/PreferenceContext'
 import { Sys, SystemContext } from '../../context/SystemContext'
 import { DB } from '../../database/DatabaseManager'
 import { randomString } from '../../utils/StringUtils'
-import { JSON, taskpool } from '@kit.ArkTS'
-import { superContext } from '../../utils/AbilityUtils'
+import { taskpool } from '@kit.ArkTS'
 import { fileIo } from '@kit.CoreFileKit'
-import { parseVtt } from '../../lib/subtitle/vtt/VttParser'
 import { hiAppEvent } from '@kit.PerformanceAnalysisKit'
 
 @Concurrent

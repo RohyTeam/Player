@@ -70,10 +70,7 @@ export struct SettingsSheet {
             this.sheetNavigator.pushPath({ name: "appearance" })
           }
         })
-      }
-
-      InnerContainerDivider()
-      InnerComponentSet() {
+        InnerDivider()
         InnerSwitch({
           title: $r("app.string.screen_forward_and_backward"),
           popup: $r("app.string.screen_forward_and_backward_tips"),
@@ -83,7 +80,17 @@ export struct SettingsSheet {
             return !original
           }
         })
-        InnerDivider()
+      }
+
+      /*InnerContainerDivider()
+      InnerComponentSet() {
+        InnerButton({
+          title: "解码器",
+          showGoToIcon: true,
+          clickCallback: () => {
+            this.sheetNavigator.pushPath({ name: "decoders" })
+          }
+        })
         InnerSwitch({
           title: $r("app.string.hardware_decode"),
           popup: $r("app.string.hardware_decode_tips"),
@@ -93,7 +100,7 @@ export struct SettingsSheet {
             return !original
           }
         })
-      }
+      }*/
 
       // 还没做，先屏蔽，等 PC 功能完成后一并添加
       /*InnerContainerDivider()
@@ -123,14 +130,14 @@ export struct SettingsSheet {
             openUrl(this.getUIContext(), "https://agreement-drcn.hispace.dbankcloud.cn/index.html?lang=zh&agreementId=1770139877623479680")
           }
         })
-        InnerDivider()
+        /*InnerDivider()
         InnerButton({
           title: $r("app.string.update_log"),
           showGoToIcon: true,
           clickCallback: () => {
             this.sheetNavigator.pushPath({ name: "update_log" })
           }
-        })
+        })*/
         InnerDivider()
         InnerButton({
           title: $r("app.string.about"),

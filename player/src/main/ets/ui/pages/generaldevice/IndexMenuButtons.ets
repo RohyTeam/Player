@@ -21,6 +21,7 @@ import { AboutPage } from '../misc/AboutPage';
 import { QnAPage } from '../misc/QnAPage';
 import { AppearancePage } from './settings/AppearancePage';
 import { UpdateLogPage } from '../misc/UpdateLogPage';
+import { DecodersPage } from '../misc/DecodersPages';
 
 @ComponentV2
 export struct IndexMenuButtons {
@@ -164,6 +165,10 @@ export struct IndexMenuButtons {
         'appearance': {
           title: $r('app.string.appearance'),
           builder: wrapBuilder(appearanceWrapper)
+        },
+        'decoders': {
+          title: "解码器",
+          builder: wrapBuilder(decodersWrapper)
         }
       },
       onClose: () => {
@@ -308,4 +313,9 @@ function updateLogWrapper() {
 @Builder
 function appearanceWrapper() {
   AppearancePage()
+}
+
+@Builder
+function decodersWrapper() {
+  DecodersPage()
 }

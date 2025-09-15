@@ -203,6 +203,14 @@ export class VideoMetadataManager {
               url: getPath(`videos/${identity}/subtitles/${fileName}`),
               internal: true
             })
+          } else if (fileName.endsWith(".vtt")) {
+            subtitleInfos.push({
+              title: undefined,
+              language: undefined,
+              type: 'vtt',
+              url: getPath(`videos/${identity}/subtitles/${fileName}`),
+              internal: true
+            })
           } else if (fileName.endsWith(".ass")) {
             subtitleInfos.push({
               title: undefined,
@@ -231,6 +239,14 @@ export class VideoMetadataManager {
               title: getFileName(getPath(`videos/${identity}/external_subtitles/${fileName}`)),
               language: undefined,
               type: 'srt',
+              url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
+              internal: false
+            })
+          } else if (fileName.endsWith(".vtt")) {
+            subtitleInfos.push({
+              title: getFileName(getPath(`videos/${identity}/external_subtitles/${fileName}`)),
+              language: undefined,
+              type: 'vtt',
               url: getPath(`videos/${identity}/external_subtitles/${fileName}`),
               internal: false
             })

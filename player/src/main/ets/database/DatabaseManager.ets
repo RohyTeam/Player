@@ -2,6 +2,8 @@ import { Database, DatabaseDao, Migration, RdbStoreWrapper, SQL } from '@zxhhyj/
 import { relationalStore } from '@kit.ArkData';
 import { Table_PlaylistDao } from './table/PlaylistTable';
 
+const LATEST_DATABASE_VERSION: number = 3
+
 export class DatabaseManager extends Database {
   readonly playlistDao = DatabaseDao.form(this).select(Table_PlaylistDao)
 
@@ -27,6 +29,13 @@ export class DatabaseManager extends Database {
     rdbStore.executeSync('DROP TABLE rohyplayer_playlist;')
     rdbStore.executeSync(SQL.createTableAndIndex(Table_PlaylistDao))
   }
+
+  @Migration(2, 3)
+  protected migration_from_2_to_3(rdbStore: RdbStoreWrapper) {
+    rdbStore.executeSync('DROP TABLE rohyplayer_playlist;')
+    rdbStore.executeSync(SQL.createTableAndIndex(Table_PlaylistDao))
+  }
+
 }
 
-export let DB: DatabaseManager = new DatabaseManager(2);
+export let DB: DatabaseManager = new DatabaseManager(LATEST_DATABASE_VERSION);

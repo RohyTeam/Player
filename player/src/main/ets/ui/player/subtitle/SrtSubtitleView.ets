@@ -1,20 +1,23 @@
-import { parseSrtSubtitle, SrtSubtitleLine } from '../../../lib/subtitle/srt/srt';
 import { PlayerContext } from '../../../player/PlayerContext';
-import { fileIo } from '@kit.CoreFileKit';
 import { ensurePath } from '../../../utils/FileUtils';
 import { LengthMetricsUnit } from '@kit.ArkUI';
+import { ParseSrt, SrtLine } from '@dove/subtitles'
 
 @ComponentV2
 export struct SrtSubtitleView {
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
   @Local
-  subtitles: SrtSubtitleLine[] = []
+  subtitles: SrtLine[] = []
 
   aboutToAppear(): void {
-    fileIo.readText(ensurePath(this.playerContext.subtitles[this.playerContext.selectedSubtitle!].url))
-      .then((text) => {
-        this.subtitles = parseSrtSubtitle(text)
+    let parser = new ParseSrt(ensurePath(this.playerContext.subtitles[this.playerContext.selectedSubtitle!].url))
+    parser.init()
+      .then(() => {
+        parser.readLines()
+          .then((lines) => {
+            this.subtitles = lines
+          })
       })
   }
 
@@ -23,9 +26,9 @@ export struct SrtSubtitleView {
       Column() {
         Blank()
           .layoutWeight(1)
-        ForEach(this.subtitles, (subtitleLine: SrtSubtitleLine) => {
-          if (subtitleLine.start <= this.playerContext.currentPosition &&
-            subtitleLine.end >= this.playerContext.currentPosition) {
+        ForEach(this.subtitles, (subtitleLine: SrtLine) => {
+          if (subtitleLine.start.getTime() <= this.playerContext.currentPosition &&
+            subtitleLine.end.getTime() >= this.playerContext.currentPosition) {
             SubtitleLine({
               text: subtitleLine.text,
               playerContext: this.playerContext
@@ -45,16 +48,7 @@ export struct SrtSubtitleView {
 }
 
 @ComponentV2
-struct SrtSubtitle {
-
-  build() {
-
-  }
-
-}
-
-@ComponentV2
-export struct SubtitleLine {
+struct SubtitleLine {
   @Param
   @Require
   text: string

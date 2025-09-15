@@ -59,7 +59,8 @@ export struct ImportOrCreatePlaylistSheet {
                   DataSources.PLAYLIST.add({
                     name: value,
                     structure: JSON.stringify(emptyPlaylistStructure()),
-                    updatedAt: Date.now()
+                    updatedAt: Date.now(),
+                    source: 'user_created'
                   }, false)
                   promptAction.showToast({
                     message: $r('app.string.create_success')

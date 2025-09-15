@@ -16,6 +16,7 @@ import { SubtitleInfo } from '../../player/subtitle/SubtitleInfo';
 import { Pref } from '../../context/PreferenceContext';
 import { BackgroundTaskContext } from '../../context/BackgroundTaskContext';
 import { WindowContext } from '../../context/WindowContext';
+import { VttSubtitleView } from './subtitle/VttSubtitleView';
 
 @ComponentV2
 export struct PlayerPage {
@@ -165,6 +166,8 @@ export struct PlayerPage {
                 PgsSubtitleView()
               } else if (this.playerContext.subtitles[this.playerContext.selectedSubtitle].type == 'srt') {
                 SrtSubtitleView()
+              } else if (this.playerContext.subtitles[this.playerContext.selectedSubtitle].type == 'vtt') {
+                VttSubtitleView()
               }
             }
           })

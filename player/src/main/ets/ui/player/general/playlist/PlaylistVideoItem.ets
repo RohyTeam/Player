@@ -39,8 +39,8 @@ export struct PlaylistVideoItem {
               .objectFit(ImageFit.Fill)
               .height("100%")
               .width("100%")
-            Row() {
-              Column() {
+            Column() {
+              Row() {
                 if (this.metadata.metadata.hdr == 1) {
                   Image($r("app.media.dolby_colorful"))
                     .borderRadius({
@@ -93,11 +93,11 @@ export struct PlaylistVideoItem {
               Blank()
                 .backgroundColor(Color.Transparent)
                 .layoutWeight(1)
-              Column() {
+              Row() {
                 Blank()
                   .backgroundColor(Color.Transparent)
                   .layoutWeight(1)
-                Column() {
+                Row() {
                   Text(convertNumberToDurationString(this.metadata.metadata.duration))
                 }
                 .borderRadius(6)

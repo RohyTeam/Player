@@ -397,6 +397,15 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                             }
                             track.hdr = 0;
                         }
+                    } else if (oh_avFormat) {
+                        int32_t isHDRVivid = 0;
+                        OH_AVFormat_GetIntValue(oh_avFormat, OH_MD_KEY_VIDEO_IS_HDR_VIVID, &isHDRVivid);
+                        if (isHDRVivid) {
+                            if (i == video_stream_idx) {
+                                meta.hdr = 2;
+                            }
+                            track.hdr = 2;
+                        }
                     }
                     break;
                     
@@ -424,33 +433,10 @@ VideoMetadata RohyMetadataGetter::extract_metadata_and_cover(const std::string& 
                     break;
             }
         
-            AVPacketPtr pkt(av_packet_alloc());
-            
-            if (av_read_frame(fmt_ctx_ptr.get(), pkt.get()) >= 0) {
-                if (!oh_avFormat) {
-                    const AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
-                    if (codec) {
-                        AVCodecContextPtr codec_ctx(avcodec_alloc_context3(codec));
-                        AVFramePtr frame(av_frame_alloc());
-                        
-                        if (frame) {
-                            if (avcodec_send_packet(codec_ctx.get(), pkt.get()) >= 0) {
-                                if (avcodec_receive_frame(codec_ctx.get(), frame.get()) >= 0) {
-                                    const AVFrameSideData *sd = av_frame_get_side_data(frame.get(), AV_FRAME_DATA_DYNAMIC_HDR_VIVID);
-                                    if (sd) {
-                                        track.hdr = 2;
-                                        if (i == video_stream_idx) {
-                                            meta.hdr = 2;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    
-                    }
-                }
+            if (cover_stream_index >= 0 && i == cover_stream_index) {
+                AVPacketPtr pkt(av_packet_alloc());
                 
-                if (cover_stream_index >= 0 && pkt->stream_index == cover_stream_index) {
+                if (av_read_frame(fmt_ctx_ptr.get(), pkt.get()) >= 0) {
                     meta.cover.assign(pkt->data, pkt->data + pkt->size);
                 }
             }

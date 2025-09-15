@@ -5,7 +5,7 @@ export interface SubtitleInfo {
   readonly title: string | undefined
   readonly language: string | undefined
   readonly url: string
-  readonly type: 'ass' | 'srt' | 'pgs'
+  readonly type: 'ass' | 'srt' | 'pgs' | 'vtt'
   readonly internal: boolean
 
 }
