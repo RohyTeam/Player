@@ -1,11 +1,13 @@
 #include <cstdint>
 #include <stdio.h>
 #include <string.h>
+#include <fstream>
 #include "hilog/log.h"
 #include "metadata/rohy_metadata_exporter.h"
 #include "metadata/rohy_metadata_getter.h"
 #include "metadata/rohy_metadata_shared.h"
 #include "utils/napi_utils.h"
+#include <xxhash.h>
 
 napi_value RohyMetadata_GetMetadata(napi_env env, napi_callback_info info) {
     OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "GetMetadata", "Starting getting metadata");
@@ -241,12 +243,71 @@ napi_value RohyMetadata_ExtractTracks(napi_env env, napi_callback_info info) {
     return nullptr;
 }
 
+napi_value RohyMetadata_HashFile(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+    if (napi_ok != napi_get_cb_info(env, info, &argc, args, nullptr, nullptr)) {
+        return nullptr;
+    }
+    
+    std::string file_path;
+    NapiUtils::JsValueToString(env, args[0], 2048, file_path);
+    
+    napi_value jsSize = args[1];
+    int64_t file_size;
+    napi_get_value_int64(env, jsSize, &file_size);
+    
+    const size_t SAMPLE_POINTS = 4;
+    const size_t SAMPLE_SIZE = 4096;
+    
+    std::ifstream file(file_path, std::ios::binary);
+    if (!file.is_open()) {
+        return nullptr;
+    }
+    
+    XXH3_state_t* state = XXH3_createState();
+    XXH3_128bits_reset(state);
+    
+    for (size_t i = 0; i < SAMPLE_POINTS; ++i) {
+        size_t offset = (file_size * i) / SAMPLE_POINTS;
+        
+        file.seekg(offset);
+        if (!file) {
+            XXH3_freeState(state);
+            return nullptr;
+        }
+        
+        char buffer[SAMPLE_SIZE];
+        size_t to_read = std::min(SAMPLE_SIZE, file_size - offset);
+        file.read(buffer, to_read);
+        
+        if (file.gcount() != to_read) {
+            XXH3_freeState(state);
+            return nullptr;
+        }
+        
+        XXH3_128bits_update(state, buffer, to_read);
+    }
+    
+    XXH128_hash_t hash = XXH3_128bits_digest(state);
+    XXH3_freeState(state);
+    
+    char hash_str[33];
+    snprintf(hash_str, sizeof(hash_str), 
+             "%016llx%016llx", hash.high64, hash.low64);
+    
+    OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "Fuck!", "FUCK: file hash is %{public}s", hash_str);
+    
+    return NapiUtils::CStringToJsString(env, hash_str);
+}
+
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
         { "RohyMetedata_getMetadata", nullptr, RohyMetadata_GetMetadata, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "RohyMetadata_extractTracks", nullptr, RohyMetadata_ExtractTracks, nullptr, nullptr, nullptr, napi_default, nullptr }
+        { "RohyMetadata_extractTracks", nullptr, RohyMetadata_ExtractTracks, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "RohyMetadata_hashFile", nullptr, RohyMetadata_HashFile, nullptr, nullptr, nullptr, napi_default, nullptr }
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

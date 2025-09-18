@@ -9,7 +9,7 @@ import { ImportProgressContext,
   showEasyImportProgressDialog } from '../../../overlay/ImportProgressOverlay'
 import { MetadataFetcher } from '../../../../metadata/MetadataFetcher'
 import { ensurePath, fileName } from '../../../../utils/FileUtils'
-import { fileIo, fileShare } from '@kit.CoreFileKit'
+import { fileIo, fileShare, hash } from '@kit.CoreFileKit'
 import { VideoMetadataManager } from '../../../../metadata/VideoMetadataManager'
 import {
   createSendableVideoMetadata,
@@ -19,8 +19,9 @@ import {
 import { ensureContext } from '../../../../utils/AbilityUtils'
 import { asyncSave } from '../../../../metadata/SendableVideoMetadataManager'
 import { BusinessError } from '@kit.BasicServicesKit'
-import { importErrorDialog, showEasyImportErrorDialog } from './dialog/ImportErrorDialog'
+import { showEasyImportErrorDialog } from './dialog/ImportErrorDialog'
 import { DialogHelper } from '@pura/harmony-dialog'
+import RohyMetadata from 'librohy_metadata.so'
 
 export class ImportErrorType {
 
@@ -31,6 +32,7 @@ export class ImportErrorType {
   public static readonly STORAGE_FULL: ImportErrorType = new ImportErrorType("storage_full", $r("app.string.storage_is_not_enough"))
   public static readonly PERSIST_FILE: ImportErrorType = new ImportErrorType("persist_file", $r("app.string.faield_to_persist_file"))
   public static readonly ACCESS_FILE: ImportErrorType = new ImportErrorType("access_file", $r("app.string.failed_to_access_file"))
+  public static readonly HASH_FILE: ImportErrorType = new ImportErrorType("access_file", $r("app.string.failed_to_access_file"))
   public static readonly UNKNOWN: ImportErrorType = new ImportErrorType("unknown", $r("app.string.unknown_error"))
 
   public static readonly TYPES: ImportErrorType[] = [
@@ -65,6 +67,18 @@ export interface ImportVideo {
   name: string
   identity: string
   url: string
+  hash: string
+  size: number
+}
+
+interface FilterUrl {
+  uri: string
+  size: number
+}
+
+@Concurrent
+function hashFile(path: string, size: number): string | undefined {
+  return RohyMetadata.RohyMetadata_hashFile(path, size)
 }
 
 @Concurrent
@@ -118,7 +132,7 @@ export struct PlaylistMenuButtons {
               this.importProgressContext.current = 0
               this.importProgressContext.total = urls.length
               this.importProgressContext.subProgressCurrent = 0
-              this.importProgressContext.subProgressTotal = urls.length * 5
+              this.importProgressContext.subProgressTotal = urls.length * 6
 
               let cancelled = false
               let finished = false
@@ -137,7 +151,7 @@ export struct PlaylistMenuButtons {
                 }
               })
 
-              let filteredUrls: string[] = []
+              let filteredUrls: FilterUrl[] = []
               for (let uri of urls) {
                 this.importProgressContext.subProgressCurrent += 1
                 this.importProgressContext.subProgressText = $r("app.string.import_verify_file", fileName(uri))
@@ -147,7 +161,7 @@ export struct PlaylistMenuButtons {
                     url: uri,
                     reason:ImportErrorType.DUPLICATED
                   })
-                  this.importProgressContext.subProgressCurrent += 4
+                  this.importProgressContext.subProgressCurrent += 5
                   this.importProgressContext.current += 1
                   continue
                 }
@@ -155,15 +169,19 @@ export struct PlaylistMenuButtons {
                   let file = fileIo.openSync(uri)
                   let stat = fileIo.statSync(file.fd)
                   let location = stat.location
+                  let size = stat.size
                   fileIo.closeSync(file)
                   if (location == 1) {
-                    filteredUrls.push(uri)
+                    filteredUrls.push({
+                      uri: uri,
+                      size: size
+                    })
                   } else {
                     importErrors.push({
                       url: uri,
                       reason: ImportErrorType.NOT_IN_FILES
                     })
-                    this.importProgressContext.subProgressCurrent += 4
+                    this.importProgressContext.subProgressCurrent += 5
                     this.importProgressContext.current += 1
                     continue
                   }
@@ -172,14 +190,16 @@ export struct PlaylistMenuButtons {
                     url: uri,
                     reason: ImportErrorType.ACCESS_FILE
                   })
-                  this.importProgressContext.subProgressCurrent += 4
+                  this.importProgressContext.subProgressCurrent += 5
                   this.importProgressContext.current += 1
                   continue
                 }
               }
 
               if (filteredUrls.length <= 0) {
-                DialogHelper.closeDialog(importProgressDialogId)
+                setTimeout(() => {
+                  DialogHelper.closeDialog(importProgressDialogId)
+                }, 10)
                 if (importErrors.length > 0) {
                   showEasyImportErrorDialog(importErrors)
                 }
@@ -193,7 +213,7 @@ export struct PlaylistMenuButtons {
                   if (!cancelled && !finished) {
                     finished = true
                     for (let video of importVideos) {
-                      this.playlistFolderDataSource?.importVideo(video.name, video.identity, video.url)
+                      this.playlistFolderDataSource?.importVideo(video.name, video.identity, video.url, video.hash, video.size)
                     }
                     if (importErrors.length > 0) {
                       showEasyImportErrorDialog(importErrors)
@@ -202,13 +222,11 @@ export struct PlaylistMenuButtons {
                 }
               }
 
-              for (let uri of filteredUrls) {
+              for (let filteredUri of filteredUrls) {
+                let uri = filteredUri.uri
                 let identity = sha256(`files:${uri}`)
                 let task = new taskpool.Task(fetchMetadata, uri, ensurePath(uri), true, new collections.Map<string, string>())
                 task.onReceiveData(async (result: SendableVideoMetadata | number) => {
-                  if (!result) {
-                    return
-                  }
                   if (typeof result == 'number') {
                     importErrors.push({
                       url: uri,
@@ -220,61 +238,91 @@ export struct PlaylistMenuButtons {
                   let metadata = sendableVideoMetadataToNormal(result)
                   this.importProgressContext.subProgressCurrent += 1
                   this.importProgressContext.subProgressText = $r("app.string.import_persisting", fileName(uri))
-                  fileShare.persistPermission([{
-                    uri: uri,
-                    operationMode: fileShare.OperationMode.READ_MODE
-                  }])
-                    .then(() => {
-                      let continueJob: () => void = () => {
-                        importVideos.push({
-                          name: fileName(uri),
-                          identity: identity,
-                          url: uri
-                        })
-                        this.importProgressContext.subProgressCurrent += 1
-                        this.importProgressContext.subProgressText = $r("app.string.import_finished", fileName(uri))
-                      }
-                      this.importProgressContext.subProgressCurrent += 1
-                      this.importProgressContext.subProgressText = $r("app.string.import_saving", fileName(uri))
-                      if (!VideoMetadataManager.existsInFiles(identity)) {
-                        if (VideoMetadataManager.existsInTemp(identity)) {
-                          VideoMetadataManager.tempToFile(identity)
-                          continueJob()
-                        } else {
-                          asyncSave(
-                            ensureContext(this.getUIContext()).tempDir,
-                            ensureContext(this.getUIContext()).filesDir,
-                            identity,
-                            true,
-                            uri,
-                            createSendableVideoMetadata(metadata)
-                          )
-                            .then(() => {
-                              continueJob()
-                              plusOne()
-                            })
-                            .catch(() => {
-                              importErrors.push({
-                                url: uri,
-                                reason: ImportErrorType.SAVE_METADATA
-                              })
-                            })
+
+                  let persist = (hash: string) => {
+                    fileShare.persistPermission([{
+                      uri: uri,
+                      operationMode: fileShare.OperationMode.READ_MODE
+                    }])
+                      .then(() => {
+                        let continueJob: () => void = () => {
+                          importVideos.push({
+                            name: fileName(uri),
+                            identity: identity,
+                            url: uri,
+                            hash: hash,
+                            size: filteredUri.size
+                          })
+                          this.importProgressContext.subProgressCurrent += 1
+                          this.importProgressContext.subProgressText = $r("app.string.import_finished", fileName(uri))
                         }
-                      } else {
-                        continueJob()
+                        this.importProgressContext.subProgressCurrent += 1
+                        this.importProgressContext.subProgressText = $r("app.string.import_saving", fileName(uri))
+                        if (!VideoMetadataManager.existsInFiles(identity)) {
+                          if (VideoMetadataManager.existsInTemp(identity)) {
+                            VideoMetadataManager.tempToFile(identity)
+                            continueJob()
+                          } else {
+                            asyncSave(
+                              ensureContext(this.getUIContext()).tempDir,
+                              ensureContext(this.getUIContext()).filesDir,
+                              identity,
+                              true,
+                              uri,
+                              createSendableVideoMetadata(metadata)
+                            )
+                              .then(() => {
+                                continueJob()
+                                plusOne()
+                              })
+                              .catch(() => {
+                                importErrors.push({
+                                  url: uri,
+                                  reason: ImportErrorType.SAVE_METADATA
+                                })
+                                plusOne()
+                              })
+                          }
+                        } else {
+                          continueJob()
+                          plusOne()
+                        }
+                      })
+                      .catch(() => {
+                        this.importProgressContext.subProgressCurrent += 1
+                        importErrors.push({
+                          url: uri,
+                          reason: ImportErrorType.SAVE_METADATA
+                        })
                         plusOne()
+                      })
+                  }
+
+                  let failHash = () => {
+                    this.importProgressContext.subProgressCurrent += 2
+                    importErrors.push({
+                      url: uri,
+                      reason: ImportErrorType.HASH_FILE
+                    })
+                    plusOne()
+                  }
+
+                  taskpool.execute(hashFile, ensurePath(uri), filteredUri.size)
+                    .then((result) => {
+                      if (result === undefined || typeof result !== 'string') {
+                        failHash()
+                      } else {
+                        console.error(`file hash is: ${result}`)
+                        persist(result)
                       }
                     })
                     .catch(() => {
-                      importErrors.push({
-                        url: uri,
-                        reason: ImportErrorType.SAVE_METADATA
-                      })
-                      plusOne()
+                      failHash()
                     })
                 })
                 task.onExecutionFailed((err) => {
                   this.importProgressContext.current += 1
+                  this.importProgressContext.subProgressCurrent += 3
                   importErrors.push({
                     url: uri,
                     reason: ImportErrorType.UNKNOWN

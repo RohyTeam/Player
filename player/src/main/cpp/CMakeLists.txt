@@ -54,6 +54,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${THIRDPARTY_LIBRARY_DIR}/x265/${OHOS_ARCH}/include
                     ${THIRDPARTY_LIBRARY_DIR}/xavs2/${OHOS_ARCH}/include
                     ${THIRDPARTY_LIBRARY_DIR}/xvidcore/${OHOS_ARCH}/include
+                    ${THIRDPARTY_LIBRARY_DIR}/xxHash/${OHOS_ARCH}/include
                     ${THIRDPARTY_LIBRARY_DIR}/xz/${OHOS_ARCH}/include
                     ${THIRDPARTY_LIBRARY_DIR}/zstd_1_5_6/${OHOS_ARCH}/include)
 
@@ -179,6 +180,7 @@ target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/x265/${OHOS_ARCH}/
 target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/x265/${OHOS_ARCH}/lib/libx265_main12.so)
 target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/xavs2/${OHOS_ARCH}/lib/libxavs2.a)
 target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/xvidcore/${OHOS_ARCH}/lib/libxvidcore.so.4)
+target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/xxHash/${OHOS_ARCH}/lib/libxxhash.so.0)
 target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/xz/${OHOS_ARCH}/lib/liblzma.so.5)
 target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/zlib_1_3_1/${OHOS_ARCH}/lib/libz.so.1)
 target_link_libraries(rohy_metadata ${THIRDPARTY_LIBRARY_DIR}/zstd_1_5_6/${OHOS_ARCH}/lib/libzstd.so.1)

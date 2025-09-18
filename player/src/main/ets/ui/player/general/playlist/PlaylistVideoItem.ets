@@ -10,9 +10,17 @@ import { convertNumberToDurationString } from '../../../../utils/NumberUtils'
 import { buildMenuGroup, menuGroups, RohyMenu } from '../../../component/menu/RohyMenu'
 import { DialogHelper } from '@pura/harmony-dialog'
 import { isEmptyOrBlank } from '../../../../utils/StringUtils'
-import { promptAction } from '@kit.ArkUI'
+import { ComponentContent, promptAction } from '@kit.ArkUI'
 import { PlaylistFolderItemsDataSource } from '../../../../datasource/playlist/PlaylistFolderItemsDataSource'
 import { ensurePath } from '../../../../utils/FileUtils'
+import { openVideoWaitingDialog } from '../../../pages/generaldevice/dialog/OpenVideoWaitingDialog'
+import { taskpool } from '@kit.ArkTS'
+import RohyMetadata from 'librohy_metadata.so'
+
+@Concurrent
+function hashFile(path: string, size: number): string | undefined {
+  return RohyMetadata.RohyMetadata_hashFile(path, size)
+}
 
 @ComponentV2
 export struct PlaylistVideoItem {
@@ -135,19 +143,64 @@ export struct PlaylistVideoItem {
       .bindContextMenu(this.contextMenu, ResponseType.LongPress)
       .bindContextMenu(this.contextMenu, ResponseType.RightClick)
       .onClick(() => {
+        let waitingComponent = new ComponentContent(this.getUIContext(), wrapBuilder(openVideoWaitingDialog))
+        this.getUIContext().getPromptAction().openCustomDialog(
+          waitingComponent,
+          {
+            autoCancel: false,
+            onWillDismiss: () => {
+            }
+          }
+        )
+        let closeDialog = () => {
+          this.getUIContext().getPromptAction().closeCustomDialog(waitingComponent)
+          waitingComponent.dispose()
+        }
         fileShare.activatePermission([{
           uri: this.video.url,
           operationMode: fileShare.OperationMode.READ_MODE
         }])
           .then(() => {
-            this.playerContext.video = true
-            this.playerContext.videoSource = new LocalFileVideoSource(
-              true,
-              this.metadata!,
-              this.video.url,
-              this.video.name
-            )
-            this.indexNavigator.pushPath({ name: "Player" })
+            fileIo.stat(ensurePath(this.video.url))
+              .then((stat) => {
+                if (stat.size != this.video.size) {
+                  closeDialog()
+                  this.modifiedDialog()
+                } else {
+                  taskpool.execute(hashFile, ensurePath(this.video.url), stat.size)
+                    .then((result) => {
+                      closeDialog()
+                      if (result === undefined || typeof result !== 'string') {
+                        this.brokenDialog()
+                      } else {
+                        if (result != this.video.hash) {
+                          this.modifiedDialog()
+                        } else {
+                          this.playerContext.video = true
+                          this.playerContext.videoSource = new LocalFileVideoSource(
+                            true,
+                            this.metadata!,
+                            this.video.url,
+                            this.video.name
+                          )
+                          this.indexNavigator.pushPath({ name: "Player" })
+                        }
+                      }
+                    })
+                    .catch(() => {
+                      closeDialog()
+                      this.brokenDialog()
+                    })
+                }
+              })
+              .catch(() => {
+                closeDialog()
+                this.brokenDialog()
+              })
+          })
+          .catch(() => {
+            closeDialog()
+            this.brokenDialog()
           })
       })
       .borderRadius(16)
@@ -160,11 +213,6 @@ export struct PlaylistVideoItem {
       .onAppear(() => {
         VideoMetadataManager.loadAsync(this.video.identity)
           .then((savedMetadata) => {
-            if (!savedMetadata || !fileIo.accessSync(ensurePath(this.video.url), fileIo.AccessModeType.EXIST)) {
-              // 这一步是判断如果这个视频不存在了就直接删除
-              this.playlistFolderDataSource?.deleteVideo(this.video.identity)
-              return
-            }
             this.metadata = savedMetadata
           })
       })
@@ -177,6 +225,48 @@ export struct PlaylistVideoItem {
         bottom: 4
       })
     }
+  }
+
+  private brokenDialog() {
+    DialogHelper.showAlertDialog({
+      primaryTitle: $r("app.string.failed_to_open_video"),
+      content: $r("app.string.cannot_access_file"),
+      primaryButton: {
+        value: $r("app.string.delete"),
+        fontColor: $r("sys.color.warning"),
+        action: () => {
+          this.playlistFolderDataSource!.deleteVideo(this.video.identity)
+        }
+      },
+      secondaryButton: {
+        value: $r("app.string.cancel"),
+        fontColor: $r("sys.color.font_primary")
+      },
+      onAction: (action: number, dialogId: string): void => {
+        DialogHelper.closeDialog(dialogId)
+      }
+    })
+  }
+
+  private modifiedDialog() {
+    DialogHelper.showAlertDialog({
+      primaryTitle: $r("app.string.security_protection"),
+      content: $r("app.string.video_file_modified"),
+      primaryButton: {
+        value: $r("app.string.delete"),
+        fontColor: $r("sys.color.warning"),
+        action: () => {
+          this.playlistFolderDataSource!.deleteVideo(this.video.identity)
+        }
+      },
+      secondaryButton: {
+        value: $r("app.string.cancel"),
+        fontColor: $r("sys.color.font_primary")
+      },
+      onAction: (action: number, dialogId: string): void => {
+        DialogHelper.closeDialog(dialogId)
+      }
+    })
   }
 
   @Builder

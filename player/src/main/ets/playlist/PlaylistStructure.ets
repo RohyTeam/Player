@@ -15,6 +15,8 @@ export interface PlaylistVideo extends PlaylistItem {
 
   url: string
   identity: string
+  size: number
+  hash: string
   played: number
 
 }

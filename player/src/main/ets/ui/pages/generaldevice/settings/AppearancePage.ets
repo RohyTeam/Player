@@ -14,6 +14,7 @@ import { InnerDraggableArea, InnerDraggableContainer } from "../../../component/
 import { InnerContainerText } from "../../../component/inner/InnerContainerText";
 import { indexToDraggableItem, listHidButtons } from "../../../player/controller/ControllerItemMappings";
 import { Con } from "../../../../context/ControllerContext";
+import { Sys } from "../../../../context/SystemContext";
 
 @ComponentV2
 export struct AppearancePage {
@@ -24,9 +25,35 @@ export struct AppearancePage {
   @Provider("whiteBackground")
   private whiteBackground: boolean = false
 
+  @Local
+  private hidePreview: boolean = false
+
   build() {
     Column() {
       FakePlayerPreview()
+        .visibility(this.hidePreview ? Visibility.None : Visibility.Visible)
+        .transition(
+          TransitionEffect.scale({
+            y: 0,
+            centerY: 0
+          }).combine(TransitionEffect.OPACITY)
+        )
+      CircleIconButton({
+        icon: $r('sys.symbol.chevron_down'),
+        iconRotation: this.hidePreview ? 0 : 180,
+        clickCallback: () => {
+          animateTo({
+            duration: 200,
+            curve: curves.springMotion()
+          }, () => {
+            this.hidePreview = !this.hidePreview
+          })
+        }
+      })
+        .margin({
+          top: this.hidePreview ? 8 : 0,
+          bottom: 8
+        })
       Column() {
         InnerContainer({
           bgColor: Color.Transparent
@@ -254,6 +281,7 @@ export struct AppearancePage {
       .layoutWeight(1)
       .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.BOTTOM])
     }
+    .alignItems(HorizontalAlign.Center)
     .backgroundColor($r("app.color.rohy_background"))
     .width("100%")
     .layoutWeight(1)
@@ -586,7 +614,7 @@ export struct FakePlayerPreview {
     }
     .clip(true)
     .backgroundColor(this.whiteBackground ? Color.White : Color.Black)
-    .aspectRatio(4 / 3)
+    .aspectRatio(Sys.isTablet() ? 16 / 9 : 4 / 3)
     .borderRadius(16)
     .width("90%")
     .margin({

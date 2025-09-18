@@ -295,6 +295,11 @@ export struct InnerDraggableArea {
           }
         })
       }
+      .padding({
+        top: 8,
+        bottom: 8
+      })
+      .columnsGap(8)
       .scrollBar(BarState.Off)
       .attributeModifier(new DraggableGridLayoutModifier(this.getUIContext()))
       .onItemDragStart((event: ItemDragInfo, itemIndex: number) => {
@@ -439,13 +444,13 @@ class DraggableGridLayoutModifier implements AttributeModifier<GridAttribute> {
     } else if (this.windowContext.widthBreakpoint == "sm") {
       instance.columnsTemplate("1fr 1fr 1fr 1fr")
     } else if (this.windowContext.widthBreakpoint == "md") {
-      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr")
+      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr")
     } else if (this.windowContext.widthBreakpoint == "lg") {
-      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr")
+      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr")
     } else if (this.windowContext.widthBreakpoint == "xl") {
-      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr")
+      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr")
     } else {
-      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr")
+      instance.columnsTemplate("1fr 1fr 1fr 1fr 1fr 1fr 1fr")
     }
   }
 }

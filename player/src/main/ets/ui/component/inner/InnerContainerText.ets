@@ -19,3 +19,28 @@ export struct InnerContainerText {
     .backgroundColor(Color.Transparent)
   }
 }
+
+@ComponentV2
+export struct InnerContainerTextCustomizable {
+
+  @Param
+  textColor?: ResourceColor = undefined
+
+  @BuilderParam
+  builder: () => void
+
+  build() {
+    Column() {
+      Text() {
+        this.builder()
+      }
+      .fontColor(this.textColor)
+      .padding({
+        bottom: 2
+      })
+    }
+    .width("89%")
+    .alignItems(HorizontalAlign.Start)
+    .backgroundColor(Color.Transparent)
+  }
+}

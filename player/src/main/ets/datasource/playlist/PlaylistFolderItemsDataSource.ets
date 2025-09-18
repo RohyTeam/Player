@@ -84,7 +84,7 @@ export class PlaylistFolderItemsDataSource implements IDataSource {
     })
   }
 
-  importVideo(name: string, identity: string, url: string) {
+  importVideo(name: string, identity: string, url: string, hash: string, size: number) {
     let finalName = name
     let duplicateNumber = 1
     if (this.items().find((it) => it.name == finalName)) {
@@ -99,6 +99,8 @@ export class PlaylistFolderItemsDataSource implements IDataSource {
       name: finalName,
       identity: identity,
       url: url,
+      hash: hash,
+      size: size,
       played: 0
     }
     if (this.folder) {

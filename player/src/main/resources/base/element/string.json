@@ -558,7 +558,7 @@
     },
     {
       "name": "import_error",
-      "value": "Import errors"
+      "value": "Files errors or broken"
     },
     {
       "name": "paused",
@@ -643,6 +643,46 @@
     {
       "name": "update_log",
       "value": "Update log"
+    },
+    {
+      "name": "decoder_ffmpeg",
+      "value": "FFmpeg"
+    },
+    {
+      "name": "decoder_system_software",
+      "value": "System"
+    },
+    {
+      "name": "decoder_system_hardware",
+      "value": "Hardware"
+    },
+    {
+      "name": "decoders",
+      "value": "Decoders"
+    },
+    {
+      "name": "decoders_tips",
+      "value": "Decoders modifiable here are all system supported decoders, other codecs will all use FFmpeg to decode."
+    },
+    {
+      "name": "failed_to_hash_file",
+      "value": "Failed to hash file"
+    },
+    {
+      "name": "cannot_access_file",
+      "value": "Failed to activate permission, maybe the video file was deleted or broken, delete it?"
+    },
+    {
+      "name": "security_protection",
+      "value": "Security protection"
+    },
+    {
+      "name": "video_file_modified",
+      "value": "Video file modified, for security, this app is not allowed to play it, delete it?"
+    },
+    {
+      "name": "search",
+      "value": "Search"
     }
   ]
 }

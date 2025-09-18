@@ -339,13 +339,11 @@ function subtitlesMenu() {
 
 @Builder
 export function subtitlesMenuItem() {
-  MenuItem() {
-    MenuItem({
-      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.AI_subtitles")),
-      content: $r("app.string.subtitles"),
-      builder: subtitlesMenu
-    })
-  }
+  MenuItem({
+    symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.AI_subtitles")),
+    content: $r("app.string.subtitles"),
+    builder: subtitlesMenu
+  })
 }
 
 @Builder

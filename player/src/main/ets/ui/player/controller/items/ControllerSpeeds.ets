@@ -69,13 +69,11 @@ function speedsMenu() {
 
 @Builder
 export function speedsMenuItem() {
-  MenuItem() {
-    MenuItem({
-      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.video_speed")),
-      content: $r("app.string.speed"),
-      builder: speedsMenu
-    })
-  }
+  MenuItem({
+    symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.video_speed")),
+    content: $r("app.string.speed"),
+    builder: speedsMenu
+  })
 }
 
 @Builder

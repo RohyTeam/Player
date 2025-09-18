@@ -18,6 +18,8 @@ import { surfaceFillingModesButton,
 import { audiosButton, audiosMenuItem } from './controller/items/ControllerAudios'
 import { subtitlesButton, subtitlesMenuItem } from './controller/items/ControllerSubtitles'
 import { speedsButton, speedsMenuItem } from './controller/items/ControllerSpeeds'
+import { getWidthBreakpointSize } from '../../utils/ComponentUtils'
+import { WindowContext } from '../../context/WindowContext'
 
 @ComponentV2
 export struct PlayerTopBar {
@@ -27,6 +29,8 @@ export struct PlayerTopBar {
   playerController: PlayerController = new PlayerController()
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
+  @Local
+  windowContext: WindowContext = WindowContext.reach(this.getUIContext())
   @Consumer("landscape")
   landscape: boolean = false
   @Consumer("controlsContext")
@@ -99,7 +103,7 @@ export struct PlayerTopBar {
             .fontColor($r("sys.color.font_primary"))
           Blank()
             .layoutWeight(1)
-          if (!Pref.alwaysFold && (this.landscape || Sys.isTablet())) {
+          if (!Pref.alwaysFold && (this.landscape || Sys.isTablet()) && getWidthBreakpointSize(this.windowContext.widthBreakpoint) > 2) {
             ForEach(Con.topBar, (item: DraggableItem) => {
               if (item.index === 0) {
                 mirrorFlipButton({

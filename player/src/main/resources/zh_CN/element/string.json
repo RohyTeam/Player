@@ -494,7 +494,7 @@
     },
     {
       "name": "unknown_error",
-      "value": "未知的问题"
+      "value": "文件可能损坏"
     },
     {
       "name": "unknown_error_desc",
@@ -522,7 +522,7 @@
     },
     {
       "name": "import_fetching_metadata",
-      "value": "获取元数据中"
+      "value": "获取元数据中（%s）"
     },
     {
       "name": "import_saving",
@@ -558,7 +558,7 @@
     },
     {
       "name": "import_error",
-      "value": "导入错误"
+      "value": "文件错误或损坏"
     },
     {
       "name": "paused",
@@ -643,6 +643,46 @@
     {
       "name": "update_log",
       "value": "更新日志"
+    },
+    {
+      "name": "decoder_ffmpeg",
+      "value": "FFmpeg 解码"
+    },
+    {
+      "name": "decoder_system_software",
+      "value": "系统解码器"
+    },
+    {
+      "name": "decoder_system_hardware",
+      "value": "硬件解码器"
+    },
+    {
+      "name": "decoders",
+      "value": "解码器"
+    },
+    {
+      "name": "decoders_tips",
+      "value": "这里可以调整解码器的编码都是系统支持的，其他非系统支持的编码都会使用 FFmpeg 进行解码。"
+    },
+    {
+      "name": "failed_to_hash_file",
+      "value": "获取文件哈希值失败"
+    },
+    {
+      "name": "cannot_access_file",
+      "value": "无法访问视频，视频可能损坏或已被删除，是否从播放列表中移除？"
+    },
+    {
+      "name": "security_protection",
+      "value": "安全拦截"
+    },
+    {
+      "name": "video_file_modified",
+      "value": "该视频文件已被修改，为了安全考虑，软件不被允许播放视频，是否从播放列表中移除？"
+    },
+    {
+      "name": "search",
+      "value": "搜索"
     }
   ]
 }

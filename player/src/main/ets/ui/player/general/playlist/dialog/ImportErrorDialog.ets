@@ -1,35 +1,42 @@
 import { DialogHelper } from "@pura/harmony-dialog";
 import { fileName } from "../../../../../utils/FileUtils";
 import { ImportError, ImportErrorType } from "../PlaylistMenuButtons";
+import { List } from "@kit.ArkTS";
 
 @ObservedV2
 class Errors {
 
   @Trace
-  errors: ImportError[] = []
+  errors: ErrorProblems[] = []
 
 }
 
 let globalErrors: Errors = new Errors()
 
+interface ErrorProblems {
+
+  errorType: ImportErrorType
+  urls: string[]
+
+}
+
 @Builder
 function importErrorContent() {
-  ForEach(listifiedErrors(optimizeErrors(globalErrors.errors)), (urls: string[], index: number) => {
-    if (urls.length > 0) {
-      Text() {
-        Span(ImportErrorType.TYPES[index].reason)
-          .fontColor($r('sys.color.warning'))
-        ForEach(urls, (uri: string) => {
-          Span('\n' + `  ·  ${fileName(uri)}`)
-        })
-      }
-      .margin(8)
+  ForEach(globalErrors.errors, (problems: ErrorProblems) => {
+    Text() {
+      Span(problems.errorType.reason)
+        .fontColor($r('sys.color.warning'))
+        .fontSize(16)
+      ForEach(problems.urls, (uri: string) => {
+        Span('\n' + `  ·  ${fileName(uri)}`)
+      })
     }
+    .margin(8)
   })
 }
 
 export function showEasyImportErrorDialog(errors: ImportError[]) {
-  globalErrors.errors = errors
+  globalErrors.errors = errorsToProblems(errors)
   DialogHelper.showCustomContentDialog({
     primaryTitle: $r("app.string.import_error"),
     contentBuilder: importErrorContent,
@@ -45,52 +52,19 @@ export function showEasyImportErrorDialog(errors: ImportError[]) {
   })
 }
 
-@Builder
-export function importErrorDialog(errors: ImportError[]) {
-  Column() {
-    ForEach(listifiedErrors(optimizeErrors(errors)), (urls: string[], index: number) => {
-      if (urls.length > 0) {
-        Text() {
-          Span(ImportErrorType.TYPES[index].reason)
-            .fontColor($r('sys.color.warning'))
-          ForEach(urls, (uri: string) => {
-            Span('\n' + `  ${fileName(uri)}`)
-          })
-        }
-        .margin(8)
-      }
-    })
-    /*
-    Text($r("app.string.unknown_error_desc"))
-      .fontColor($r('sys.color.warning'))
-      .margin(8)*/
-  }
-  .alignItems(HorizontalAlign.Start)
-  .backgroundColor($r("app.color.rohy_card"))
-  .borderRadius(16)
-  .padding(12)
-  .margin(16)
-}
-
-function listifiedErrors(errors: Record<number, string[]>): string[][] {
-  let listifiedErrors: string[][] = []
-
-  for (let i = 0; i < ImportErrorType.length; i++) {
-    listifiedErrors.push(errors[i] ?? [])
-  }
-
-  return listifiedErrors
-}
-
-function optimizeErrors(errors: ImportError[]): Record<number, string[]> {
-  let optimizedErrors: Record<number, string[]> = {}
+function errorsToProblems(errors: ImportError[]): ErrorProblems[] {
+  let problems: Map<ImportErrorType, ErrorProblems> = new Map()
   for (let error of errors) {
-    let index = ImportErrorType.TYPES.indexOf(error.reason)
-    if (index < 0)
-      continue
-    if (!optimizedErrors[index])
-      optimizedErrors[index] = []
-    optimizedErrors[index].push(error.url)
+    if (!problems.has(error.reason))
+      problems.set(error.reason, {
+        errorType: error.reason,
+        urls: []
+      })
+    problems.get(error.reason)!.urls.push(error.url)
   }
-  return optimizedErrors
+  let problemArray: ErrorProblems[] = []
+  for (let problem of problems.values()){
+    problemArray.push(problem)
+  }
+  return problemArray
 }

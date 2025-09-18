@@ -1,4 +1,5 @@
 import { ItemRestriction, SegmentButtonOptions, SegmentButtonTextItem, SymbolGlyphModifier } from '@kit.ArkUI'
+import { SameWidthComponent } from '../SameWidthComponent'
 import { MySegmentButtonV2 } from '../v2/MySegmentButtonV2'
 
 export interface SelectChoice {
@@ -21,6 +22,8 @@ export struct InnerSelect {
   subtitle: ResourceStr | undefined = undefined
   @Param
   popup: ResourceStr | undefined = undefined
+  @Param
+  sameId: string | undefined = undefined
   @Param
   blankSize: number = 2
   @Param
@@ -120,18 +123,40 @@ export struct InnerSelect {
         }
         Blank()
           .layoutWeight(this.blankSize)
-        Select(this.selectOptions)
-          .selected(this.selected)
-          .value(this.choices[this.selected].title)
-          .height(this.larger ? 28 : 24)
-          .onSelect((index) => {
-            this.selected = index
-            this.choices[index].action()
-          })
-          .layoutWeight(3)
-          .margin({
-            right: 8
-          })
+        if (this.sameId !== undefined) {
+          SameWidthComponent({
+            sameId: this.sameId,
+            componentHeight: this.larger ? 28 : 24,
+            componentMargin: {
+              right: 8
+            }
+          }) {
+            Select(this.selectOptions)
+              .controlSize(ControlSize.SMALL)
+              .selected(this.selected)
+              .font({ size: 12 })
+              .value(this.choices[this.selected].title)
+              .onSelect((index) => {
+                this.selected = index
+                this.choices[index].action()
+              })
+              .layoutWeight(3)
+          }
+        } else {
+          Select(this.selectOptions)
+            .controlSize(ControlSize.SMALL)
+            .selected(this.selected)
+            .value(this.choices[this.selected].title)
+            .height(this.larger ? 28 : 24)
+            .onSelect((index) => {
+              this.selected = index
+              this.choices[index].action()
+            })
+            .layoutWeight(3)
+            .margin({
+              right: 8
+            })
+        }
       }
       .alignItems(VerticalAlign.Center)
       .borderRadius(12)

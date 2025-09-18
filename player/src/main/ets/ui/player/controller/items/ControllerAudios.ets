@@ -62,13 +62,11 @@ function audiosMenu() {
 
 @Builder
 export function audiosMenuItem() {
-  MenuItem() {
-    MenuItem({
-      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.sound")),
-      content: $r("app.string.audios"),
-      builder: audiosMenu
-    })
-  }
+  MenuItem({
+    symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.sound")),
+    content: $r("app.string.audios"),
+    builder: audiosMenu
+  })
 }
 
 @Builder

@@ -15,6 +15,7 @@ import { CutoutAvoidArea } from '../../avoidarea/CutoutAvoidArea'
 import { WindowContext } from '../../../context/WindowContext'
 import { TopCutoutAvoidArea } from '../../avoidarea/TopCutoutAvoidArea'
 import { LeftCutoutAvoidArea } from '../../avoidarea/LeftCutoutAvoidArea'
+import { audio } from '@kit.AudioKit'
 
 @ComponentV2
 export struct GeneralControlPanel {
@@ -28,6 +29,22 @@ export struct GeneralControlPanel {
   controlsContext: ControlsContext = new ControlsContext()
   @Consumer("landscape")
   landscape: boolean = true
+
+  @Local
+  private lastVolumeTime: number = 0
+
+  private volumeListener = (event: audio.VolumeEvent) => {
+    this.playerContext.currentVolume = event.volume
+    this.lastVolumeTime = Date.now()
+  }
+
+  aboutToAppear(): void {
+    audio.getAudioManager().getVolumeManager().on('volumeChange', this.volumeListener)
+  }
+
+  aboutToDisappear(): void {
+    audio.getAudioManager().getVolumeManager().off('volumeChange', this.volumeListener)
+  }
 
   build() {
     SideBarContainer(SideBarContainerType.Overlay) {
@@ -88,7 +105,7 @@ export struct GeneralControlPanel {
                   duration: 200
                 })
             }
-            if (this.playerContext.adjustingVolume) {
+            if (this.playerContext.adjustingVolume || Sys.time - this.lastVolumeTime <= 1000) {
               SmallTips({
                 content: $r("app.string.adjusting_volume",
                   `${clamp(Math.round((this.playerContext.currentVolume / Sys.maxVolume) * 100), 0, 100)}%`)

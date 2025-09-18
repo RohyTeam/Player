@@ -22,6 +22,8 @@ import { repeatButton, repeatMenuItem } from './controller/items/ControllerRepea
 import { mirrorFlipButton, mirrorFlipMenuItem } from './controller/items/ControllerMirrorFlip'
 import { Con } from '../../context/ControllerContext'
 import { DraggableItem } from '../component/inner/InnerDraggable'
+import { getWidthBreakpointSize } from '../../utils/ComponentUtils'
+import { WindowContext } from '../../context/WindowContext'
 
 @ObservedV2
 export class ControlsContext {
@@ -58,6 +60,8 @@ export struct PlayerBottomBar {
   showSidebar: boolean = false
   @Local
   playerContext: PlayerContext = PlayerContext.reach(this.getUIContext())
+  @Local
+  windowContext: WindowContext = WindowContext.reach(this.getUIContext())
   @Local
   showSurfaceFillingModeMenu: boolean = false
   @Local
@@ -102,7 +106,7 @@ export struct PlayerBottomBar {
           })
           Blank()
             .layoutWeight(1)
-          if ((!this.landscape && !Sys.isTablet()) || Pref.alwaysFold) {
+          if ((!this.landscape && !Sys.isTablet()) || Pref.alwaysFold || getWidthBreakpointSize(this.windowContext.widthBreakpoint) <= 2) {
             CircleIconButton({
               icon: $r("sys.symbol.dot_grid_2x2"),
               buttonMargin: {

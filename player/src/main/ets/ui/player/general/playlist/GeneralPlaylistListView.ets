@@ -9,6 +9,8 @@ import { PlaylistItem } from './PlaylistItem';
 export struct GeneralPlaylistView {
   @Consumer("indexNavigator")
   private indexNavigator: NavPathStack = new NavPathStack()
+  @Consumer('hideSearch')
+  hideSearch: boolean = false
 
   build() {
     if (DataSources.PLAYLIST.alreadyReloaded) {
@@ -34,6 +36,21 @@ export struct GeneralPlaylistView {
           )
         })
       }
+      .onScrollFrameBegin((offset, state) => {
+        animateTo({
+          duration: 200,
+          curve: curves.springMotion()
+        }, () => {
+          if (offset > 0) {
+            this.hideSearch = true
+          } else if (offset < 0) {
+            this.hideSearch = false
+          }
+        })
+        return {
+          offsetRemain: offset
+        }
+      })
       .edgeEffect(EdgeEffect.Spring, { alwaysEnabled: true })
       .attributeModifier(Modifiers.gridLayout(this.getUIContext()))
       .padding({

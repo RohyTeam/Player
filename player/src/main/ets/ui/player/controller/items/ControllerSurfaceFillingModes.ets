@@ -50,13 +50,11 @@ function surfaceFillingModesMenu() {
 
 @Builder
 export function surfaceFillingModesMenuItem() {
-  MenuItem() {
-    MenuItem({
-      symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.resolution_video")),
-      content: $r("app.string.surface_filling_mode"),
-      builder: surfaceFillingModesMenu
-    })
-  }
+  MenuItem({
+    symbolStartIcon: new SymbolGlyphModifier($r("sys.symbol.resolution_video")),
+    content: $r("app.string.surface_filling_mode"),
+    builder: surfaceFillingModesMenu
+  })
 }
 
 @Builder

@@ -2,8 +2,8 @@
   "app": {
     "bundleName": "org.rohy.player",
     "vendor": "example",
-    "versionCode": 3005, // MxxxNxxxP, M: Major version, N: Minor version, P: Patch version
-    "versionName": "0.3.5",
+    "versionCode": 3006, // MxxxNxxxP, M: Major version, N: Minor version, P: Patch version
+    "versionName": "0.3.6",
     "icon": "$media:rohyplayer_icon",
     "label": "$string:app_name"
   }

@@ -82,15 +82,15 @@ export struct SettingsSheet {
         })
       }
 
-      /*InnerContainerDivider()
+      InnerContainerDivider()
       InnerComponentSet() {
-        InnerButton({
-          title: "解码器",
+        /*InnerButton({
+          title: $r('app.string.decoders'),
           showGoToIcon: true,
           clickCallback: () => {
             this.sheetNavigator.pushPath({ name: "decoders" })
           }
-        })
+        })*/
         InnerSwitch({
           title: $r("app.string.hardware_decode"),
           popup: $r("app.string.hardware_decode_tips"),
@@ -100,7 +100,7 @@ export struct SettingsSheet {
             return !original
           }
         })
-      }*/
+      }
 
       // 还没做，先屏蔽，等 PC 功能完成后一并添加
       /*InnerContainerDivider()

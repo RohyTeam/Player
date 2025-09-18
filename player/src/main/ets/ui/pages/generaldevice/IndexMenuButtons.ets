@@ -167,7 +167,7 @@ export struct IndexMenuButtons {
           builder: wrapBuilder(appearanceWrapper)
         },
         'decoders': {
-          title: "解码器",
+          title: $r('app.string.decoders'),
           builder: wrapBuilder(decodersWrapper)
         }
       },
